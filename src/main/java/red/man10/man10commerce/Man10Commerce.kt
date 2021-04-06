@@ -1,18 +1,13 @@
-package red.man10.man10commerce;
+package red.man10.man10commerce
 
-import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.plugin.java.JavaPlugin
 
-public final class Man10Commerce extends JavaPlugin {
-
-    @Override
-    public void onEnable() {
+class Man10Commerce : JavaPlugin() {
+    override fun onEnable() {
         // Plugin startup logic
-
-
     }
 
-    @Override
-    public void onDisable() {
+    override fun onDisable() {
         // Plugin shutdown logic
     }
 }
