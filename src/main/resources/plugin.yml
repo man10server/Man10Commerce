@@ -1,4 +1,7 @@
 name: Man10Commerce
-version: @version@
+version: 1.0
 main: red.man10.man10commerce.Man10Commerce
 api-version: 1.16
+commands:
+  commerce:
+    default: op
