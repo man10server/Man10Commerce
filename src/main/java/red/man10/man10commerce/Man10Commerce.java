@@ -8,6 +8,7 @@ public final class Man10Commerce extends JavaPlugin {
     public void onEnable() {
         // Plugin startup logic
 
+
     }
 
     @Override
