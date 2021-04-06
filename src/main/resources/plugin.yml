@@ -1,0 +1,4 @@
+name: Man10Commerce
+version: @version@
+main: red.man10.man10commerce.Man10Commerce
+api-version: 1.16
