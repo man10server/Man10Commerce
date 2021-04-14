@@ -6,8 +6,15 @@ import org.bukkit.entity.Player
 import org.bukkit.plugin.java.JavaPlugin
 
 class Man10Commerce : JavaPlugin() {
+
+    companion object{
+        lateinit var plugin: JavaPlugin
+    }
+
     override fun onEnable() {
         // Plugin startup logic
+        plugin = this
+
     }
 
     override fun onDisable() {

@@ -2,9 +2,12 @@ package red.man10.man10commerce.data
 
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
+import red.man10.man10commerce.Man10Commerce.Companion.plugin
+import red.man10.man10commerce.Utility
 import java.util.*
+import java.util.concurrent.ConcurrentHashMap
 
-class ItemData(val seller : UUID) {
+class ItemData {
 
     var id = 0
     var sellItem : ItemStack? = null
@@ -41,10 +44,46 @@ class ItemData(val seller : UUID) {
 
     companion object{
 
-        fun getItemList(page:Int):MutableList<ItemData>{
-            val list = mutableListOf<ItemData>()
+        private val itemMap = ConcurrentHashMap<ItemStack,Int>()
 
-            return list
+        private val mysql = MySQLManager(plugin,"Man10Commerce")
+
+        fun createItemMap(item:ItemStack):Boolean{
+
+            val one = item.asOne()
+
+            if (itemMap.containsKey(one))return false
+
+            val name = if (one.hasItemMeta()) one.itemMeta!!.displayName else one.i18NDisplayName
+
+            mysql.execute("INSERT INTO item_list " +
+                    "(item_name, item_type, base64) VALUES ('${name}', '${one.type}', '${Utility.itemToBase64(one)}');")
+
+            val rs = mysql.query("select id from item_list ORDER BY id DESC LIMIT 1;")!!
+
+            rs.next()
+
+            itemMap[one] = rs.getInt("id")
+
+            rs.close()
+            mysql.close()
+
+            return true
+        }
+
+        fun loadItemMap(){
+
+            itemMap.clear()
+
+            val rs = mysql.query("select id,base64 from item_list;")?:return
+
+            while (rs.next()){
+                itemMap[Utility.itemFromBase64(rs.getString("base64"))!!] = rs.getInt("id")
+            }
+
+            rs.close()
+            mysql.close()
+
         }
 
 
