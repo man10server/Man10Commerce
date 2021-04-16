@@ -1,5 +1,6 @@
 package red.man10.man10commerce.data
 
+import org.bukkit.Bukkit
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
 import red.man10.man10bank.BankAPI
@@ -71,7 +72,7 @@ class ItemData {
         var fee = 0.1
 
         //新アイテムを登録する
-        fun registerItemIndex(item:ItemStack):Boolean{
+        private fun registerItemIndex(item:ItemStack):Boolean{
 
             val one = item.asOne()
 
@@ -127,6 +128,23 @@ class ItemData {
             mysql.close()
 
             return data
+        }
+
+        fun sell(p:Player,item: ItemStack,price:Double):Boolean{
+
+            registerItemIndex(item)
+
+            val name = if (item.hasItemMeta()) item.itemMeta!!.displayName else item.i18NDisplayName
+
+            val id = itemIndex.forEach{ if (it.value.isSimilar(item)){it.key} }
+
+            mysql.execute("INSERT INTO order_table " +
+                    "(player, uuid, item_id, item_name, date, amount, price) " +
+                    "VALUES ('${p.name}', '${p.uniqueId}', $id, '${name}', now(), ${item.amount}, $price);")
+
+            Bukkit.getLogger().info("$id,${name},${item.amount},$price")
+
+            return true
         }
 
     }
