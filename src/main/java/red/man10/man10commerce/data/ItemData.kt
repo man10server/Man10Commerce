@@ -144,6 +144,8 @@ class ItemData {
 
             Bukkit.getLogger().info("$id,${name},${item.amount},$price")
 
+            item.amount = 0
+
             return true
         }
 

@@ -1,0 +1,7 @@
+mysql:
+  db:
+  pass:
+  host:
+  port:
+  user:
+fee: 0.1
