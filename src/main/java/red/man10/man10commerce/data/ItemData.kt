@@ -2,6 +2,7 @@ package red.man10.man10commerce.data
 
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
+import red.man10.man10bank.BankAPI
 import red.man10.man10commerce.Man10Commerce.Companion.plugin
 import red.man10.man10commerce.Utility
 import java.util.*
@@ -10,49 +11,71 @@ import java.util.concurrent.ConcurrentHashMap
 class ItemData {
 
     var id = 0
-    var sellItem : ItemStack? = null
+    var itemID = 0
+    var amount = 0
     var price : Double = 0.0
     var date : Date? = null
-
-
-    //商品を出品する
-    fun push():Boolean{
-
-
-        return false
-    }
+    var seller : UUID? = null
 
     //商品を購入する
     fun buy(buyer:Player):Boolean{
 
+        if (!bank.withdraw(buyer.uniqueId,price,"BuyItemOnMan10Commerce"))return false
 
-        return false
+        val item = itemIndex[id]?.clone()?:return false
+
+        item.amount = amount
+
+        buyer.inventory.addItem(item)
+
+        bank.deposit(seller!!,(price*(1.0- fee)),"SellItemOnMan10Commerce")
+
+        finish()
+
+        return true
     }
 
-    //出品期間が過ぎたかどうか
-    fun isFinishTime():Boolean{
-
-
-        return false
-    }
+//    //出品期間が過ぎたかどうか
+//    fun isFinishTime():Boolean{
+//
+//
+//        return false
+//    }
 
     //出品を取り下げる
     fun close():Boolean{
+
+        bank.deposit(seller!!,price,"CloseItemOnMan10Commerce")
+
+        finish()
+
+        return false
+    }
+
+    //取引を完了させたら呼び出す
+    private fun finish():Boolean{
+
+        mysql.execute("DELETE FROM order_table where id=$id;")
 
         return false
     }
 
     companion object{
 
-        private val itemMap = ConcurrentHashMap<ItemStack,Int>()
+        private val itemIndex = ConcurrentHashMap<Int,ItemStack>()
 
         private val mysql = MySQLManager(plugin,"Man10Commerce")
 
-        fun createItemMap(item:ItemStack):Boolean{
+        private val bank = BankAPI(plugin)
+
+        var fee = 0.1
+
+        //新アイテムを登録する
+        fun registerItemIndex(item:ItemStack):Boolean{
 
             val one = item.asOne()
 
-            if (itemMap.containsKey(one))return false
+            if (itemIndex.containsValue(one))return false
 
             val name = if (one.hasItemMeta()) one.itemMeta!!.displayName else one.i18NDisplayName
 
@@ -63,7 +86,7 @@ class ItemData {
 
             rs.next()
 
-            itemMap[one] = rs.getInt("id")
+            itemIndex[rs.getInt("id")] = one
 
             rs.close()
             mysql.close()
@@ -71,14 +94,14 @@ class ItemData {
             return true
         }
 
-        fun loadItemMap(){
+        fun loadItemIndex(){
 
-            itemMap.clear()
+            itemIndex.clear()
 
             val rs = mysql.query("select id,base64 from item_list;")?:return
 
             while (rs.next()){
-                itemMap[Utility.itemFromBase64(rs.getString("base64"))!!] = rs.getInt("id")
+                itemIndex[rs.getInt("id")] = Utility.itemFromBase64(rs.getString("base64"))!!
             }
 
             rs.close()
@@ -86,6 +109,25 @@ class ItemData {
 
         }
 
+        fun getMinPriceItem(itemID:Int): ItemData? {
+            val rs = mysql.query("SELECT * FROM order_table where item_id=$itemID ORDER BY price ASC LIMIT 1;")?:return null
+
+            if (!rs.next())return null
+
+            val data = ItemData()
+
+            data.id = rs.getInt("id")
+            data.amount = rs.getInt("amount")
+            data.date = rs.getDate("date")
+            data.itemID = itemID
+            data.price = rs.getDouble("price")
+            data.seller = UUID.fromString(rs.getString("uuid"))
+
+            rs.close()
+            mysql.close()
+
+            return data
+        }
 
     }
 
