@@ -186,7 +186,7 @@ object ItemData {
     }
 
     @Synchronized
-    fun close(id:Int):Boolean{
+    fun close(id:Int,p:Player):Boolean{
 
         val rs = mysql.query("select * from order_table where id=${id};")?:return false
 
@@ -195,11 +195,14 @@ object ItemData {
         val itemID = rs.getInt("item_id")
         val seller = UUID.fromString(rs.getString("uuid"))
         val price = rs.getDouble("price")
-
-        bank.deposit(seller!!,price,"CloseItemOnMan10Commerce")
+        val amount = rs.getInt("amount")
 
         mysql.execute("DELETE FROM order_table where id=${id};")
         setMinPriceItem(itemID)
+
+        val item = itemIndex[itemID]!!.clone()
+        item.amount = amount
+        p.inventory.addItem(item)
 
         return true
     }

@@ -21,11 +21,12 @@ import red.man10.man10commerce.data.ItemData.itemIndex
 import red.man10.man10commerce.data.ItemData.itemList
 import java.text.SimpleDateFormat
 import java.util.*
+import java.util.concurrent.ConcurrentHashMap
 import kotlin.collections.HashMap
 
 object CommerceMenu : Listener{
 
-    private val playerMenuMap = HashMap<Player,String>()
+    private val playerMenuMap = ConcurrentHashMap<Player,String>()
     private val pageMap = HashMap<Player,Int>()
 
     private const val ITEM_MENU = "§e§l出品中のアイテム一覧"
@@ -82,13 +83,19 @@ object CommerceMenu : Listener{
 
             item.lore = lore
 
-            inv.addItem(item)
+            val meta = item.itemMeta
+
+            meta.persistentDataContainer.set(NamespacedKey(plugin,"order_id"), PersistentDataType.INTEGER,data.id)
+
+            item.itemMeta = meta
+
+            inv.setItem(i,item)
         }
 
-        playerMenuMap[p] = SELL_MENU
-
-        Bukkit.getScheduler().runTask(plugin, Runnable { p.openInventory(inv) })
-
+        Bukkit.getScheduler().runTask(plugin, Runnable {
+            p.openInventory(inv)
+            playerMenuMap[p] = SELL_MENU
+        })
     }
 
     fun openItemMenu(p:Player,page:Int){
@@ -235,8 +242,9 @@ object CommerceMenu : Listener{
                 val orderID = meta.persistentDataContainer[NamespacedKey(plugin,"order_id"), PersistentDataType.INTEGER]?:0
 
                 es.execute {
-                    if (ItemData.close(orderID)){
+                    if (ItemData.close(orderID,p)){
                         sendMsg(p,"出品を取り下げました")
+                        openSellItemMenu(p,p.uniqueId)
                     }
                 }
 

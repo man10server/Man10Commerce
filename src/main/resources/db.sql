@@ -2,7 +2,7 @@ create table item_list
 (
 	id int auto_increment,
 	item_name varchar(128) null,
-	item_type varchar(24) null,
+	item_type varchar(64) null,
 	base64 longtext null,
 	constraint item_list_pk
 		primary key (id)
