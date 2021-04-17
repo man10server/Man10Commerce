@@ -32,7 +32,7 @@ class Data {
     }
 
     //取引を完了させたら呼び出す
-    private fun finish():Boolean{
+    fun finish():Boolean{
 
         mysql.execute("DELETE FROM order_table where id=$id;")
         setMinPriceItem(itemID)
@@ -130,9 +130,12 @@ object ItemData {
     }
 
     fun setMinPriceItem(itemID: Int) {
+
+        itemList.remove(itemID)
+
         val rs = mysql.query("SELECT * FROM order_table where item_id=$itemID ORDER BY price ASC LIMIT 1;") ?: return
 
-        if (!rs.next()) return
+        if (!rs.next()){ return}
 
         val data = Data()
 
@@ -200,6 +203,8 @@ object ItemData {
         p.inventory.addItem(item)
 
         bank.deposit(data.seller!!,(data.price*(1.0- fee)),"SellItemOnMan10Commerce")
+
+        data.finish()
 
         return true
     }

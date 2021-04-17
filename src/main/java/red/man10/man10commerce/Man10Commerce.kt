@@ -26,6 +26,8 @@ class Man10Commerce : JavaPlugin() {
 
         ItemData.fee = config.getDouble("fee")
 
+        server.pluginManager.registerEvents(CommerceMenu,this)
+
     }
 
     override fun onDisable() {
