@@ -202,12 +202,13 @@ object ItemData {
         val itemID = rs.getInt("item_id")
         val amount = rs.getInt("amount")
 
-        mysql.execute("DELETE FROM order_table where id=${id};")
-        setMinPriceItem(itemID)
-
         val item = itemIndex[itemID]!!.clone()
         item.amount = amount
         p.inventory.addItem(item)
+
+
+        mysql.execute("DELETE FROM order_table where id=${id};")
+        setMinPriceItem(itemID)
 
         Log.closeLog(p,itemID,item)
 
