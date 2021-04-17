@@ -115,10 +115,20 @@ object CommerceMenu : Listener{
 
             val itemID = keys[inc+page*45]
 
-            val data = itemList[itemID]?: Data()
+            val data = itemList[itemID]
             val item = itemIndex[itemID]!!.clone()
 
             val lore = item.lore?: mutableListOf()
+
+            if (data==null){
+
+                lore.add("§c§l売り切れ")
+
+                item.lore = lore
+
+                inv.addItem(item)
+                continue
+            }
 
             lore.add("§e§l値段:${Utility.format(data.price)}")
             lore.add("§e§l個数:${data.amount}")
@@ -217,8 +227,10 @@ object CommerceMenu : Listener{
 
                         val meta = item.itemMeta!!
 
-                        val orderID = meta.persistentDataContainer[NamespacedKey(plugin,"order_id"), PersistentDataType.INTEGER]?:0
-                        val itemID = meta.persistentDataContainer[NamespacedKey(plugin,"item_id"), PersistentDataType.INTEGER]?:0
+                        val orderID = meta.persistentDataContainer[NamespacedKey(plugin,"order_id"), PersistentDataType.INTEGER]?:-1
+                        val itemID = meta.persistentDataContainer[NamespacedKey(plugin,"item_id"), PersistentDataType.INTEGER]?:-1
+
+                        if (orderID == -1)return
 
                         es.execute {
                             if (ItemData.buy(p,itemID,orderID)){
