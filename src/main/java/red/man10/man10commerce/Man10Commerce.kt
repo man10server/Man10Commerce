@@ -18,6 +18,8 @@ class Man10Commerce : JavaPlugin() {
         val es : ExecutorService = Executors.newCachedThreadPool()
 
         const val prefix = "§l[§a§lA§d§lma§f§ln§a§lzon§f§l]"
+
+        var enable = true
     }
 
     override fun onEnable() {
@@ -28,6 +30,7 @@ class Man10Commerce : JavaPlugin() {
         ItemData.loadItemIndex()
 
         ItemData.fee = config.getDouble("fee")
+        enable = config.getBoolean("enable")
 
         server.pluginManager.registerEvents(CommerceMenu,this)
 
@@ -43,6 +46,14 @@ class Man10Commerce : JavaPlugin() {
 
         if (args.isNullOrEmpty()){
 
+            if (!sender.hasPermission("commerce.user"))return false
+
+            if (!sender.hasPermission("commerce.op") && !enable){
+                sendMsg(sender,"§f現在営業を停止しています")
+
+                return false
+            }
+
             CommerceMenu.openMainMenu(sender)
 
             return true
@@ -50,7 +61,31 @@ class Man10Commerce : JavaPlugin() {
 
         when(args[0]){
 
+            "on" ->{
+                if (!sender.hasPermission("commerce.op"))return true
+
+                enable = true
+                config.set("enable", enable)
+                saveConfig()
+            }
+
+            "off" ->{
+                if (!sender.hasPermission("commerce.op"))return true
+
+                enable = false
+                config.set("enable", enable)
+                saveConfig()
+
+            }
+
             "sell" ->{//mnc sell price
+                if (!sender.hasPermission("commerce.user"))return true
+
+                if (!sender.hasPermission("commerce.op") && !enable){
+                    sendMsg(sender,"§f現在営業を停止しています")
+
+                    return false
+                }
 
                 if (args.size != 2)return false
 
