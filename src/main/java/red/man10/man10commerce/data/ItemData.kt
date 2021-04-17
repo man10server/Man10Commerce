@@ -181,7 +181,7 @@ object ItemData {
 
         bank.deposit(data.seller!!,(data.price*(1.0- fee)),"SellItemOnMan10Commerce")
 
-        mysql.execute("DELETE FROM order_table where id=$${data.id};")
+        mysql.execute("DELETE FROM order_table where id=${data.id};")
         setMinPriceItem(itemID)
 
         return true
@@ -200,7 +200,7 @@ object ItemData {
 
         bank.deposit(seller!!,price,"CloseItemOnMan10Commerce")
 
-        mysql.execute("DELETE FROM order_table where id=$${id};")
+        mysql.execute("DELETE FROM order_table where id=${id};")
         setMinPriceItem(itemID)
 
         return true

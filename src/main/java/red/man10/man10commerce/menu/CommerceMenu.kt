@@ -94,7 +94,7 @@ object CommerceMenu : Listener{
 
             lore.add("§e§l値段:${Utility.format(data.price)}")
             lore.add("§e§l個数:${data.amount}")
-            lore.add("§cシフト左クリックで1Click購入")
+            lore.add("§cシフトクリックで1Click購入")
 
             val meta = item.itemMeta
             meta.persistentDataContainer.set(NamespacedKey(plugin,"order_id"), PersistentDataType.INTEGER,data.id)
