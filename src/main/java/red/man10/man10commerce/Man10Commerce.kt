@@ -38,7 +38,8 @@ class Man10Commerce : JavaPlugin() {
 
         if (args.isNullOrEmpty()){
 
-            CommerceMenu.openMainMenu(sender)
+//            CommerceMenu.openMainMenu(sender)
+            CommerceMenu.openItemMenu(sender,0)
 
             return true
         }
