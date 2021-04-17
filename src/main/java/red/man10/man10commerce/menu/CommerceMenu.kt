@@ -12,13 +12,15 @@ import org.bukkit.event.inventory.InventoryCloseEvent
 import org.bukkit.inventory.ItemStack
 import org.bukkit.inventory.meta.ItemMeta
 import org.bukkit.persistence.PersistentDataType
-import red.man10.man10commerce.Man10Commerce
 import red.man10.man10commerce.Man10Commerce.Companion.es
 import red.man10.man10commerce.Man10Commerce.Companion.plugin
 import red.man10.man10commerce.Utility
 import red.man10.man10commerce.data.ItemData
 import red.man10.man10commerce.data.ItemData.itemIndex
 import red.man10.man10commerce.data.ItemData.itemList
+import java.text.SimpleDateFormat
+import java.util.*
+import kotlin.collections.HashMap
 
 object CommerceMenu : Listener{
 
@@ -26,8 +28,43 @@ object CommerceMenu : Listener{
     private val pageMap = HashMap<Player,Int>()
 
     private const val ITEM_MENU = "§e§l出品中のアイテム一覧"
+    private const val SELL_MENU = "§e§l出品したアイテム"
+    private const val MAIN_MENU = "§e§lメニュー"
 
     fun openMainMenu(p:Player){
+
+        val inv = Bukkit.createInventory(null,9, MAIN_MENU)
+
+
+
+    }
+
+    fun openSellItemMenu(p:Player,seller: UUID){
+
+        if (p.uniqueId!=seller &&!p.hasPermission("commerce.op")){ return }
+
+        val list = ItemData.sellList(seller)?:return
+
+        val inv = Bukkit.createInventory(null,54, SELL_MENU)
+
+        for (i in 0 .. 53){
+            val data = list[i]
+
+            val item = itemIndex[data.itemID]!!.clone()
+
+            val lore = item.lore?: mutableListOf()
+
+            lore.add("§e§l値段:${Utility.format(data.price)}")
+            lore.add("§e§l個数:${data.amount}")
+            lore.add("§e§l${SimpleDateFormat("yyyy-MM/dd").format(data.date)}")
+            lore.add("§c§lシフトクリックで出品を取り下げる")
+
+            item.lore = lore
+
+            inv.addItem(item)
+        }
+
+        Bukkit.getScheduler().runTask(plugin, Runnable { p.openInventory(inv) })
 
     }
 
@@ -174,6 +211,27 @@ object CommerceMenu : Listener{
                 }
             }
 
+            SELL_MENU ->{
+
+                if (action != InventoryAction.MOVE_TO_OTHER_INVENTORY)return
+
+                val meta = item.itemMeta!!
+                val orderID = meta.persistentDataContainer[NamespacedKey(plugin,"order_id"), PersistentDataType.INTEGER]?:0
+
+                es.execute {
+                    if (ItemData.close(orderID)){
+                        p.sendMessage("出品を取り下げました")
+                    }
+                }
+
+                return
+            }
+
+            MAIN_MENU ->{
+
+
+
+            }
         }
 
     }

@@ -6,9 +6,6 @@ import org.bukkit.inventory.ItemStack
 import red.man10.man10bank.BankAPI
 import red.man10.man10commerce.Man10Commerce.Companion.plugin
 import red.man10.man10commerce.Utility
-import red.man10.man10commerce.data.ItemData.bank
-import red.man10.man10commerce.data.ItemData.mysql
-import red.man10.man10commerce.data.ItemData.setMinPriceItem
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 
@@ -20,27 +17,6 @@ class Data {
     var price : Double = 0.0
     var date : Date? = null
     var seller : UUID? = null
-
-    //出品を取り下げる
-    fun close():Boolean{
-
-        bank.deposit(seller!!,price,"CloseItemOnMan10Commerce")
-
-        finish()
-
-        return false
-    }
-
-    //取引を完了させたら呼び出す
-    fun finish():Boolean{
-
-        mysql.execute("DELETE FROM order_table where id=$id;")
-        setMinPriceItem(itemID)
-
-        return false
-    }
-
-
 
 }
 
@@ -188,6 +164,7 @@ object ItemData {
         return true
     }
 
+    @Synchronized
     fun buy(p:Player,itemID:Int,orderID:Int):Boolean{
 
         val data = itemList[itemID] ?: return false
@@ -204,9 +181,54 @@ object ItemData {
 
         bank.deposit(data.seller!!,(data.price*(1.0- fee)),"SellItemOnMan10Commerce")
 
-        data.finish()
+        mysql.execute("DELETE FROM order_table where id=$${data.id};")
+        setMinPriceItem(itemID)
 
         return true
+    }
+
+    @Synchronized
+    fun close(id:Int):Boolean{
+
+        val rs = mysql.query("select * from order_table where id=${id};")?:return false
+
+        if (!rs.next())return false
+
+        val itemID = rs.getInt("item_id")
+        val seller = UUID.fromString(rs.getString("uuid"))
+        val price = rs.getDouble("price")
+
+        bank.deposit(seller!!,price,"CloseItemOnMan10Commerce")
+
+        mysql.execute("DELETE FROM order_table where id=$${id};")
+        setMinPriceItem(itemID)
+
+        return true
+    }
+
+    fun sellList(p:UUID): MutableList<Data>? {
+
+        val list = mutableListOf<Data>()
+
+        val rs = mysql.query("select * from order_table where uuid='${p}';")?:return null
+
+        while (rs.next()){
+            val data = Data()
+
+            data.id = rs.getInt("id")
+            data.amount = rs.getInt("amount")
+            data.date = rs.getDate("date")
+            data.itemID = rs.getInt("item_id")
+            data.price = rs.getDouble("price")
+            data.seller = p
+
+            list.add(data)
+        }
+
+        rs.close()
+        mysql.close()
+
+        return list
     }
 
 }
