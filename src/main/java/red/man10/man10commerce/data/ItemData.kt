@@ -110,7 +110,11 @@ object ItemData {
 
         val rs = mysql.query("SELECT * FROM order_table where item_id=$itemID ORDER BY price ASC LIMIT 1;") ?: return
 
-        if (!rs.next()){ return}
+        if (!rs.next()){
+            itemIndex.remove(itemID)
+            mysql.execute("DELETE FROM item_list where id=$itemID;")
+            return
+        }
 
         val data = Data()
 
