@@ -154,6 +154,8 @@ object ItemData {
                     "VALUES ('${p.name}', '${p.uniqueId}', $id, '${name}', now(), ${item.amount}, $price);"
         )
 
+        Log.sellLog(p,item,price,id)
+
         setMinPriceItem(id)
 
         item.amount = 0
@@ -178,6 +180,8 @@ object ItemData {
 
         bank.deposit(data.seller!!,(data.price*(1.0- fee)),"SellItemOnMan10Commerce")
 
+        Log.buyLog(p, data, item)
+
         mysql.execute("DELETE FROM order_table where id=${data.id};")
         setMinPriceItem(itemID)
 
@@ -200,6 +204,8 @@ object ItemData {
         val item = itemIndex[itemID]!!.clone()
         item.amount = amount
         p.inventory.addItem(item)
+
+        Log.closeLog(p,itemID,item)
 
         return true
     }

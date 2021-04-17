@@ -30,6 +30,7 @@ create table log
 	id int auto_increment,
 	order_player varchar(16) null,
 	target_player varchar(16) null,
+	action varchar(16) null,
 	item_id int null,
 	item_name varchar(128) null,
 	amount int null,
