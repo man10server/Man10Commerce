@@ -56,6 +56,6 @@ object Utility {
         return String.format("%,.1f",double)
     }
 
-    fun Player.sendMsg(msg:String){ sendMessage(prefix+msg) }
+    fun sendMsg(p:Player,msg:String){ p.sendMessage(prefix+msg) }
 
 }

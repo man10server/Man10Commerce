@@ -214,9 +214,9 @@ object CommerceMenu : Listener{
 
                         es.execute {
                             if (ItemData.buy(p,itemID,orderID)){
-                                p.sendMsg("§a§l購入成功しました！")
+                                sendMsg(p,"§a§l購入成功しました！")
                             }else{
-                                p.sendMsg("§c§l購入失敗、Man10Bankにお金がないか、既に売り切れています！")
+                                sendMsg(p,"§c§l購入失敗、Man10Bankにお金がないか、既に売り切れています！")
                             }
 
                             Bukkit.getScheduler().runTask(plugin, Runnable { openItemMenu(p,page) })
@@ -236,7 +236,7 @@ object CommerceMenu : Listener{
 
                 es.execute {
                     if (ItemData.close(orderID)){
-                        p.sendMsg("出品を取り下げました")
+                        sendMsg(p,"出品を取り下げました")
                     }
                 }
 

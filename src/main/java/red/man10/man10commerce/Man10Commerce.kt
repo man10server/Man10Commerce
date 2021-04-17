@@ -43,6 +43,7 @@ class Man10Commerce : JavaPlugin() {
 
         if (args.isNullOrEmpty()){
 
+//            CommerceMenu.openMainMenu(sender)
             CommerceMenu.openMainMenu(sender)
 
             return true
@@ -62,7 +63,7 @@ class Man10Commerce : JavaPlugin() {
 
                 if (price == null){
 
-                    sender.sendMsg("§c§l金額は数字を使ってください！")
+                    sendMsg(sender,"§c§l金額は数字を使ってください！")
 
                     return true
                 }
@@ -70,7 +71,7 @@ class Man10Commerce : JavaPlugin() {
 
                 es.execute {
                     if (ItemData.sell(sender,item,price)){
-                        sender.sendMsg("§e§l出品成功しました！")
+                        sendMsg(sender,"§e§l出品成功しました！")
                     }
                 }
 
