@@ -17,7 +17,7 @@ class Man10Commerce : JavaPlugin() {
         lateinit var plugin: JavaPlugin
         val es : ExecutorService = Executors.newCachedThreadPool()
 
-        const val prefix = "[Man10Commerce]"
+        const val prefix = "§l[§a§lA§d§lma§f§ln§a§lzon§f§l]"
     }
 
     override fun onEnable() {
@@ -43,7 +43,6 @@ class Man10Commerce : JavaPlugin() {
 
         if (args.isNullOrEmpty()){
 
-//            CommerceMenu.openMainMenu(sender)
             CommerceMenu.openMainMenu(sender)
 
             return true

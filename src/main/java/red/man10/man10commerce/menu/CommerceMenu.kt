@@ -99,12 +99,7 @@ object CommerceMenu : Listener{
 
         var inc = 0
 
-        Bukkit.getLogger().info("page$page")
-
-
         for (i in page*45 .. (page+1)*44){
-
-            Bukkit.getLogger().info("$i,$inc")
 
             if (keys.size <= i)break
 

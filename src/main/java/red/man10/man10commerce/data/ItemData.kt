@@ -155,8 +155,6 @@ object ItemData {
                     "VALUES ('${p.name}', '${p.uniqueId}', $id, '${name}', now(), ${item.amount}, $price);"
         )
 
-        Bukkit.getLogger().info("$id,${name},${item.amount},$price")
-
         setMinPriceItem(id)
 
         item.amount = 0
