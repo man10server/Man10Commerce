@@ -16,6 +16,7 @@ import red.man10.man10commerce.Man10Commerce.Companion.es
 import red.man10.man10commerce.Man10Commerce.Companion.plugin
 import red.man10.man10commerce.Utility
 import red.man10.man10commerce.Utility.sendMsg
+import red.man10.man10commerce.data.Data
 import red.man10.man10commerce.data.ItemData
 import red.man10.man10commerce.data.ItemData.itemIndex
 import red.man10.man10commerce.data.ItemData.itemList
@@ -106,13 +107,15 @@ object CommerceMenu : Listener{
 
         var inc = 0
 
-        for (i in page*45 .. (page+1)*44){
+        while (inv.getItem(44) ==null){
 
-            if (keys.size <= i)break
+            inc ++
 
-            val itemID = keys[i]
+            if (keys.size <= inc+page*45)break
 
-            val data = itemList[itemID]?:continue
+            val itemID = keys[inc+page*45]
+
+            val data = itemList[itemID]?: Data()
             val item = itemIndex[itemID]!!.clone()
 
             val lore = item.lore?: mutableListOf()
@@ -128,9 +131,7 @@ object CommerceMenu : Listener{
 
             item.lore = lore
 
-            inv.setItem(inc,item)
-
-            inc ++
+            inv.addItem(item)
 
         }
 
