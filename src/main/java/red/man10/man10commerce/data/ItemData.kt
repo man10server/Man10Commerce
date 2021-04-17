@@ -6,10 +6,13 @@ import org.bukkit.inventory.ItemStack
 import red.man10.man10bank.BankAPI
 import red.man10.man10commerce.Man10Commerce.Companion.plugin
 import red.man10.man10commerce.Utility
+import red.man10.man10commerce.data.ItemData.bank
+import red.man10.man10commerce.data.ItemData.mysql
+import red.man10.man10commerce.data.ItemData.setMinPriceItem
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 
-class ItemData {
+class Data {
 
     var id = 0
     var itemID = 0
@@ -17,31 +20,6 @@ class ItemData {
     var price : Double = 0.0
     var date : Date? = null
     var seller : UUID? = null
-
-    //商品を購入する
-    fun buy(buyer:Player):Boolean{
-
-        if (!bank.withdraw(buyer.uniqueId,price,"BuyItemOnMan10Commerce"))return false
-
-        val item = itemIndex[id]?.clone()?:return false
-
-        item.amount = amount
-
-        buyer.inventory.addItem(item)
-
-        bank.deposit(seller!!,(price*(1.0- fee)),"SellItemOnMan10Commerce")
-
-        finish()
-
-        return true
-    }
-
-//    //出品期間が過ぎたかどうか
-//    fun isFinishTime():Boolean{
-//
-//
-//        return false
-//    }
 
     //出品を取り下げる
     fun close():Boolean{
@@ -57,143 +35,173 @@ class ItemData {
     private fun finish():Boolean{
 
         mysql.execute("DELETE FROM order_table where id=$id;")
+        setMinPriceItem(itemID)
 
         return false
     }
 
-    companion object{
 
-        val itemIndex = ConcurrentHashMap<Int,ItemStack>()
-        val itemList = ConcurrentHashMap<Int,ItemData>()
 
-        private val mysql = MySQLManager(plugin,"Man10Commerce")
+}
 
-        private val bank = BankAPI(plugin)
+object ItemData {
 
-        var fee = 0.1
+    val itemIndex = ConcurrentHashMap<Int, ItemStack>()
+    val itemList = ConcurrentHashMap<Int, Data>()
 
-        //新アイテムを登録する
-        private fun registerItemIndex(item:ItemStack):Boolean{
+    val mysql = MySQLManager(plugin, "Man10Commerce")
 
-            val one = item.asOne()
+    val bank = BankAPI(plugin)
 
-            if (itemIndex.containsValue(one))return false
+    var fee = 0.1
 
-            val name = if (one.hasItemMeta()) one.itemMeta!!.displayName else one.i18NDisplayName
+    //新アイテムを登録する
+    private fun registerItemIndex(item: ItemStack): Boolean {
 
-            mysql.execute("INSERT INTO item_list " +
-                    "(item_name, item_type, base64) VALUES ('${name}', '${one.type}', '${Utility.itemToBase64(one)}');")
+        val one = item.asOne()
 
-            val rs = mysql.query("select id from item_list ORDER BY id DESC LIMIT 1;")!!
+        if (itemIndex.containsValue(one)) return false
 
-            rs.next()
+        val name = if (one.hasItemMeta()) one.itemMeta!!.displayName else one.i18NDisplayName
 
-            itemIndex[rs.getInt("id")] = one
+        mysql.execute(
+            "INSERT INTO item_list " +
+                    "(item_name, item_type, base64) VALUES ('${name}', '${one.type}', '${Utility.itemToBase64(one)}');"
+        )
+
+        val rs = mysql.query("select id from item_list ORDER BY id DESC LIMIT 1;")!!
+
+        rs.next()
+
+        itemIndex[rs.getInt("id")] = one
+
+        rs.close()
+        mysql.close()
+
+        return true
+    }
+
+    fun loadItemIndex() {
+
+        itemIndex.clear()
+
+        val rs = mysql.query("select id,base64 from item_list;")
+
+        if (rs != null) {
+
+            while (rs.next()) {
+                itemIndex[rs.getInt("id")] = Utility.itemFromBase64(rs.getString("base64"))!!
+            }
 
             rs.close()
             mysql.close()
 
-            return true
         }
 
-        fun loadItemIndex(){
 
-            itemIndex.clear()
+        itemList.clear()
 
-            val rs = mysql.query("select id,base64 from item_list;")
+        val rs2 = mysql.query("select * from order_table")
 
-            if (rs != null){
+        if (rs2 != null) {
+            while (rs2.next()) {
 
-                while (rs.next()){
-                    itemIndex[rs.getInt("id")] = Utility.itemFromBase64(rs.getString("base64"))!!
-                }
+                val itemID = rs2.getInt("item_id")
 
-                rs.close()
-                mysql.close()
+                if (itemList.containsKey(itemID)) continue
 
-            }
+                val data = Data()
 
+                data.id = rs2.getInt("id")
+                data.amount = rs2.getInt("amount")
+                data.date = rs2.getDate("date")
+                data.itemID = itemID
+                data.price = rs2.getDouble("price")
+                data.seller = UUID.fromString(rs2.getString("uuid"))
 
-            itemList.clear()
-
-            val rs2 = mysql.query("select * from order_table")
-
-            if (rs2!=null){
-                while (rs2.next()){
-
-                    val itemID = rs2.getInt("item_id")
-
-                    if (itemList.containsKey(itemID))continue
-
-                    val data = ItemData()
-
-                    data.id = rs2.getInt("id")
-                    data.amount = rs2.getInt("amount")
-                    data.date = rs2.getDate("date")
-                    data.itemID = itemID
-                    data.price = rs2.getDouble("price")
-                    data.seller = UUID.fromString(rs2.getString("uuid"))
-
-                    itemList[itemID] = data
-                }
-
-                rs2.close()
-                mysql.close()
-
-            }
-
-        }
-
-        fun setMinPriceItem(itemID:Int) {
-            val rs = mysql.query("SELECT * FROM order_table where item_id=$itemID ORDER BY price ASC LIMIT 1;")?:return
-
-            if (!rs.next())return
-
-            val data = ItemData()
-
-            data.id = rs.getInt("id")
-            data.amount = rs.getInt("amount")
-            data.date = rs.getDate("date")
-            data.itemID = itemID
-            data.price = rs.getDouble("price")
-            data.seller = UUID.fromString(rs.getString("uuid"))
-
-            rs.close()
-            mysql.close()
-
-            val nowItem = itemList[itemID]
-
-            if (nowItem ==null || data.price < nowItem.price){
                 itemList[itemID] = data
             }
 
+            rs2.close()
+            mysql.close()
+
         }
 
-        fun sell(p:Player,item: ItemStack,price:Double):Boolean{
+    }
 
-            registerItemIndex(item)
+    fun setMinPriceItem(itemID: Int) {
+        val rs = mysql.query("SELECT * FROM order_table where item_id=$itemID ORDER BY price ASC LIMIT 1;") ?: return
 
-            val name = if (item.hasItemMeta()) item.itemMeta!!.displayName else item.i18NDisplayName
+        if (!rs.next()) return
 
-            var id = -1
+        val data = Data()
 
-            itemIndex.forEach{ if (it.value.isSimilar(item)){id = it.key} }
+        data.id = rs.getInt("id")
+        data.amount = rs.getInt("amount")
+        data.date = rs.getDate("date")
+        data.itemID = itemID
+        data.price = rs.getDouble("price")
+        data.seller = UUID.fromString(rs.getString("uuid"))
 
-            if (id == -1)return false
+        rs.close()
+        mysql.close()
 
-            mysql.execute("INSERT INTO order_table " +
+        val nowItem = itemList[itemID]
+
+        if (nowItem == null || data.price < nowItem.price) {
+            itemList[itemID] = data
+        }
+
+    }
+
+    fun sell(p: Player, item: ItemStack, price: Double): Boolean {
+
+        registerItemIndex(item)
+
+        val name = if (item.hasItemMeta()) item.itemMeta!!.displayName else item.i18NDisplayName
+
+        var id = -1
+
+        itemIndex.forEach {
+            if (it.value.isSimilar(item)) {
+                id = it.key
+            }
+        }
+
+        if (id == -1) return false
+
+        mysql.execute(
+            "INSERT INTO order_table " +
                     "(player, uuid, item_id, item_name, date, amount, price) " +
-                    "VALUES ('${p.name}', '${p.uniqueId}', $id, '${name}', now(), ${item.amount}, $price);")
+                    "VALUES ('${p.name}', '${p.uniqueId}', $id, '${name}', now(), ${item.amount}, $price);"
+        )
 
-            Bukkit.getLogger().info("$id,${name},${item.amount},$price")
+        Bukkit.getLogger().info("$id,${name},${item.amount},$price")
 
-            setMinPriceItem(id)
+        setMinPriceItem(id)
 
-            item.amount = 0
+        item.amount = 0
 
-            return true
-        }
+        return true
+    }
 
+    fun buy(p:Player,itemID:Int,orderID:Int):Boolean{
+
+        val data = itemList[itemID] ?: return false
+
+        if (data.id != orderID)return false
+
+        if (!bank.withdraw(p.uniqueId,data.price,"BuyItemOnMan10Commerce"))return false
+
+        val item = itemIndex[itemID]?.clone()?:return false
+
+        item.amount = data.amount
+
+        p.inventory.addItem(item)
+
+        bank.deposit(data.seller!!,(data.price*(1.0- fee)),"SellItemOnMan10Commerce")
+
+        return true
     }
 
 }
