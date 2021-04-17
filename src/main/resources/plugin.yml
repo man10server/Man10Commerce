@@ -1,6 +1,9 @@
 name: Man10Commerce
 version: 1.0
 main: red.man10.man10commerce.Man10Commerce
+depend:
+  - Man10CommonLibs
+  - Man10OfflineBank
 api-version: 1.16
 commands:
   commerce:
