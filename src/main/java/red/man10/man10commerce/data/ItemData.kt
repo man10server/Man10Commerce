@@ -63,7 +63,8 @@ class ItemData {
 
     companion object{
 
-        private val itemIndex = ConcurrentHashMap<Int,ItemStack>()
+        val itemIndex = ConcurrentHashMap<Int,ItemStack>()
+        val itemList = ConcurrentHashMap<Int,ItemData>()
 
         private val mysql = MySQLManager(plugin,"Man10Commerce")
 
@@ -99,21 +100,54 @@ class ItemData {
 
             itemIndex.clear()
 
-            val rs = mysql.query("select id,base64 from item_list;")?:return
+            val rs = mysql.query("select id,base64 from item_list;")
 
-            while (rs.next()){
-                itemIndex[rs.getInt("id")] = Utility.itemFromBase64(rs.getString("base64"))!!
+            if (rs != null){
+
+                while (rs.next()){
+                    itemIndex[rs.getInt("id")] = Utility.itemFromBase64(rs.getString("base64"))!!
+                }
+
+                rs.close()
+                mysql.close()
+
             }
 
-            rs.close()
-            mysql.close()
+
+            itemList.clear()
+
+            val rs2 = mysql.query("select * from order_table")
+
+            if (rs2!=null){
+                while (rs2.next()){
+
+                    val itemID = rs2.getInt("item_id")
+
+                    if (itemList.containsKey(itemID))continue
+
+                    val data = ItemData()
+
+                    data.id = rs2.getInt("id")
+                    data.amount = rs2.getInt("amount")
+                    data.date = rs2.getDate("date")
+                    data.itemID = itemID
+                    data.price = rs2.getDouble("price")
+                    data.seller = UUID.fromString(rs2.getString("uuid"))
+
+                    itemList[itemID] = data
+                }
+
+                rs2.close()
+                mysql.close()
+
+            }
 
         }
 
-        fun getMinPriceItem(itemID:Int): ItemData? {
-            val rs = mysql.query("SELECT * FROM order_table where item_id=$itemID ORDER BY price ASC LIMIT 1;")?:return null
+        fun setMinPriceItem(itemID:Int) {
+            val rs = mysql.query("SELECT * FROM order_table where item_id=$itemID ORDER BY price ASC LIMIT 1;")?:return
 
-            if (!rs.next())return null
+            if (!rs.next())return
 
             val data = ItemData()
 
@@ -127,7 +161,12 @@ class ItemData {
             rs.close()
             mysql.close()
 
-            return data
+            val nowItem = itemList[itemID]
+
+            if (nowItem ==null || data.price < nowItem.price){
+                itemList[itemID] = data
+            }
+
         }
 
         fun sell(p:Player,item: ItemStack,price:Double):Boolean{
@@ -136,13 +175,19 @@ class ItemData {
 
             val name = if (item.hasItemMeta()) item.itemMeta!!.displayName else item.i18NDisplayName
 
-            val id = itemIndex.forEach{ if (it.value.isSimilar(item)){it.key} }
+            var id = -1
+
+            itemIndex.forEach{ if (it.value.isSimilar(item)){id = it.key} }
+
+            if (id == -1)return false
 
             mysql.execute("INSERT INTO order_table " +
                     "(player, uuid, item_id, item_name, date, amount, price) " +
                     "VALUES ('${p.name}', '${p.uniqueId}', $id, '${name}', now(), ${item.amount}, $price);")
 
             Bukkit.getLogger().info("$id,${name},${item.amount},$price")
+
+            setMinPriceItem(id)
 
             item.amount = 0
 
