@@ -43,7 +43,6 @@ class Man10Commerce : JavaPlugin() {
 
         if (args.isNullOrEmpty()){
 
-//            CommerceMenu.openMainMenu(sender)
             CommerceMenu.openMainMenu(sender)
 
             return true
@@ -68,6 +67,10 @@ class Man10Commerce : JavaPlugin() {
                     return true
                 }
 
+                if (price<1){
+                    sendMsg(sender,"§c§l1円以下での出品はできません！")
+                    return true
+                }
 
                 es.execute {
                     if (ItemData.sell(sender,item,price)){
@@ -78,8 +81,6 @@ class Man10Commerce : JavaPlugin() {
             }
 
         }
-
-
 
         return false
     }

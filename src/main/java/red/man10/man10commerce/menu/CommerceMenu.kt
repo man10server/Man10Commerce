@@ -58,7 +58,7 @@ object CommerceMenu : Listener{
 
     }
 
-    fun openSellItemMenu(p:Player,seller: UUID){
+    private fun openSellItemMenu(p:Player, seller: UUID){
 
         if (p.uniqueId!=seller &&!p.hasPermission("commerce.op")){ return }
 
@@ -98,7 +98,7 @@ object CommerceMenu : Listener{
         })
     }
 
-    fun openItemMenu(p:Player,page:Int){
+    private fun openItemMenu(p:Player, page:Int){
 
         val inv = Bukkit.createInventory(null,54, ITEM_MENU)
 

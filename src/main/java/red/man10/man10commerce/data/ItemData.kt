@@ -1,6 +1,5 @@
 package red.man10.man10commerce.data
 
-import org.bukkit.Bukkit
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
 import red.man10.man10bank.BankAPI
@@ -188,7 +187,7 @@ object ItemData {
     @Synchronized
     fun close(id:Int,p:Player):Boolean{
 
-        val rs = mysql.query("select * from order_table where id=${id};")?:return false
+        val rs = mysql.query("select item_id,amount from order_table where id=${id};")?:return false
 
         if (!rs.next())return false
 
