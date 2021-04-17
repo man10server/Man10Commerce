@@ -5,6 +5,7 @@ import org.bukkit.command.Command
 import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
 import org.bukkit.plugin.java.JavaPlugin
+import red.man10.man10commerce.Utility.sendMsg
 import red.man10.man10commerce.data.ItemData
 import red.man10.man10commerce.menu.CommerceMenu
 import java.util.concurrent.ExecutorService
@@ -15,6 +16,8 @@ class Man10Commerce : JavaPlugin() {
     companion object{
         lateinit var plugin: JavaPlugin
         val es : ExecutorService = Executors.newCachedThreadPool()
+
+        const val prefix = "[Man10Commerce]"
     }
 
     override fun onEnable() {
@@ -54,19 +57,21 @@ class Man10Commerce : JavaPlugin() {
 
                 val item = sender.inventory.itemInMainHand
 
-                if (item.type == Material.AIR){
+                if (item.type == Material.AIR){ return true }
+
+                val price = args[1].toDoubleOrNull()
+
+                if (price == null){
+
+                    sender.sendMsg("§c§l金額は数字を使ってください！")
 
                     return true
                 }
 
-                val price = args[1].toDoubleOrNull() ?: return false
-
 
                 es.execute {
                     if (ItemData.sell(sender,item,price)){
-
-                        sender.sendMessage("出品成功")
-
+                        sender.sendMsg("§e§l出品成功しました！")
                     }
                 }
 

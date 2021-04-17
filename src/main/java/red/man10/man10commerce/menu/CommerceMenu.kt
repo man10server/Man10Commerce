@@ -15,6 +15,7 @@ import org.bukkit.persistence.PersistentDataType
 import red.man10.man10commerce.Man10Commerce.Companion.es
 import red.man10.man10commerce.Man10Commerce.Companion.plugin
 import red.man10.man10commerce.Utility
+import red.man10.man10commerce.Utility.sendMsg
 import red.man10.man10commerce.data.ItemData
 import red.man10.man10commerce.data.ItemData.itemIndex
 import red.man10.man10commerce.data.ItemData.itemList
@@ -218,11 +219,9 @@ object CommerceMenu : Listener{
 
                         es.execute {
                             if (ItemData.buy(p,itemID,orderID)){
-
-                                p.sendMessage("購入成功")
-
+                                p.sendMsg("§a§l購入成功しました！")
                             }else{
-                                p.sendMessage("購入失敗")
+                                p.sendMsg("§c§l購入失敗、Man10Bankにお金がないか、既に売り切れています！")
                             }
 
                             Bukkit.getScheduler().runTask(plugin, Runnable { openItemMenu(p,page) })
@@ -242,7 +241,7 @@ object CommerceMenu : Listener{
 
                 es.execute {
                     if (ItemData.close(orderID)){
-                        p.sendMessage("出品を取り下げました")
+                        p.sendMsg("出品を取り下げました")
                     }
                 }
 
