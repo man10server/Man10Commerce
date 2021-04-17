@@ -193,8 +193,6 @@ object ItemData {
         if (!rs.next())return false
 
         val itemID = rs.getInt("item_id")
-        val seller = UUID.fromString(rs.getString("uuid"))
-        val price = rs.getDouble("price")
         val amount = rs.getInt("amount")
 
         mysql.execute("DELETE FROM order_table where id=${id};")
