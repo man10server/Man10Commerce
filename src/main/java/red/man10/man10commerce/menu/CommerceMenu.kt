@@ -35,7 +35,24 @@ object CommerceMenu : Listener{
 
         val inv = Bukkit.createInventory(null,9, MAIN_MENU)
 
+        val button1 = ItemStack(Material.GRASS_BLOCK)
+        val meta1 = button1.itemMeta
+        meta1.setDisplayName("§a§l現在出品中のアイテムを見る")
+        setID(meta1,"ItemMenu")
+        button1.itemMeta = meta1
 
+        val button2 = ItemStack(Material.CHEST)
+        val meta2 = button2.itemMeta
+        meta2.setDisplayName("§a§l出品したアイテムを見る")
+        setID(meta2,"SellMenu")
+        button2.itemMeta = meta2
+
+        inv.setItem(2,button1)
+        inv.setItem(6,button2)
+
+        playerMenuMap[p] = MAIN_MENU
+
+        p.openInventory(inv)
 
     }
 
@@ -48,6 +65,9 @@ object CommerceMenu : Listener{
         val inv = Bukkit.createInventory(null,54, SELL_MENU)
 
         for (i in 0 .. 53){
+
+            if (list.size <=i)break
+
             val data = list[i]
 
             val item = itemIndex[data.itemID]!!.clone()
@@ -63,6 +83,8 @@ object CommerceMenu : Listener{
 
             inv.addItem(item)
         }
+
+        playerMenuMap[p] = SELL_MENU
 
         Bukkit.getScheduler().runTask(plugin, Runnable { p.openInventory(inv) })
 
@@ -229,7 +251,10 @@ object CommerceMenu : Listener{
 
             MAIN_MENU ->{
 
-
+                when(id){
+                    "ItemMenu" -> openItemMenu(p,0)
+                    "SellMenu" -> es.execute { openSellItemMenu(p,p.uniqueId) }
+                }
 
             }
         }
