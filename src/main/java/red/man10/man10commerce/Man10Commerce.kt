@@ -20,6 +20,8 @@ class Man10Commerce : JavaPlugin() {
         const val prefix = "§l[§a§lA§d§lma§f§ln§a§lzon§f§l]"
 
         var enable = true
+
+        var minPrice : Double =  10.0
     }
 
     override fun onEnable() {
@@ -30,6 +32,7 @@ class Man10Commerce : JavaPlugin() {
         ItemData.loadItemIndex()
 
         ItemData.fee = config.getDouble("fee")
+        minPrice = config.getDouble("minPrice")
         enable = config.getBoolean("enable")
 
         server.pluginManager.registerEvents(CommerceMenu,this)
@@ -102,8 +105,8 @@ class Man10Commerce : JavaPlugin() {
                     return true
                 }
 
-                if (price<1){
-                    sendMsg(sender,"§c§l1円以下での出品はできません！")
+                if (price< minPrice){
+                    sendMsg(sender,"§c§l${minPrice}円以下での出品はできません！")
                     return true
                 }
 

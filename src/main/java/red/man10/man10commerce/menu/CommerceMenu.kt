@@ -24,6 +24,7 @@ import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.collections.HashMap
+import kotlin.math.floor
 
 object CommerceMenu : Listener{
 
@@ -130,7 +131,8 @@ object CommerceMenu : Listener{
                 continue
             }
 
-            lore.add("§e§l値段:${Utility.format(data.price)}")
+            lore.add("§e§l値段:${Utility.format(floor(data.price))}")
+            lore.add("§e§l単価:${Utility.format(floor(data.price/data.amount))}")
             lore.add("§e§l個数:${data.amount}")
             lore.add("§cシフトクリックで1Click購入")
 
@@ -203,11 +205,11 @@ object CommerceMenu : Listener{
 
         val menuName = playerMenuMap[p]?:return
 
+        e.isCancelled = true
+
         val item = e.currentItem?:return
         val action = e.action
         val id = getID(item)
-
-        e.isCancelled = true
 
         when(menuName){
 

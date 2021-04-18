@@ -108,7 +108,7 @@ object ItemData {
 
         itemList.remove(itemID)
 
-        val rs = mysql.query("SELECT * FROM order_table where item_id=$itemID ORDER BY price ASC LIMIT 1;") ?: return
+        val rs = mysql.query("SELECT * FROM order_table where item_id=$itemID ORDER BY price/amount ASC LIMIT 1;") ?: return
 
         if (!rs.next()){
             itemIndex.remove(itemID)
