@@ -24,6 +24,9 @@ class Man10Commerce : JavaPlugin() {
         var enable = true
 
         var minPrice : Double =  10.0
+
+        var maxPrice : Double = 10000000.0 //一般会員の出品額上限
+        var maxItems : Int = 54 // 一般会員の出品数上限
     }
 
     override fun onEnable() {
@@ -35,6 +38,8 @@ class Man10Commerce : JavaPlugin() {
 
         ItemData.fee = config.getDouble("fee")
         minPrice = config.getDouble("minPrice")
+        maxPrice = config.getDouble("maxPrice")
+        maxItems = config.getInt("maxItems")
         enable = config.getBoolean("enable")
 
         server.pluginManager.registerEvents(CommerceMenu,this)

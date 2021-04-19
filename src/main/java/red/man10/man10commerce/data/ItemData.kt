@@ -150,7 +150,10 @@ object ItemData {
             }
         }
 
-        if (id == -1) return false
+        if (id == -1){
+            Utility.sendMsg(p,"§c出品失敗！サーバー管理者にレポートしてください！sell error 1")
+            return false
+        }
 
         mysql.execute(
             "INSERT INTO order_table " +
