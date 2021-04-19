@@ -24,9 +24,9 @@ object ItemData {
     val itemIndex = ConcurrentHashMap<Int, ItemStack>()
     val itemList = ConcurrentHashMap<Int, Data>()
 
-    val mysql = MySQLManager(plugin, "Man10Commerce")
+    private val mysql = MySQLManager(plugin, "Man10Commerce")
 
-    val bank = BankAPI(plugin)
+    private val bank = BankAPI(plugin)
 
     var fee = 0.1
 

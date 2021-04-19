@@ -1,10 +1,12 @@
 package red.man10.man10commerce
 
+import org.bukkit.Bukkit
 import org.bukkit.Material
 import org.bukkit.command.Command
 import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
 import org.bukkit.plugin.java.JavaPlugin
+import red.man10.man10commerce.Utility.format
 import red.man10.man10commerce.Utility.sendMsg
 import red.man10.man10commerce.data.ItemData
 import red.man10.man10commerce.menu.CommerceMenu
@@ -86,6 +88,12 @@ class Man10Commerce : JavaPlugin() {
             es.execute {
                 if (ItemData.sell(sender,item,price)){
                     sendMsg(sender,"§e§l出品成功しました！")
+
+                    val name = if (item.hasItemMeta()) item.itemMeta!!.displayName else item.i18NDisplayName
+
+                    Bukkit.getScheduler().runTask(this, Runnable {
+                        Bukkit.broadcastMessage("${prefix}§f§l${name}が§e§l${format(price)}§f§l円で出品されました！")
+                    })
                 }
             }
 
