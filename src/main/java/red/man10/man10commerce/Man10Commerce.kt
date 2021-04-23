@@ -27,6 +27,7 @@ class Man10Commerce : JavaPlugin() {
 
         var maxPrice : Double = 10000000.0 //一般会員の出品額上限
         var maxItems : Int = 54 // 一般会員の出品数上限
+        var primeMoney : Double = 1000000.0 //プライム会員の会員費
     }
 
     override fun onEnable() {
@@ -36,11 +37,7 @@ class Man10Commerce : JavaPlugin() {
         plugin = this
         ItemData.loadItemIndex()
 
-        ItemData.fee = config.getDouble("fee")
-        minPrice = config.getDouble("minPrice")
-        maxPrice = config.getDouble("maxPrice")
-        maxItems = config.getInt("maxItems")
-        enable = config.getBoolean("enable")
+        loadConfig()
 
         server.pluginManager.registerEvents(CommerceMenu,this)
 
@@ -48,6 +45,20 @@ class Man10Commerce : JavaPlugin() {
 
     override fun onDisable() {
         // Plugin shutdown logic
+    }
+
+    fun loadConfig(){
+
+        reloadConfig()
+
+        ItemData.fee = config.getDouble("fee")
+        minPrice = config.getDouble("minPrice")
+        maxPrice = config.getDouble("maxPrice")
+        maxItems = config.getInt("maxItems")
+        enable = config.getBoolean("enable")
+        primeMoney = config.getDouble("primeMoney")
+
+
     }
 
     override fun onCommand(sender: CommandSender, command: Command, label: String, args: Array<out String>): Boolean {
@@ -139,6 +150,15 @@ class Man10Commerce : JavaPlugin() {
                 config.set("enable", enable)
                 saveConfig()
 
+            }
+
+            "config" ->{
+                if (!sender.hasPermission("commerce.op"))return true
+
+                Thread{
+                    loadConfig()
+                    sender.sendMessage("§a§lReloaded Config")
+                }.start()
             }
 
             "sell" ->{//mnc sell price
