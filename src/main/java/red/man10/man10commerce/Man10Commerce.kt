@@ -161,42 +161,42 @@ class Man10Commerce : JavaPlugin() {
                 }.start()
             }
 
-            "sell" ->{//mnc sell price
-                if (!sender.hasPermission("commerce.user"))return true
-
-                if (!sender.hasPermission("commerce.op") && !enable){
-                    sendMsg(sender,"§f現在営業を停止しています")
-
-                    return false
-                }
-
-                if (args.size != 2)return false
-
-                val item = sender.inventory.itemInMainHand
-
-                if (item.type == Material.AIR){ return true }
-
-                val price = args[1].toDoubleOrNull()
-
-                if (price == null){
-
-                    sendMsg(sender,"§c§l金額は数字を使ってください！")
-
-                    return true
-                }
-
-                if (price< minPrice){
-                    sendMsg(sender,"§c§l${minPrice}円以下での出品はできません！")
-                    return true
-                }
-
-                es.execute {
-                    if (ItemData.sell(sender,item,price)){
-                        sendMsg(sender,"§e§l出品成功しました！")
-                    }
-                }
-
-            }
+//            "sell" ->{//mnc sell price
+//                if (!sender.hasPermission("commerce.user"))return true
+//
+//                if (!sender.hasPermission("commerce.op") && !enable){
+//                    sendMsg(sender,"§f現在営業を停止しています")
+//
+//                    return false
+//                }
+//
+//                if (args.size != 2)return false
+//
+//                val item = sender.inventory.itemInMainHand
+//
+//                if (item.type == Material.AIR){ return true }
+//
+//                val price = args[1].toDoubleOrNull()
+//
+//                if (price == null){
+//
+//                    sendMsg(sender,"§c§l金額は数字を使ってください！")
+//
+//                    return true
+//                }
+//
+//                if (price< minPrice){
+//                    sendMsg(sender,"§c§l${minPrice}円以下での出品はできません！")
+//                    return true
+//                }
+//
+//                es.execute {
+//                    if (ItemData.sell(sender,item,price)){
+//                        sendMsg(sender,"§e§l出品成功しました！")
+//                    }
+//                }
+//
+//            }
 
         }
 
