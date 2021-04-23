@@ -133,6 +133,7 @@ object CommerceMenu : Listener{
 
             lore.add("§e§l値段:${Utility.format(floor(data.price))}")
             lore.add("§e§l単価:${Utility.format(floor(data.price/data.amount))}")
+            lore.add("§e§l出品者${Bukkit.getOfflinePlayer(data.seller!!)}")
             lore.add("§e§l個数:${data.amount}")
             lore.add("§cシフトクリックで1Click購入")
 
