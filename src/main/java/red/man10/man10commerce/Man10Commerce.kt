@@ -28,6 +28,7 @@ class Man10Commerce : JavaPlugin() {
         var maxPrice : Double = 10000000.0 //一般会員の出品額上限
         var maxItems : Int = 54 // 一般会員の出品数上限
         var primeMoney : Double = 1000000.0 //プライム会員の会員費
+        var fee = 0.1
     }
 
     override fun onEnable() {
@@ -47,11 +48,11 @@ class Man10Commerce : JavaPlugin() {
         // Plugin shutdown logic
     }
 
-    fun loadConfig(){
+    private fun loadConfig(){
 
         reloadConfig()
 
-        ItemData.fee = config.getDouble("fee")
+        fee = config.getDouble("fee")
         minPrice = config.getDouble("minPrice")
         maxPrice = config.getDouble("maxPrice")
         maxItems = config.getInt("maxItems")

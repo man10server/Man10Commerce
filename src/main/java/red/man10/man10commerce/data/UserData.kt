@@ -22,6 +22,18 @@ object UserData {
         return ret
     }
 
+    fun isPrimeUser(uuid: UUID):Boolean{
+
+        val rs = mysql.query("select * from prime_list where uuid='$uuid';")?:return false
+
+        val ret = rs.next()
+
+        rs.close()
+        mysql.close()
+
+        return ret
+    }
+
     fun getSellAmount(p: Player):Int{
 
         val rs = mysql.query("select count(*) from order_table where uuid=${p.uniqueId};")?:return 0

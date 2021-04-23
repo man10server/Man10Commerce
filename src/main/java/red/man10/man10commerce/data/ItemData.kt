@@ -3,6 +3,8 @@ package red.man10.man10commerce.data
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
 import red.man10.man10bank.BankAPI
+import red.man10.man10commerce.Man10Commerce
+import red.man10.man10commerce.Man10Commerce.Companion.fee
 import red.man10.man10commerce.Man10Commerce.Companion.plugin
 import red.man10.man10commerce.Utility
 import java.util.*
@@ -28,7 +30,7 @@ object ItemData {
 
     private val bank = BankAPI(plugin)
 
-    var fee = 0.1
+
 
     //新アイテムを登録する
     private fun registerItemIndex(item: ItemStack): Boolean {
@@ -104,7 +106,7 @@ object ItemData {
 
     }
 
-    fun setMinPriceItem(itemID: Int) {
+    private fun setMinPriceItem(itemID: Int) {
 
         itemList.remove(itemID)
 
@@ -137,6 +139,18 @@ object ItemData {
     }
 
     fun sell(p: Player, item: ItemStack, price: Double): Boolean {
+
+        val isPrime = UserData.isPrimeUser(p)
+
+        if (Man10Commerce.maxItems< UserData.getSellAmount(p) && !isPrime){
+            Utility.sendMsg(p,"出品数の上限に達しています！")
+            return false
+        }
+
+        if (Man10Commerce.maxPrice < price &&!isPrime){
+            Utility.sendMsg(p,"金額の上限に達しています！")
+            return false
+        }
 
         registerItemIndex(item)
 
@@ -185,7 +199,13 @@ object ItemData {
 
         p.inventory.addItem(item)
 
-        bank.deposit(data.seller!!,(data.price*(1.0- fee)),"SellItemOnMan10Commerce")
+        //利益の支払い処理(Primeなら手数料を半分に)
+        if (UserData.isPrimeUser(data.seller!!)){
+            bank.deposit(data.seller!!,(data.price*(1.0- (fee/2))),"SellItemOnMan10Commerce")
+        }else{
+            bank.deposit(data.seller!!,(data.price*(1.0- fee)),"SellItemOnMan10Commerce")
+        }
+
 
         Log.buyLog(p, data, item)
 
