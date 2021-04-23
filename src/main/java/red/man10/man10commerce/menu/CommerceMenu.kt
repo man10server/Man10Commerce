@@ -14,9 +14,9 @@ import org.bukkit.inventory.meta.ItemMeta
 import org.bukkit.persistence.PersistentDataType
 import red.man10.man10commerce.Man10Commerce.Companion.es
 import red.man10.man10commerce.Man10Commerce.Companion.plugin
+import red.man10.man10commerce.Man10Commerce.Companion.prefix
 import red.man10.man10commerce.Utility
 import red.man10.man10commerce.Utility.sendMsg
-import red.man10.man10commerce.data.Data
 import red.man10.man10commerce.data.ItemData
 import red.man10.man10commerce.data.ItemData.itemIndex
 import red.man10.man10commerce.data.ItemData.itemList
@@ -34,6 +34,7 @@ object CommerceMenu : Listener{
     private const val ITEM_MENU = "§e§l出品中のアイテム一覧"
     private const val SELL_MENU = "§e§l出品したアイテム"
     private const val MAIN_MENU = "§e§lメニュー"
+    private const val PRIME_MENU = "${prefix}§e§lPrime"
 
     fun openMainMenu(p:Player){
 
@@ -51,8 +52,15 @@ object CommerceMenu : Listener{
         setID(meta2,"SellMenu")
         button2.itemMeta = meta2
 
-        inv.setItem(2,button1)
-        inv.setItem(6,button2)
+        val button3 = ItemStack(Material.NETHER_STAR)
+        val meta3 = button3.itemMeta
+        meta3.setDisplayName("§a§lPrime")
+        setID(meta3,"Prime")
+        button3.itemMeta = meta3
+
+        inv.setItem(1,button1)
+        inv.setItem(4,button2)
+        inv.setItem(7,button3)
 
         playerMenuMap[p] = MAIN_MENU
 
@@ -188,6 +196,12 @@ object CommerceMenu : Listener{
 
     }
 
+    private fun openPrimeMenu(p:Player){
+
+
+
+    }
+
     private fun setID(meta:ItemMeta, value:String){
         meta.persistentDataContainer.set(NamespacedKey(plugin,"id"), PersistentDataType.STRING,value)
     }
@@ -272,7 +286,12 @@ object CommerceMenu : Listener{
                 when(id){
                     "ItemMenu" -> openItemMenu(p,0)
                     "SellMenu" -> es.execute { openSellItemMenu(p,p.uniqueId) }
+                    "Prime"    -> openPrimeMenu(p)
                 }
+
+            }
+
+            PRIME_MENU ->{
 
             }
         }

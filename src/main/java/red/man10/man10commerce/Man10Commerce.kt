@@ -9,6 +9,7 @@ import org.bukkit.plugin.java.JavaPlugin
 import red.man10.man10commerce.Utility.format
 import red.man10.man10commerce.Utility.sendMsg
 import red.man10.man10commerce.data.ItemData
+import red.man10.man10commerce.data.UserData
 import red.man10.man10commerce.menu.CommerceMenu
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
@@ -160,6 +161,29 @@ class Man10Commerce : JavaPlugin() {
                     loadConfig()
                     sender.sendMessage("§a§lReloaded Config")
                 }.start()
+            }
+
+            "balance" ->{
+                if (!sender.hasPermission("commerce.user"))return true
+
+                es.execute {
+                    sendMsg(sender, "§e§l今月の利益(手数料は計算されていません):${format(UserData.getProfitMonth(sender))}")
+                }
+
+            }
+
+            "joinprime" ->{
+                if (!sender.hasPermission("commerce.user"))return true
+
+
+
+            }
+
+            "leaveprime" ->{
+                if (!sender.hasPermission("commerce.user"))return true
+
+
+
             }
 
 //            "sell" ->{//mnc sell price

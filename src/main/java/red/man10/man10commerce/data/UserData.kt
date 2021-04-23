@@ -65,6 +65,13 @@ object UserData {
         return profit
     }
 
+    fun joinPrime(uuid:UUID){
+
+    }
+
+    fun leavePrime(uuid:UUID){
+
+    }
 
 
 }
