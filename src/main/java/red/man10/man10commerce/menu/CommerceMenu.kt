@@ -16,7 +16,6 @@ import red.man10.man10commerce.Man10Commerce
 import red.man10.man10commerce.Man10Commerce.Companion.es
 import red.man10.man10commerce.Man10Commerce.Companion.plugin
 import red.man10.man10commerce.Man10Commerce.Companion.prefix
-import red.man10.man10commerce.Utility
 import red.man10.man10commerce.Utility.format
 import red.man10.man10commerce.Utility.sendMsg
 import red.man10.man10commerce.data.ItemData
@@ -207,7 +206,7 @@ object CommerceMenu : Listener{
 
         val inv = Bukkit.createInventory(null,9, PRIME_MENU)
 
-        if (isPrime){
+        if (!isPrime){
 
             val item = ItemStack(Material.GREEN_WOOL)
             val meta = item.itemMeta
@@ -215,9 +214,9 @@ object CommerceMenu : Listener{
             meta.lore = mutableListOf(
                 "§e主な特典",
                 "§f・売上から引かれる",
-                "手数料が半分になります",
+                "§f手数料が半分になります",
                 "§f・/amzn balance コマンドで",
-                "その月の売上を確認できます",
+                "§fその月の売上を確認できます",
                 "§f・出品時に出品通知を表示します",
                 "§e会員費:${format(Man10Commerce.primeMoney)}/月")
 
@@ -241,7 +240,10 @@ object CommerceMenu : Listener{
 
         }
 
-        Bukkit.getScheduler().runTask(plugin, Runnable { p.openInventory(inv) })
+        Bukkit.getScheduler().runTask(plugin, Runnable {
+            p.openInventory(inv)
+            playerMenuMap[p] = PRIME_MENU
+        })
 
     }
 
@@ -338,6 +340,7 @@ object CommerceMenu : Listener{
                 if (id == "")return
 
                 p.performCommand("amzn ${id}prime")
+                p.closeInventory()
             }
         }
 

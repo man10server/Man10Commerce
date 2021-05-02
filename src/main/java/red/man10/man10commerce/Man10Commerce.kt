@@ -6,6 +6,7 @@ import org.bukkit.command.Command
 import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
 import org.bukkit.plugin.java.JavaPlugin
+import red.man10.man10bank.Bank
 import red.man10.man10bank.BankAPI
 import red.man10.man10commerce.Utility.format
 import red.man10.man10commerce.Utility.sendMsg
@@ -19,6 +20,7 @@ class Man10Commerce : JavaPlugin() {
 
     companion object{
         lateinit var plugin: JavaPlugin
+        lateinit var bank : BankAPI
         val es : ExecutorService = Executors.newCachedThreadPool()
 
         const val prefix = "§l[§a§lA§d§lma§f§ln§a§lzon§f§l]§f"
@@ -32,8 +34,6 @@ class Man10Commerce : JavaPlugin() {
         var primeMoney : Double = 1000000.0 //プライム会員の会員費
         var fee = 0.1
 
-        val bank = BankAPI(plugin)
-
     }
 
     override fun onEnable() {
@@ -41,6 +41,7 @@ class Man10Commerce : JavaPlugin() {
         saveDefaultConfig()
 
         plugin = this
+        bank = BankAPI(plugin)
         ItemData.loadItemIndex()
 
         loadConfig()
@@ -114,6 +115,8 @@ class Man10Commerce : JavaPlugin() {
             es.execute {
                 if (ItemData.sell(sender,item,price)){
                     sendMsg(sender,"§e§l出品成功しました！")
+
+                    if (!UserData.isPrimeUser(sender))return@execute
 
                     val name = if (item.hasItemMeta()) item.itemMeta!!.displayName else item.i18NDisplayName
 
