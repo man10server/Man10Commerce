@@ -4,6 +4,7 @@ import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
 import red.man10.man10bank.BankAPI
 import red.man10.man10commerce.Man10Commerce
+import red.man10.man10commerce.Man10Commerce.Companion.bank
 import red.man10.man10commerce.Man10Commerce.Companion.fee
 import red.man10.man10commerce.Man10Commerce.Companion.plugin
 import red.man10.man10commerce.Utility
@@ -27,10 +28,6 @@ object ItemData {
     val itemList = ConcurrentHashMap<Int, Data>()
 
     private val mysql = MySQLManager(plugin, "Man10Commerce")
-
-    private val bank = BankAPI(plugin)
-
-
 
     //新アイテムを登録する
     private fun registerItemIndex(item: ItemStack): Boolean {

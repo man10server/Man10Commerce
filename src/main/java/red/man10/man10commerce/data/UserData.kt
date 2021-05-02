@@ -2,6 +2,8 @@ package red.man10.man10commerce.data
 
 import org.bukkit.Bukkit
 import org.bukkit.entity.Player
+import red.man10.man10commerce.Man10Commerce
+import red.man10.man10commerce.Man10Commerce.Companion.bank
 import red.man10.man10commerce.Man10Commerce.Companion.plugin
 import java.text.SimpleDateFormat
 import java.util.*
@@ -65,11 +67,55 @@ object UserData {
         return profit
     }
 
-    fun joinPrime(uuid:UUID){
+    fun joinPrime(uuid:UUID):Boolean{
 
+        if (isPrimeUser(uuid))return false
+
+        if (!bank.withdraw(uuid, Man10Commerce.primeMoney,"PrimeMoney"))return false
+
+        val p = Bukkit.getOfflinePlayer(uuid)
+
+        mysql.execute("INSERT INTO prime_list (player, uuid, pay_date) " +
+                "VALUES ('${p.name}', '${uuid}', now());")
+
+        return true
     }
 
-    fun leavePrime(uuid:UUID){
+    fun leavePrime(uuid:UUID):Boolean{
+
+        if (!isPrimeUser(uuid))return false
+
+        mysql.execute("DELETE FROM prime_list where uuid='${uuid}';")
+
+        return true
+    }
+
+    fun primeThread(){
+
+        val format = SimpleDateFormat("yyyy-MM-dd 00:00:00")
+
+        while (true){
+
+            val cal = Calendar.getInstance()
+            cal.time = Date()
+            cal.add(Calendar.MONTH,-1)
+
+            val rs = mysql.query("SELECT uuid FROM prime_list where pay_date<'${format.format(cal.time)}'")?:continue
+
+            while (rs.next()){
+
+                val uuid = UUID.fromString(rs.getString("uuid"))
+
+                if (!bank.withdraw(uuid,Man10Commerce.primeMoney,"PrimeMoney")){
+                    leavePrime(uuid)
+                }
+            }
+
+            rs.close()
+            mysql.close()
+
+            Thread.sleep(100000)
+        }
 
     }
 

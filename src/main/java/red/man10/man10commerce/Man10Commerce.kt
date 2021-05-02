@@ -6,6 +6,7 @@ import org.bukkit.command.Command
 import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
 import org.bukkit.plugin.java.JavaPlugin
+import red.man10.man10bank.BankAPI
 import red.man10.man10commerce.Utility.format
 import red.man10.man10commerce.Utility.sendMsg
 import red.man10.man10commerce.data.ItemData
@@ -30,6 +31,9 @@ class Man10Commerce : JavaPlugin() {
         var maxItems : Int = 54 // 一般会員の出品数上限
         var primeMoney : Double = 1000000.0 //プライム会員の会員費
         var fee = 0.1
+
+        val bank = BankAPI(plugin)
+
     }
 
     override fun onEnable() {
@@ -42,6 +46,10 @@ class Man10Commerce : JavaPlugin() {
         loadConfig()
 
         server.pluginManager.registerEvents(CommerceMenu,this)
+
+        es.execute {
+            UserData.primeThread()
+        }
 
     }
 
@@ -175,14 +183,28 @@ class Man10Commerce : JavaPlugin() {
             "joinprime" ->{
                 if (!sender.hasPermission("commerce.user"))return true
 
-
-
+                es.execute {
+                    if (UserData.joinPrime(sender.uniqueId)){
+                        sendMsg(sender,"AmanzonPrimeに入会しました！")
+                        return@execute
+                    }
+                    sendMsg(sender,"AmanzonPrimeの入会に失敗しました")
+                }
             }
 
             "leaveprime" ->{
                 if (!sender.hasPermission("commerce.user"))return true
 
+                es.execute {
+                    if (UserData.leavePrime(sender.uniqueId)){
+                        sendMsg(sender,"AmanzonPrimeから退会しました！")
+                        return@execute
+                    }
+                    sendMsg(sender,"AmanzonPrimeの退会に失敗しました！")
 
+                }
+
+                return true
 
             }
 
