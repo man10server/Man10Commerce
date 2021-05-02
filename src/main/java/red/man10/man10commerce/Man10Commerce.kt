@@ -95,6 +95,7 @@ class Man10Commerce : JavaPlugin() {
             }
 
             val item = sender.inventory.itemInMainHand
+            val display = item.clone()
 
             if (item.type == Material.AIR){ return true }
 
@@ -118,7 +119,7 @@ class Man10Commerce : JavaPlugin() {
 
                     if (!UserData.isPrimeUser(sender))return@execute
 
-                    val name = if (item.hasItemMeta()) item.itemMeta!!.displayName else item.i18NDisplayName
+                    val name = if (display.hasItemMeta()) display.itemMeta!!.displayName else display.i18NDisplayName
 
                     Bukkit.getScheduler().runTask(this, Runnable {
                         Bukkit.broadcastMessage("${prefix}§f${name}が§e${format(price)}§f円で出品されました！")

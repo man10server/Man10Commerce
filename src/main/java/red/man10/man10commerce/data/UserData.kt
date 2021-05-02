@@ -38,7 +38,7 @@ object UserData {
 
     fun getSellAmount(p: Player):Int{
 
-        val rs = mysql.query("select count(*) from order_table where uuid=${p.uniqueId};")?:return 0
+        val rs = mysql.query("select count(*) from order_table where uuid='${p.uniqueId}';")?:return 0
         rs.next()
         val amount = rs.getInt(1)
 
