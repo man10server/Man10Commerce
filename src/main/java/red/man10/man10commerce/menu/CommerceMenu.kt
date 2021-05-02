@@ -33,9 +33,9 @@ object CommerceMenu : Listener{
     private val playerMenuMap = ConcurrentHashMap<Player,String>()
     private val pageMap = HashMap<Player,Int>()
 
-    private const val ITEM_MENU = "§${prefix}e§l出品中のアイテム一覧"
-    private const val SELL_MENU = "§${prefix}e§l出品したアイテム"
-    private const val MAIN_MENU = "§${prefix}e§lメニュー"
+    private const val ITEM_MENU = "§${prefix}§l出品中のアイテム一覧"
+    private const val SELL_MENU = "§${prefix}§l出品したアイテム"
+    private const val MAIN_MENU = "§${prefix}§lメニュー"
     private const val PRIME_MENU = "${prefix}§e§lPrime"
 
     fun openMainMenu(p:Player){
