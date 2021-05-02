@@ -21,7 +21,7 @@ class Man10Commerce : JavaPlugin() {
         lateinit var plugin: JavaPlugin
         val es : ExecutorService = Executors.newCachedThreadPool()
 
-        const val prefix = "§l[§a§lA§d§lma§f§ln§a§lzon§f§l]"
+        const val prefix = "§l[§a§lA§d§lma§f§ln§a§lzon§f§l]§f"
 
         var enable = true
 
@@ -175,6 +175,12 @@ class Man10Commerce : JavaPlugin() {
                 if (!sender.hasPermission("commerce.user"))return true
 
                 es.execute {
+
+                    if (!UserData.isPrimeUser(sender)){
+                        sendMsg(sender,"この機能が使えるのは、Primeユーザーのみです！")
+                        return@execute
+                    }
+
                     sendMsg(sender, "§e§l今月の利益(手数料は計算されていません):${format(UserData.getProfitMonth(sender))}")
                 }
 

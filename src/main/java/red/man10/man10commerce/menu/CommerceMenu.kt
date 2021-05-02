@@ -12,14 +12,17 @@ import org.bukkit.event.inventory.InventoryCloseEvent
 import org.bukkit.inventory.ItemStack
 import org.bukkit.inventory.meta.ItemMeta
 import org.bukkit.persistence.PersistentDataType
+import red.man10.man10commerce.Man10Commerce
 import red.man10.man10commerce.Man10Commerce.Companion.es
 import red.man10.man10commerce.Man10Commerce.Companion.plugin
 import red.man10.man10commerce.Man10Commerce.Companion.prefix
 import red.man10.man10commerce.Utility
+import red.man10.man10commerce.Utility.format
 import red.man10.man10commerce.Utility.sendMsg
 import red.man10.man10commerce.data.ItemData
 import red.man10.man10commerce.data.ItemData.itemIndex
 import red.man10.man10commerce.data.ItemData.itemList
+import red.man10.man10commerce.data.UserData
 import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
@@ -31,9 +34,9 @@ object CommerceMenu : Listener{
     private val playerMenuMap = ConcurrentHashMap<Player,String>()
     private val pageMap = HashMap<Player,Int>()
 
-    private const val ITEM_MENU = "§e§l出品中のアイテム一覧"
-    private const val SELL_MENU = "§e§l出品したアイテム"
-    private const val MAIN_MENU = "§e§lメニュー"
+    private const val ITEM_MENU = "§${prefix}e§l出品中のアイテム一覧"
+    private const val SELL_MENU = "§${prefix}e§l出品したアイテム"
+    private const val MAIN_MENU = "§${prefix}e§lメニュー"
     private const val PRIME_MENU = "${prefix}§e§lPrime"
 
     fun openMainMenu(p:Player){
@@ -86,8 +89,9 @@ object CommerceMenu : Listener{
 
             val lore = item.lore?: mutableListOf()
 
-            lore.add("§e§l値段:${Utility.format(data.price)}")
+            lore.add("§e§l値段:${format(data.price)}")
             lore.add("§e§l個数:${data.amount}")
+            lore.add("§e§l出品者${Bukkit.getOfflinePlayer(data.seller!!)}")
             lore.add("§e§l${SimpleDateFormat("yyyy-MM/dd").format(data.date)}")
             lore.add("§c§lシフトクリックで出品を取り下げる")
 
@@ -139,8 +143,8 @@ object CommerceMenu : Listener{
                 continue
             }
 
-            lore.add("§e§l値段:${Utility.format(floor(data.price))}")
-            lore.add("§e§l単価:${Utility.format(floor(data.price/data.amount))}")
+            lore.add("§e§l値段:${format(floor(data.price))}")
+            lore.add("§e§l単価:${format(floor(data.price/data.amount))}")
             lore.add("§e§l出品者${Bukkit.getOfflinePlayer(data.seller!!)}")
             lore.add("§e§l個数:${data.amount}")
             lore.add("§cシフトクリックで1Click購入")
@@ -199,6 +203,45 @@ object CommerceMenu : Listener{
     private fun openPrimeMenu(p:Player){
 
 
+        val isPrime = UserData.isPrimeUser(p)
+
+        val inv = Bukkit.createInventory(null,9, PRIME_MENU)
+
+        if (isPrime){
+
+            val item = ItemStack(Material.GREEN_WOOL)
+            val meta = item.itemMeta
+            meta.setDisplayName("§a§lAmanzonPrimeに入会する")
+            meta.lore = mutableListOf(
+                "§e主な特典",
+                "§f・売上から引かれる",
+                "手数料が半分になります",
+                "§f・/amzn balance コマンドで",
+                "その月の売上を確認できます",
+                "§f・出品時に出品通知を表示します",
+                "§e会員費:${format(Man10Commerce.primeMoney)}/月")
+
+            setID(meta,"join")
+
+            item.itemMeta = meta
+
+            inv.setItem(4,item)
+        } else{
+
+            val item = ItemStack(Material.RED_WOOL)
+            val meta = item.itemMeta
+            meta.setDisplayName("§c§lAmanzonPrimeから退会する")
+            meta.lore = mutableListOf("返金はありません")
+
+            setID(meta,"leave")
+
+            item.itemMeta = meta
+
+            inv.setItem(4,item)
+
+        }
+
+        Bukkit.getScheduler().runTask(plugin, Runnable { p.openInventory(inv) })
 
     }
 
@@ -292,7 +335,9 @@ object CommerceMenu : Listener{
             }
 
             PRIME_MENU ->{
+                if (id == "")return
 
+                p.performCommand("amzn ${id}prime")
             }
         }
 
