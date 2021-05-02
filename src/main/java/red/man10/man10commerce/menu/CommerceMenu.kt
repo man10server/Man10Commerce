@@ -84,13 +84,12 @@ object CommerceMenu : Listener{
 
             val data = list[i]
 
-            val item = itemIndex[data.itemID]!!.clone()
+            val item = itemIndex[data.itemID]?.clone()?:continue
 
             val lore = item.lore?: mutableListOf()
 
             lore.add("§e§l値段:${format(data.price)}")
             lore.add("§e§l個数:${data.amount}")
-            lore.add("§e§l出品者${Bukkit.getOfflinePlayer(data.seller!!)}")
             lore.add("§e§l${SimpleDateFormat("yyyy-MM/dd").format(data.date)}")
             lore.add("§c§lシフトクリックで出品を取り下げる")
 
@@ -144,8 +143,9 @@ object CommerceMenu : Listener{
 
             lore.add("§e§l値段:${format(floor(data.price))}")
             lore.add("§e§l単価:${format(floor(data.price/data.amount))}")
-            lore.add("§e§l出品者${Bukkit.getOfflinePlayer(data.seller!!)}")
+            lore.add("§e§l出品者${Bukkit.getOfflinePlayer(data.seller!!).name}")
             lore.add("§e§l個数:${data.amount}")
+            lore.add("§e§l${SimpleDateFormat("yyyy-MM/dd").format(data.date)}")
             lore.add("§cシフトクリックで1Click購入")
 
             val meta = item.itemMeta
