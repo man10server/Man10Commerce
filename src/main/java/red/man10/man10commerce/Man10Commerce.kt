@@ -132,6 +132,43 @@ class Man10Commerce : JavaPlugin() {
 
         if (label=="amsellop"){
 
+            if (args.isEmpty()){
+
+                sendMsg(sender,"§a§l/amsell <値段> (単価ではなく、合計の値段を入力してください)")
+
+                return false
+            }
+
+            val item = sender.inventory.itemInMainHand
+            val display = item.clone()
+
+            if (item.type == Material.AIR){ return true }
+
+            val price = args[0].toDoubleOrNull()
+
+            if (price == null){
+
+                sendMsg(sender,"§c§l金額は数字を使ってください！")
+
+                return true
+            }
+
+            if (price< minPrice){
+                sendMsg(sender,"§c§l${minPrice}円以下での出品はできません！")
+                return true
+            }
+
+            es.execute {
+                if (ItemData.sellOP(sender,item,price)){
+                    sendMsg(sender,"§e§l出品成功しました！")
+
+                    val name = if (display.hasItemMeta()) display.itemMeta!!.displayName else display.i18NDisplayName
+
+                    Bukkit.getScheduler().runTask(this, Runnable {
+                        Bukkit.broadcastMessage("${prefix}§d§lBasic§f${name}が§e${format(price)}§f円で公式出品されました！")
+                    })
+                }
+            }
 
             return true
         }

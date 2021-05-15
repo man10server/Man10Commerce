@@ -234,6 +234,98 @@ object CommerceMenu : Listener{
 
     }
 
+    private fun openOPMenu(p:Player, page:Int){
+
+        val inv = Bukkit.createInventory(null,54, BASIC_MENU)
+
+        val keys = itemIndex.keys().toList()
+
+        var inc = 0
+
+        while (inv.getItem(44) ==null){
+
+            inc ++
+
+            if (keys.size <= inc+page*45)break
+
+            val itemID = keys[inc+page*45]
+
+            val data = itemList[itemID]
+
+            val item = itemIndex[itemID]!!.clone()
+
+            val lore = item.lore?: mutableListOf()
+
+            if (data==null){
+
+                lore.add("§c§l売り切れ")
+
+                item.lore = lore
+
+                inv.addItem(item)
+                continue
+            }
+
+            if (!data.isOp)continue
+
+            lore.add("§e§l値段:${format(floor(data.price))}")
+            lore.add("§e§l単価:${format(floor(data.price/data.amount))}")
+            lore.add("§e§l出品者${Bukkit.getOfflinePlayer(data.seller!!).name}")
+            lore.add("§e§l個数:${data.amount}")
+            lore.add("§e§l${SimpleDateFormat("yyyy-MM/dd").format(data.date)}")
+            lore.add("§cシフトクリックで1Click購入")
+
+            val meta = item.itemMeta
+            meta.persistentDataContainer.set(NamespacedKey(plugin,"order_id"), PersistentDataType.INTEGER,data.id)
+            meta.persistentDataContainer.set(NamespacedKey(plugin,"item_id"), PersistentDataType.INTEGER,data.itemID)
+            item.itemMeta = meta
+
+            item.lore = lore
+
+            inv.addItem(item)
+
+        }
+
+        val reloadItem = ItemStack(Material.NETHER_STAR)
+        val reloadMeta = reloadItem.itemMeta
+        reloadMeta.setDisplayName("§6§lリロード")
+        setID(reloadMeta,"reload")
+        reloadItem.itemMeta = reloadMeta
+        inv.setItem(49,reloadItem)
+
+
+        if (page!=0){
+
+            val prevItem = ItemStack(Material.PAPER)
+            val prevMeta = prevItem.itemMeta
+            prevMeta.setDisplayName("§§l前ページへ")
+            setID(prevMeta,"prev")
+
+            prevItem.itemMeta = prevMeta
+
+            inv.setItem(45,prevItem)
+
+        }
+
+        if (inc >=44){
+            val nextItem = ItemStack(Material.PAPER)
+            val nextMeta = nextItem.itemMeta
+            nextMeta.setDisplayName("§§l次ページへ")
+
+            setID(nextMeta,"next")
+
+            nextItem.itemMeta = nextMeta
+
+            inv.setItem(53,nextItem)
+
+        }
+
+        p.openInventory(inv)
+        playerMenuMap[p] = BASIC_MENU
+        pageMap[p] = page
+
+    }
+
     private fun openPrimeMenu(p:Player){
 
 
@@ -392,6 +484,39 @@ object CommerceMenu : Listener{
             }
 
             BASIC_MENU ->{
+
+                val page = pageMap[p]?:0
+
+                when(id){
+                    "prev" ->{ openOPMenu(p,page-1) }
+
+                    "next" ->{ openOPMenu(p,page+1) }
+
+                    "reload" ->{ openOPMenu(p,page) }
+
+                    else ->{
+                        if (action != InventoryAction.MOVE_TO_OTHER_INVENTORY)return
+
+                        val meta = item.itemMeta!!
+
+                        val orderID = meta.persistentDataContainer[NamespacedKey(plugin,"order_id"), PersistentDataType.INTEGER]?:-1
+                        val itemID = meta.persistentDataContainer[NamespacedKey(plugin,"item_id"), PersistentDataType.INTEGER]?:-1
+
+                        if (orderID == -1)return
+
+                        es.execute {
+                            if (ItemData.buy(p,itemID,orderID)){
+                                sendMsg(p,"§a§l購入成功しました！")
+                            }else{
+                                sendMsg(p,"§c§l購入失敗、Man10Bankにお金がないか、既に売り切れています！")
+                            }
+
+                            Bukkit.getScheduler().runTask(plugin, Runnable { openItemMenu(p,page) })
+                        }
+
+                        return
+                    }
+                }
 
             }
         }
