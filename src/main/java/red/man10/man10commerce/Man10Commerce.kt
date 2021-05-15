@@ -34,6 +34,9 @@ class Man10Commerce : JavaPlugin() {
         var primeMoney : Double = 1000000.0 //プライム会員の会員費
         var fee = 0.1
 
+        const val OP = "commerce.op"
+        const val USER = "commerce.user"
+
     }
 
     override fun onEnable() {
@@ -79,9 +82,9 @@ class Man10Commerce : JavaPlugin() {
 
         if (label == "amsell"){
 
-            if (!sender.hasPermission("commerce.user"))return true
+            if (!sender.hasPermission(USER))return true
 
-            if (!sender.hasPermission("commerce.op") && !enable){
+            if (!sender.hasPermission(OP) && !enable){
                 sendMsg(sender,"§f現在営業を停止しています")
 
                 return false
@@ -132,6 +135,8 @@ class Man10Commerce : JavaPlugin() {
 
         if (label=="amsellop"){
 
+            if (!sender.hasPermission(OP))return false
+
             if (args.isEmpty()){
 
                 sendMsg(sender,"§a§l/amsell <値段> (単価ではなく、合計の値段を入力してください)")
@@ -175,9 +180,9 @@ class Man10Commerce : JavaPlugin() {
 
         if (args.isNullOrEmpty()){
 
-            if (!sender.hasPermission("commerce.user"))return false
+            if (!sender.hasPermission(USER))return false
 
-            if (!sender.hasPermission("commerce.op") && !enable){
+            if (!sender.hasPermission(OP) && !enable){
                 sendMsg(sender,"§f現在営業を停止しています")
 
                 return false
@@ -191,7 +196,7 @@ class Man10Commerce : JavaPlugin() {
         when(args[0]){
 
             "on" ->{
-                if (!sender.hasPermission("commerce.op"))return true
+                if (!sender.hasPermission(OP))return true
 
                 enable = true
                 config.set("enable", enable)
@@ -199,7 +204,7 @@ class Man10Commerce : JavaPlugin() {
             }
 
             "off" ->{
-                if (!sender.hasPermission("commerce.op"))return true
+                if (!sender.hasPermission(OP))return true
 
                 enable = false
                 config.set("enable", enable)
@@ -208,7 +213,7 @@ class Man10Commerce : JavaPlugin() {
             }
 
             "config" ->{
-                if (!sender.hasPermission("commerce.op"))return true
+                if (!sender.hasPermission(OP))return true
 
                 Thread{
                     loadConfig()
@@ -217,7 +222,7 @@ class Man10Commerce : JavaPlugin() {
             }
 
             "balance" ->{
-                if (!sender.hasPermission("commerce.user"))return true
+                if (!sender.hasPermission(USER))return true
 
                 es.execute {
 
@@ -232,7 +237,7 @@ class Man10Commerce : JavaPlugin() {
             }
 
             "joinprime" ->{
-                if (!sender.hasPermission("commerce.user"))return true
+                if (!sender.hasPermission(USER))return true
 
                 es.execute {
                     if (UserData.joinPrime(sender.uniqueId)){
@@ -244,7 +249,7 @@ class Man10Commerce : JavaPlugin() {
             }
 
             "leaveprime" ->{
-                if (!sender.hasPermission("commerce.user"))return true
+                if (!sender.hasPermission(USER))return true
 
                 es.execute {
                     if (UserData.leavePrime(sender.uniqueId)){
@@ -260,9 +265,9 @@ class Man10Commerce : JavaPlugin() {
             }
 
 //            "sell" ->{//mnc sell price
-//                if (!sender.hasPermission("commerce.user"))return true
+//                if (!sender.hasPermission(USER))return true
 //
-//                if (!sender.hasPermission("commerce.op") && !enable){
+//                if (!sender.hasPermission(OP) && !enable){
 //                    sendMsg(sender,"§f現在営業を停止しています")
 //
 //                    return false
