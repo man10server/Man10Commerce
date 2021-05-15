@@ -36,7 +36,7 @@ object CommerceMenu : Listener{
     private const val SELL_MENU = "§${prefix}§l出品したアイテム"
     private const val MAIN_MENU = "§${prefix}§lメニュー"
     private const val PRIME_MENU = "${prefix}§e§lPrime"
-    private const val BASIC_MENU = "${prefix}§d§lBasic"
+    private const val BASIC_MENU = "${prefix}§d§lAmanzonBasic"
 
     fun openMainMenu(p:Player){
 
