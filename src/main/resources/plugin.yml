@@ -10,3 +10,5 @@ commands:
     default: op
   amsell:
     default: op
+  amsellop:
+    default: op

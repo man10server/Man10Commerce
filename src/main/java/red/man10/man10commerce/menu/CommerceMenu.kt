@@ -25,18 +25,18 @@ import red.man10.man10commerce.data.UserData
 import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
-import kotlin.collections.HashMap
 import kotlin.math.floor
 
 object CommerceMenu : Listener{
 
     private val playerMenuMap = ConcurrentHashMap<Player,String>()
-    private val pageMap = HashMap<Player,Int>()
+    private val pageMap = ConcurrentHashMap<Player,Int>()
 
     private const val ITEM_MENU = "§${prefix}§l出品中のアイテム一覧"
     private const val SELL_MENU = "§${prefix}§l出品したアイテム"
     private const val MAIN_MENU = "§${prefix}§lメニュー"
     private const val PRIME_MENU = "${prefix}§e§lPrime"
+    private const val BASIC_MENU = "${prefix}§d§lBasic"
 
     fun openMainMenu(p:Player){
 
@@ -70,7 +70,7 @@ object CommerceMenu : Listener{
 
     }
 
-    private fun openSellItemMenu(p:Player, seller: UUID){
+    private fun openSellItemMenu(p:Player, seller: UUID,page: Int){
 
         if (p.uniqueId!=seller &&!p.hasPermission("commerce.op")){ return }
 
@@ -78,11 +78,17 @@ object CommerceMenu : Listener{
 
         val inv = Bukkit.createInventory(null,54, SELL_MENU)
 
-        for (i in 0 .. 53){
+        var inc = 0
 
-            if (list.size <=i)break
+        while (inv.getItem(44) == null){
 
-            val data = list[i]
+            inc ++
+
+            if (list.size <= inc+page*45)break
+
+            if (list.size <=inc+page*45)break
+
+            val data = list[inc+page*45]
 
             val item = itemIndex[data.itemID]?.clone()?:continue
 
@@ -101,12 +107,41 @@ object CommerceMenu : Listener{
 
             item.itemMeta = meta
 
-            inv.setItem(i,item)
+            inv.addItem(item)
+
         }
+
+        if (page!=0){
+
+            val prevItem = ItemStack(Material.PAPER)
+            val prevMeta = prevItem.itemMeta
+            prevMeta.setDisplayName("§§l前ページへ")
+            setID(prevMeta,"prev")
+
+            prevItem.itemMeta = prevMeta
+
+            inv.setItem(45,prevItem)
+
+        }
+
+        if (inc >=44){
+            val nextItem = ItemStack(Material.PAPER)
+            val nextMeta = nextItem.itemMeta
+            nextMeta.setDisplayName("§§l次ページへ")
+
+            setID(nextMeta,"next")
+
+            nextItem.itemMeta = nextMeta
+
+            inv.setItem(53,nextItem)
+
+        }
+
 
         Bukkit.getScheduler().runTask(plugin, Runnable {
             p.openInventory(inv)
             playerMenuMap[p] = SELL_MENU
+            pageMap[p] = page
         })
     }
 
@@ -313,13 +348,26 @@ object CommerceMenu : Listener{
 
                 if (action != InventoryAction.MOVE_TO_OTHER_INVENTORY)return
 
+                val page = pageMap[p]?:0
+
                 val meta = item.itemMeta!!
                 val orderID = meta.persistentDataContainer[NamespacedKey(plugin,"order_id"), PersistentDataType.INTEGER]?:0
 
                 es.execute {
+
+                    if (id=="prev"){
+                        openSellItemMenu(p,p.uniqueId,page-1)
+                        return@execute
+                    }
+
+                    if (id=="next"){
+                        openSellItemMenu(p,p.uniqueId,page+1)
+                        return@execute
+                    }
+
                     if (ItemData.close(orderID,p)){
                         sendMsg(p,"出品を取り下げました")
-                        openSellItemMenu(p,p.uniqueId)
+                        openSellItemMenu(p,p.uniqueId,page)
                     }
                 }
 
@@ -330,7 +378,7 @@ object CommerceMenu : Listener{
 
                 when(id){
                     "ItemMenu" -> openItemMenu(p,0)
-                    "SellMenu" -> es.execute { openSellItemMenu(p,p.uniqueId) }
+                    "SellMenu" -> es.execute { openSellItemMenu(p,p.uniqueId,0) }
                     "Prime"    -> openPrimeMenu(p)
                 }
 
@@ -341,6 +389,10 @@ object CommerceMenu : Listener{
 
                 p.performCommand("amzn ${id}prime")
                 p.closeInventory()
+            }
+
+            BASIC_MENU ->{
+
             }
         }
 

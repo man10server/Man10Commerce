@@ -130,7 +130,11 @@ class Man10Commerce : JavaPlugin() {
             return true
         }
 
+        if (label=="amsellop"){
 
+
+            return true
+        }
 
         if (args.isNullOrEmpty()){
 

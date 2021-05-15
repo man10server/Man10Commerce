@@ -18,12 +18,13 @@ create table order_table
 	date DATETIME null,
 	amount int null,
 	price double not null,
+	is_op tinyint not null default 0,
 	constraint order_table_pk
 		primary key (id)
 );
 
 create index order_table_uuid_item_id_index
-	on order_table (uuid, item_id);
+	on order_table (uuid, item_id, is_op);
 
 create table log
 (

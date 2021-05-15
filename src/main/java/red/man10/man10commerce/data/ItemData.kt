@@ -2,7 +2,6 @@ package red.man10.man10commerce.data
 
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
-import red.man10.man10bank.BankAPI
 import red.man10.man10commerce.Man10Commerce
 import red.man10.man10commerce.Man10Commerce.Companion.bank
 import red.man10.man10commerce.Man10Commerce.Companion.fee
@@ -19,6 +18,7 @@ class Data {
     var price : Double = 0.0
     var date : Date? = null
     var seller : UUID? = null
+    var isOp = false
 
 }
 
@@ -123,6 +123,7 @@ object ItemData {
         data.itemID = itemID
         data.price = rs.getDouble("price")
         data.seller = UUID.fromString(rs.getString("uuid"))
+        data.isOp = rs.getInt("is_op") == 1
 
         rs.close()
         mysql.close()
@@ -181,6 +182,41 @@ object ItemData {
         return true
     }
 
+    //運営用ショップ
+    fun sellOP(p: Player, item: ItemStack, price: Double): Boolean {
+
+        registerItemIndex(item)
+
+        val name = if (item.hasItemMeta()) item.itemMeta!!.displayName else item.i18NDisplayName
+
+        var id = -1
+
+        itemIndex.forEach {
+            if (it.value.isSimilar(item)) {
+                id = it.key
+            }
+        }
+
+        if (id == -1){
+            Utility.sendMsg(p,"§c出品失敗！サーバー管理者にレポートしてください！sell error 1")
+            return false
+        }
+
+        mysql.execute(
+            "INSERT INTO order_table " +
+                    "(player, uuid, item_id, item_name, date, amount, price, is_op) " +
+                    "VALUES ('${p.name}', '${p.uniqueId}', $id, '${name}', now(), ${item.amount}, $price, 1);"
+        )
+
+        Log.sellLog(p,item,price,id)
+
+        setMinPriceItem(id)
+
+        item.amount = 0
+
+        return true
+    }
+
     @Synchronized
     fun buy(p:Player,itemID:Int,orderID:Int):Boolean{
 
@@ -206,7 +242,9 @@ object ItemData {
 
         Log.buyLog(p, data, item)
 
-        mysql.execute("DELETE FROM order_table where id=${data.id};")
+        if (!data.isOp){
+            mysql.execute("DELETE FROM order_table where id=${data.id};")
+        }
         setMinPriceItem(itemID)
 
         return true
@@ -250,6 +288,7 @@ object ItemData {
             data.itemID = rs.getInt("item_id")
             data.price = rs.getDouble("price")
             data.seller = p
+            data.isOp = rs.getInt("is_op") == 1
 
             list.add(data)
         }
