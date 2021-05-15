@@ -170,7 +170,7 @@ class Man10Commerce : JavaPlugin() {
                     val name = if (display.hasItemMeta()) display.itemMeta!!.displayName else display.i18NDisplayName
 
                     Bukkit.getScheduler().runTask(this, Runnable {
-                        Bukkit.broadcastMessage("${prefix}§d§lBasic§f${name}が§e${format(price)}§f円で公式出品されました！")
+                        Bukkit.broadcastMessage("${prefix}§f${name}が§e${format(price)}§f円で公式出品されました！")
                     })
                 }
             }

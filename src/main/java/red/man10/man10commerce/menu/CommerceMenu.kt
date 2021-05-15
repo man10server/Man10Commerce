@@ -42,27 +42,34 @@ object CommerceMenu : Listener{
 
         val inv = Bukkit.createInventory(null,9, MAIN_MENU)
 
-        val button1 = ItemStack(Material.GRASS_BLOCK)
-        val meta1 = button1.itemMeta
-        meta1.setDisplayName("§a§l現在出品中のアイテムを見る")
-        setID(meta1,"ItemMenu")
-        button1.itemMeta = meta1
+        val showItem = ItemStack(Material.GRASS_BLOCK)
+        val shouItemMeta = showItem.itemMeta
+        shouItemMeta.setDisplayName("§a§l現在出品中のアイテムを見る")
+        setID(shouItemMeta,"ItemMenu")
+        showItem.itemMeta = shouItemMeta
 
-        val button2 = ItemStack(Material.CHEST)
-        val meta2 = button2.itemMeta
-        meta2.setDisplayName("§a§l出品したアイテムを見る")
-        setID(meta2,"SellMenu")
-        button2.itemMeta = meta2
+        val basic = ItemStack(Material.DIAMOND_BLOCK)
+        val basicMeta = basic.itemMeta
+        basicMeta.setDisplayName("§a§lAmazonBasic")
+        setID(basicMeta,"Basic")
+        basic.itemMeta = basicMeta
 
-        val button3 = ItemStack(Material.NETHER_STAR)
-        val meta3 = button3.itemMeta
-        meta3.setDisplayName("§a§lPrime")
-        setID(meta3,"Prime")
-        button3.itemMeta = meta3
+        val sellItem = ItemStack(Material.CHEST)
+        val sellItemMeta = sellItem.itemMeta
+        sellItemMeta.setDisplayName("§a§l出品したアイテムを見る")
+        setID(sellItemMeta,"SellMenu")
+        sellItem.itemMeta = sellItemMeta
 
-        inv.setItem(1,button1)
-        inv.setItem(4,button2)
-        inv.setItem(7,button3)
+        val prime = ItemStack(Material.NETHER_STAR)
+        val primeMeta = prime.itemMeta
+        primeMeta.setDisplayName("§a§lPrime")
+        setID(primeMeta,"Prime")
+        prime.itemMeta = primeMeta
+
+        inv.setItem(1,showItem)
+        inv.setItem(3,basic)
+        inv.setItem(5,sellItem)
+        inv.setItem(7,prime)
 
         playerMenuMap[p] = MAIN_MENU
 
@@ -256,15 +263,7 @@ object CommerceMenu : Listener{
 
             val lore = item.lore?: mutableListOf()
 
-            if (data==null){
-
-                lore.add("§c§l売り切れ")
-
-                item.lore = lore
-
-                inv.addItem(item)
-                continue
-            }
+            if (data==null)continue
 
             if (!data.isOp)continue
 
@@ -470,6 +469,7 @@ object CommerceMenu : Listener{
 
                 when(id){
                     "ItemMenu" -> openItemMenu(p,0)
+                    "Basic" -> openOPMenu(p,0)
                     "SellMenu" -> es.execute { openSellItemMenu(p,p.uniqueId,0) }
                     "Prime"    -> openPrimeMenu(p)
                 }
@@ -511,7 +511,7 @@ object CommerceMenu : Listener{
                                 sendMsg(p,"§c§l購入失敗、Man10Bankにお金がないか、既に売り切れています！")
                             }
 
-                            Bukkit.getScheduler().runTask(plugin, Runnable { openItemMenu(p,page) })
+                            Bukkit.getScheduler().runTask(plugin, Runnable { openOPMenu(p,page) })
                         }
 
                         return

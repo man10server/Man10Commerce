@@ -92,6 +92,7 @@ object ItemData {
                 data.itemID = itemID
                 data.price = rs2.getDouble("price")
                 data.seller = UUID.fromString(rs2.getString("uuid"))
+                data.isOp = rs2.getInt("is_op") == 1
 
                 itemList[itemID] = data
             }
