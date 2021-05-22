@@ -96,6 +96,7 @@ object ItemData {
                 data.isOp = rs2.getInt("is_op") == 1
 
                 itemList[itemID] = data
+                if (data.isOp) opItemList[itemID] = data
             }
 
             rs2.close()
