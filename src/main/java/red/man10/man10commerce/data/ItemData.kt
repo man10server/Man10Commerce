@@ -26,6 +26,7 @@ object ItemData {
 
     val itemIndex = ConcurrentHashMap<Int, ItemStack>()
     val itemList = ConcurrentHashMap<Int, Data>()
+    val opItemList = ConcurrentHashMap<Int,Data>()
 
     private val mysql = MySQLManager(plugin, "Man10Commerce")
 
@@ -133,6 +134,7 @@ object ItemData {
 
         if (nowItem == null || data.price < nowItem.price) {
             itemList[itemID] = data
+            if (data.isOp){ opItemList[itemID] = data }
         }
 
     }
@@ -199,7 +201,7 @@ object ItemData {
         }
 
         if (id == -1){
-            Utility.sendMsg(p,"§c出品失敗！サーバー管理者にレポートしてください！sell error 1")
+            Utility.sendMsg(p,"§c出品失敗！サーバー管理者にレポートしてください！sell error 2")
             return false
         }
 
@@ -274,11 +276,11 @@ object ItemData {
         return true
     }
 
-    fun sellList(p:UUID): MutableList<Data>? {
+    fun sellList(uuid:UUID): MutableList<Data> {
 
         val list = mutableListOf<Data>()
 
-        val rs = mysql.query("select * from order_table where uuid='${p}';")?:return null
+        val rs = mysql.query("select * from order_table where uuid='${uuid}';")?:return list
 
         while (rs.next()){
             val data = Data()
@@ -288,8 +290,8 @@ object ItemData {
             data.date = rs.getDate("date")
             data.itemID = rs.getInt("item_id")
             data.price = rs.getDouble("price")
-            data.seller = p
-            data.isOp = rs.getInt("is_op") == 1
+            data.seller = uuid
+//            data.isOp = rs.getInt("is_op") == 1
 
             list.add(data)
         }

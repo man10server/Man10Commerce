@@ -21,6 +21,7 @@ import red.man10.man10commerce.Utility.sendMsg
 import red.man10.man10commerce.data.ItemData
 import red.man10.man10commerce.data.ItemData.itemIndex
 import red.man10.man10commerce.data.ItemData.itemList
+import red.man10.man10commerce.data.ItemData.opItemList
 import red.man10.man10commerce.data.UserData
 import java.text.SimpleDateFormat
 import java.util.*
@@ -77,11 +78,12 @@ object CommerceMenu : Listener{
 
     }
 
+    //自分が出品したアイテムを確認する
     private fun openSellItemMenu(p:Player, seller: UUID,page: Int){
 
         if (p.uniqueId!=seller &&!p.hasPermission("commerce.op")){ return }
 
-        val list = ItemData.sellList(seller)?:return
+        val list = ItemData.sellList(seller)
 
         val inv = Bukkit.createInventory(null,54, SELL_MENU)
 
@@ -92,8 +94,6 @@ object CommerceMenu : Listener{
             inc ++
 
             if (list.size <= inc+page*45)break
-
-            if (list.size <=inc+page*45)break
 
             val data = list[inc+page*45]
 
@@ -152,11 +152,12 @@ object CommerceMenu : Listener{
         })
     }
 
+    //出品アイテム一覧を見る
     private fun openItemMenu(p:Player, page:Int){
 
         val inv = Bukkit.createInventory(null,54, ITEM_MENU)
 
-        val keys = itemIndex.keys().toList()
+        val keys = itemList.keys().toList()
 
         var inc = 0
 
@@ -169,7 +170,7 @@ object CommerceMenu : Listener{
             val itemID = keys[inc+page*45]
 
             val data = itemList[itemID]
-            val item = itemIndex[itemID]!!.clone()
+            val item = itemIndex[itemID]?.clone()?:continue
 
             val lore = item.lore?: mutableListOf()
 
@@ -241,11 +242,12 @@ object CommerceMenu : Listener{
 
     }
 
+    //Amanzon Basic
     private fun openOPMenu(p:Player, page:Int){
 
         val inv = Bukkit.createInventory(null,54, BASIC_MENU)
 
-        val keys = itemIndex.keys().toList()
+        val keys = opItemList.keys().toList()
 
         var inc = 0
 
