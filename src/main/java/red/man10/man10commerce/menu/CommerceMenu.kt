@@ -189,6 +189,7 @@ object CommerceMenu : Listener{
             lore.add("§e§l出品者${Bukkit.getOfflinePlayer(data.seller!!).name}")
             lore.add("§e§l個数:${data.amount}")
             lore.add("§e§l${SimpleDateFormat("yyyy-MM/dd").format(data.date)}")
+            if (data.isOp) lore.add("§d§l公式出品アイテム")
             lore.add("§cシフトクリックで1Click購入")
 
             val meta = item.itemMeta
