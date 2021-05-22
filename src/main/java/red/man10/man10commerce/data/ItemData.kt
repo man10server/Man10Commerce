@@ -75,6 +75,7 @@ object ItemData {
 
 
         itemList.clear()
+        opItemList.clear()
 
         val rs2 = mysql.query("select * from order_table")
 
@@ -114,6 +115,7 @@ object ItemData {
 
         if (!rs.next()){
             itemIndex.remove(itemID)
+            opItemList.remove(itemID)
             mysql.execute("DELETE FROM item_list where id=$itemID;")
             return
         }
