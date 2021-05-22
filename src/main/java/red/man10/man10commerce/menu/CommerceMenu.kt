@@ -91,11 +91,11 @@ object CommerceMenu : Listener{
 
         while (inv.getItem(44) == null){
 
-            inc ++
-
             if (list.size <= inc+page*45)break
 
             val data = list[inc+page*45]
+
+            inc ++
 
             val item = itemIndex[data.itemID]?.clone()?:continue
 
@@ -163,11 +163,11 @@ object CommerceMenu : Listener{
 
         while (inv.getItem(44) ==null){
 
-            inc ++
-
             if (keys.size <= inc+page*45)break
 
             val itemID = keys[inc+page*45]
+
+            inc ++
 
             val data = itemList[itemID]
             val item = itemIndex[itemID]?.clone()?:continue
@@ -254,11 +254,11 @@ object CommerceMenu : Listener{
 
         while (inv.getItem(44) ==null){
 
-            inc ++
-
             if (keys.size <= inc+page*45)break
 
             val itemID = keys[inc+page*45]
+
+            inc ++
 
             val data = itemList[itemID]
 
