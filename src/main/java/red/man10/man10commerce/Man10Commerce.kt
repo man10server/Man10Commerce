@@ -264,6 +264,17 @@ class Man10Commerce : JavaPlugin() {
 
             }
 
+            "reload" ->{
+                if (!sender.hasPermission(OP))return true
+
+                es.execute {
+                    loadConfig()
+                    sender.sendMessage("§a§lReloaded Config")
+                    ItemData.loadItemIndex()
+                    sendMsg(sender,"Reload Table")
+                }
+            }
+
 //            "sell" ->{//mnc sell price
 //                if (!sender.hasPermission(USER))return true
 //
