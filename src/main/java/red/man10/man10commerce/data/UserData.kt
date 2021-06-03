@@ -109,6 +109,8 @@ object UserData {
                 if (!bank.withdraw(uuid,Man10Commerce.primeMoney,"PrimeMoney")){
                     leavePrime(uuid)
                 }
+
+                mysql.execute("UPDATE prime_list set pay_date=now() where uuid='${uuid}';")
             }
 
             rs.close()
