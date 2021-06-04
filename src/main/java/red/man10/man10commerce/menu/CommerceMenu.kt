@@ -343,7 +343,7 @@ object CommerceMenu : Listener{
             meta.lore = mutableListOf(
                 "§e主な特典",
                 "§f・売上から引かれる",
-                "§f手数料が半分になります",
+                "§f手数料がなくなります",
                 "§f・/amzn balance コマンドで",
                 "§fその月の売上を確認できます",
                 "§f・出品時に出品通知を表示します",
