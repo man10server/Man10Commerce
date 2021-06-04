@@ -240,7 +240,7 @@ object ItemData {
 
         //利益の支払い処理(Primeなら手数料を半分に)
         if (UserData.isPrimeUser(data.seller!!)){
-            bank.deposit(data.seller!!,(data.price*(1.0- (fee/2))),"SellItemOnMan10Commerce")
+//            bank.deposit(data.seller!!,(data.price*(1.0- (fee/2))),"SellItemOnMan10Commerce")
         }else{
             bank.deposit(data.seller!!,(data.price*(1.0- fee)),"SellItemOnMan10Commerce")
         }
