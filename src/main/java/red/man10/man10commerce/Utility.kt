@@ -53,7 +53,7 @@ object Utility {
     }
 
     fun format(double: Double):String{
-        return String.format("%,.1f",double)
+        return String.format("%,.0f",double)
     }
 
     fun sendMsg(p:Player,msg:String){ p.sendMessage(prefix+msg) }

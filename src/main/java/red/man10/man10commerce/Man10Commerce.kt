@@ -6,7 +6,6 @@ import org.bukkit.command.Command
 import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
 import org.bukkit.plugin.java.JavaPlugin
-import red.man10.man10bank.Bank
 import red.man10.man10bank.BankAPI
 import red.man10.man10commerce.Utility.format
 import red.man10.man10commerce.Utility.sendMsg
@@ -32,7 +31,7 @@ class Man10Commerce : JavaPlugin() {
         var maxPrice : Double = 10000000.0 //一般会員の出品額上限
         var maxItems : Int = 54 // 一般会員の出品数上限
         var primeMoney : Double = 1000000.0 //プライム会員の会員費
-        var fee = 0.1
+        var fee = 0.0
 
         const val OP = "commerce.op"
         const val USER = "commerce.user"
@@ -215,10 +214,10 @@ class Man10Commerce : JavaPlugin() {
             "config" ->{
                 if (!sender.hasPermission(OP))return true
 
-                Thread{
+                es.execute {
                     loadConfig()
                     sender.sendMessage("§a§lReloaded Config")
-                }.start()
+                }
             }
 
             "balance" ->{
@@ -274,44 +273,6 @@ class Man10Commerce : JavaPlugin() {
                     sendMsg(sender,"Reload Table")
                 }
             }
-
-//            "sell" ->{//mnc sell price
-//                if (!sender.hasPermission(USER))return true
-//
-//                if (!sender.hasPermission(OP) && !enable){
-//                    sendMsg(sender,"§f現在営業を停止しています")
-//
-//                    return false
-//                }
-//
-//                if (args.size != 2)return false
-//
-//                val item = sender.inventory.itemInMainHand
-//
-//                if (item.type == Material.AIR){ return true }
-//
-//                val price = args[1].toDoubleOrNull()
-//
-//                if (price == null){
-//
-//                    sendMsg(sender,"§c§l金額は数字を使ってください！")
-//
-//                    return true
-//                }
-//
-//                if (price< minPrice){
-//                    sendMsg(sender,"§c§l${minPrice}円以下での出品はできません！")
-//                    return true
-//                }
-//
-//                es.execute {
-//                    if (ItemData.sell(sender,item,price)){
-//                        sendMsg(sender,"§e§l出品成功しました！")
-//                    }
-//                }
-//
-//            }
-
         }
 
         return false

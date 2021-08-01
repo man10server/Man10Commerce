@@ -45,7 +45,7 @@ object CommerceMenu : Listener{
 
         val showItem = ItemStack(Material.GRASS_BLOCK)
         val shouItemMeta = showItem.itemMeta
-        shouItemMeta.setDisplayName("§a§l現在出品中のアイテムを見る")
+        shouItemMeta.setDisplayName("§a§l出品されているアイテムをみる")
         setID(shouItemMeta,"ItemMenu")
         showItem.itemMeta = shouItemMeta
 
@@ -57,7 +57,7 @@ object CommerceMenu : Listener{
 
         val sellItem = ItemStack(Material.CHEST)
         val sellItemMeta = sellItem.itemMeta
-        sellItemMeta.setDisplayName("§a§l出品したアイテムを見る")
+        sellItemMeta.setDisplayName("§a§l出品したアイテムを確かめる")
         setID(sellItemMeta,"SellMenu")
         sellItem.itemMeta = sellItemMeta
 
@@ -190,7 +190,7 @@ object CommerceMenu : Listener{
             lore.add("§e§l個数:${data.amount}")
             lore.add("§e§l${SimpleDateFormat("yyyy-MM/dd").format(data.date)}")
             if (data.isOp) lore.add("§d§l公式出品アイテム")
-            lore.add("§cシフトクリックで1Click購入")
+            lore.add("§cシフトクリックで1-Click購入")
 
             val meta = item.itemMeta
             meta.persistentDataContainer.set(NamespacedKey(plugin,"order_id"), PersistentDataType.INTEGER,data.id)
@@ -275,7 +275,7 @@ object CommerceMenu : Listener{
             lore.add("§e§l出品者${Bukkit.getOfflinePlayer(data.seller!!).name}")
             lore.add("§e§l個数:${data.amount}")
             lore.add("§e§l${SimpleDateFormat("yyyy-MM/dd").format(data.date)}")
-            lore.add("§cシフトクリックで1Click購入")
+            lore.add("§cシフトクリックで1-Click購入")
 
             val meta = item.itemMeta
             meta.persistentDataContainer.set(NamespacedKey(plugin,"order_id"), PersistentDataType.INTEGER,data.id)
@@ -342,11 +342,7 @@ object CommerceMenu : Listener{
             meta.setDisplayName("§a§lAmanzonPrimeに入会する")
             meta.lore = mutableListOf(
                 "§e主な特典",
-                "§f・売上から引かれる",
-                "§f手数料がなくなります",
-                "§f・/amzn balance コマンドで",
-                "§fその月の売上を確認できます",
-                "§f・出品時に出品通知を表示します",
+                "現在ありません",
                 "§e会員費:${format(Man10Commerce.primeMoney)}/月")
 
             setID(meta,"join")
@@ -425,9 +421,9 @@ object CommerceMenu : Listener{
 
                         es.execute {
                             if (ItemData.buy(p,itemID,orderID)){
-                                sendMsg(p,"§a§l購入成功しました！")
+                                sendMsg(p,"§a§l購入成功！")
                             }else{
-                                sendMsg(p,"§c§l購入失敗、Man10Bankにお金がないか、既に売り切れています！")
+                                sendMsg(p,"§c§l購入失敗!銀行にお金がないか、売り切れています！")
                             }
 
                             Bukkit.getScheduler().runTask(plugin, Runnable { openItemMenu(p,page) })
@@ -509,9 +505,9 @@ object CommerceMenu : Listener{
 
                         es.execute {
                             if (ItemData.buy(p,itemID,orderID)){
-                                sendMsg(p,"§a§l購入成功しました！")
+                                sendMsg(p,"§a§l購入成功！")
                             }else{
-                                sendMsg(p,"§c§l購入失敗、Man10Bankにお金がないか、既に売り切れています！")
+                                sendMsg(p,"§c§l購入失敗!銀行にお金がないか、売り切れています！")
                             }
 
                             Bukkit.getScheduler().runTask(plugin, Runnable { openOPMenu(p,page) })
