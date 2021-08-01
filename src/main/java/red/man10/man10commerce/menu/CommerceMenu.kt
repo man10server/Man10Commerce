@@ -482,7 +482,7 @@ object CommerceMenu : Listener{
                     "Prime"    -> openPrimeMenu(p)
                     "Selling"    -> {
                         p.closeInventory()
-                        p.sendMessage(Component.text("${prefix}§a§l§n売るアイテムを手に持って、/amsell <金額> を入力してください")
+                        p.sendMessage(Component.text("${prefix}§a§n売るアイテムを手に持って、/amsell <金額> を入力してください")
                             .clickEvent(ClickEvent.suggestCommand("/amsell ")))
                     }
                 }

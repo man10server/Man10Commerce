@@ -119,7 +119,7 @@ class Man10Commerce : JavaPlugin() {
                 if (ItemData.sell(sender,item,price)){
                     sendMsg(sender,"§e§l出品成功しました！")
 
-                    if (!UserData.isPrimeUser(sender))return@execute
+//                    if (!UserData.isPrimeUser(sender))return@execute
 
                     val name = if (display.hasItemMeta()) display.itemMeta!!.displayName else display.i18NDisplayName
 
