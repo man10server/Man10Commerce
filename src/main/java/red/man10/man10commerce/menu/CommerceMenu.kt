@@ -1,5 +1,7 @@
 package red.man10.man10commerce.menu
 
+import net.kyori.adventure.text.Component
+import net.kyori.adventure.text.event.ClickEvent
 import org.bukkit.Bukkit
 import org.bukkit.Material
 import org.bukkit.NamespacedKey
@@ -61,16 +63,23 @@ object CommerceMenu : Listener{
         setID(sellItemMeta,"SellMenu")
         sellItem.itemMeta = sellItemMeta
 
-        val prime = ItemStack(Material.NETHER_STAR)
-        val primeMeta = prime.itemMeta
-        primeMeta.setDisplayName("§a§lPrime")
-        setID(primeMeta,"Prime")
-        prime.itemMeta = primeMeta
+//        val prime = ItemStack(Material.NETHER_STAR)
+//        val primeMeta = prime.itemMeta
+//        primeMeta.setDisplayName("§a§lPrime")
+//        setID(primeMeta,"Prime")
+//        prime.itemMeta = primeMeta
+
+        val selling = ItemStack(Material.COBBLESTONE)
+        val sellingMeta = selling.itemMeta
+        sellingMeta.setDisplayName("§e§lアイテムを出品する")
+        setID(sellingMeta,"Selling")
+        selling.itemMeta = sellingMeta
 
         inv.setItem(1,showItem)
         inv.setItem(3,basic)
         inv.setItem(5,sellItem)
-        inv.setItem(7,prime)
+//        inv.setItem(7,prime)
+        inv.setItem(7,selling)
 
         playerMenuMap[p] = MAIN_MENU
 
@@ -471,6 +480,11 @@ object CommerceMenu : Listener{
                     "Basic" -> openOPMenu(p,0)
                     "SellMenu" -> es.execute { openSellItemMenu(p,p.uniqueId,0) }
                     "Prime"    -> openPrimeMenu(p)
+                    "Selling"    -> {
+                        p.closeInventory()
+                        p.sendMessage(Component.text("${prefix}§a§l§n売るアイテムを手に持って、/amsell <金額> を入力してください")
+                            .clickEvent(ClickEvent.suggestCommand("/amsell ")))
+                    }
                 }
 
             }
