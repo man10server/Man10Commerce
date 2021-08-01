@@ -124,7 +124,7 @@ class Man10Commerce : JavaPlugin() {
                     val name = if (display.hasItemMeta()) display.itemMeta!!.displayName else display.i18NDisplayName
 
                     Bukkit.getScheduler().runTask(this, Runnable {
-                        Bukkit.broadcastMessage("${prefix}§f${name}が§e${format(price)}§f円で出品されました！")
+                        Bukkit.broadcastMessage("${prefix}§f§l${name}が§e§l${format(price)}§f§l円で出品されました！")
                     })
                 }
             }
@@ -169,7 +169,7 @@ class Man10Commerce : JavaPlugin() {
                     val name = if (display.hasItemMeta()) display.itemMeta!!.displayName else display.i18NDisplayName
 
                     Bukkit.getScheduler().runTask(this, Runnable {
-                        Bukkit.broadcastMessage("${prefix}§f${name}が§e${format(price)}§f円で§d§l公式出品されました！")
+                        Bukkit.broadcastMessage("${prefix}§f§l{name}が§e§l${format(price)}§f§l円で§d§l公式出品されました！")
                     })
                 }
             }
