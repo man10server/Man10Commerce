@@ -20,7 +20,7 @@ class Man10Commerce : JavaPlugin() {
     companion object{
         lateinit var plugin: JavaPlugin
         lateinit var bank : BankAPI
-        val es : ExecutorService = Executors.newCachedThreadPool()
+        lateinit var es : ExecutorService
 
         const val prefix = "§l[§a§lA§d§lma§f§ln§a§lzon§f§l]§f"
 
@@ -41,6 +41,8 @@ class Man10Commerce : JavaPlugin() {
     override fun onEnable() {
         // Plugin startup logic
         saveDefaultConfig()
+
+        es  = Executors.newCachedThreadPool()
 
         plugin = this
         bank = BankAPI(plugin)
