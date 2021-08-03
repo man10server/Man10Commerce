@@ -81,10 +81,8 @@ object CommerceMenu : Listener{
 //        inv.setItem(7,prime)
         inv.setItem(7,selling)
 
-        playerMenuMap[p] = MAIN_MENU
-
         p.openInventory(inv)
-
+        playerMenuMap[p] = MAIN_MENU
     }
 
     //自分が出品したアイテムを確認する
@@ -153,12 +151,9 @@ object CommerceMenu : Listener{
 
         }
 
-
-        Bukkit.getScheduler().runTask(plugin, Runnable {
-            p.openInventory(inv)
-            playerMenuMap[p] = SELL_MENU
-            pageMap[p] = page
-        })
+        p.openInventory(inv)
+        playerMenuMap[p] = SELL_MENU
+        pageMap[p] = page
     }
 
     //出品アイテム一覧を見る
@@ -374,10 +369,8 @@ object CommerceMenu : Listener{
 
         }
 
-        Bukkit.getScheduler().runTask(plugin, Runnable {
-            p.openInventory(inv)
-            playerMenuMap[p] = PRIME_MENU
-        })
+        p.openInventory(inv)
+        playerMenuMap[p] = PRIME_MENU
 
     }
 
@@ -429,11 +422,17 @@ object CommerceMenu : Listener{
                         if (orderID == -1)return
 
                         es.execute {
-                            if (ItemData.buy(p,itemID,orderID)){
-                                sendMsg(p,"§a§l購入成功！")
-                            }else{
-                                sendMsg(p,"§c§l購入失敗!銀行にお金がないか、売り切れています！")
+
+                            when(val ret = ItemData.buy(p,itemID,orderID)){
+                                0 -> { sendMsg(p,"§c§l購入失敗！電子マネーが足りません！") }
+                                1 -> {sendMsg(p,"§a§l購入成功！")}
+                                else ->{ sendMsg(p,"エラー:${ret} サーバー運営者、GMに報告してください")}
                             }
+//                            if (ItemData.buy(p,itemID,orderID)){
+//                                sendMsg(p,"§a§l購入成功！")
+//                            }else{
+//                                sendMsg(p,"§c§l購入失敗!銀行にお金がないか、売り切れています！")
+//                            }
 
                             Bukkit.getScheduler().runTask(plugin, Runnable { openItemMenu(p,page) })
                         }
@@ -518,10 +517,11 @@ object CommerceMenu : Listener{
                         if (orderID == -1)return
 
                         es.execute {
-                            if (ItemData.buy(p,itemID,orderID)){
-                                sendMsg(p,"§a§l購入成功！")
-                            }else{
-                                sendMsg(p,"§c§l購入失敗!銀行にお金がないか、売り切れています！")
+
+                            when(val ret = ItemData.buy(p,itemID,orderID)){
+                                0 -> { sendMsg(p,"§c§l購入失敗！電子マネーが足りません！") }
+                                1 -> {sendMsg(p,"§a§l購入成功！")}
+                                else ->{ sendMsg(p,"エラー:${ret} サーバー運営者、GMに報告してください")}
                             }
 
                             Bukkit.getScheduler().runTask(plugin, Runnable { openOPMenu(p,page) })

@@ -2,6 +2,7 @@ package red.man10.man10commerce.data
 
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
+import red.man10.man10bank.Man10Bank
 import red.man10.man10commerce.Man10Commerce
 import red.man10.man10commerce.Man10Commerce.Companion.bank
 import red.man10.man10commerce.Man10Commerce.Companion.fee
@@ -224,15 +225,15 @@ object ItemData {
     }
 
     @Synchronized
-    fun buy(p:Player,itemID:Int,orderID:Int):Boolean{
+    fun buy(p:Player,itemID:Int,orderID:Int):Int{
 
-        val data = itemList[itemID] ?: return false
+        val data = itemList[itemID] ?: return 3
 
-        if (data.id != orderID)return false
+        if (data.id != orderID)return 4
 
-        if (!bank.withdraw(p.uniqueId,data.price,"BuyItemOnMan10Commerce"))return false
+        if (!Man10Bank.vault.withdraw(p.uniqueId,data.price))return 0
 
-        val item = itemIndex[itemID]?.clone()?:return false
+        val item = itemIndex[itemID]?.clone()?:return 5
 
         item.amount = data.amount
 
@@ -253,7 +254,7 @@ object ItemData {
         }
         setMinPriceItem(itemID)
 
-        return true
+        return 1
     }
 
     @Synchronized
