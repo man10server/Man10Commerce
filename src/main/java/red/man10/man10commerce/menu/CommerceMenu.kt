@@ -51,9 +51,10 @@ object CommerceMenu : Listener{
         setID(shouItemMeta,"ItemMenu")
         showItem.itemMeta = shouItemMeta
 
-        val basic = ItemStack(Material.DIAMOND_BLOCK)
+        val basic = ItemStack(Material.DIAMOND)
         val basicMeta = basic.itemMeta
         basicMeta.setDisplayName("§a§lAmazonBasic")
+        basicMeta.lore = mutableListOf("§f運営が販売しているアイテムを買うことができます")
         setID(basicMeta,"Basic")
         basic.itemMeta = basicMeta
 
@@ -207,7 +208,7 @@ object CommerceMenu : Listener{
 
         }
 
-        val reloadItem = ItemStack(Material.NETHER_STAR)
+        val reloadItem = ItemStack(Material.COMPASS)
         val reloadMeta = reloadItem.itemMeta
         reloadMeta.setDisplayName("§6§lリロード")
         setID(reloadMeta,"reload")
@@ -292,7 +293,7 @@ object CommerceMenu : Listener{
 
         }
 
-        val reloadItem = ItemStack(Material.NETHER_STAR)
+        val reloadItem = ItemStack(Material.COMPASS)
         val reloadMeta = reloadItem.itemMeta
         reloadMeta.setDisplayName("§6§lリロード")
         setID(reloadMeta,"reload")
