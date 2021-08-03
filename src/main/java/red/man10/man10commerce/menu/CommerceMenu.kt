@@ -152,9 +152,12 @@ object CommerceMenu : Listener{
 
         }
 
-        p.openInventory(inv)
-        playerMenuMap[p] = SELL_MENU
-        pageMap[p] = page
+        Bukkit.getScheduler().runTask(plugin, Runnable {
+            p.openInventory(inv)
+            playerMenuMap[p] = SELL_MENU
+            pageMap[p] = page
+        })
+
     }
 
     //出品アイテム一覧を見る

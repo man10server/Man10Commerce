@@ -52,9 +52,9 @@ class Man10Commerce : JavaPlugin() {
 
         server.pluginManager.registerEvents(CommerceMenu,this)
 
-        es.execute {
-            UserData.primeThread()
-        }
+//        es.execute {
+//            UserData.primeThread()
+//        }
 
     }
 
