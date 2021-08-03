@@ -140,7 +140,7 @@ class Man10Commerce : JavaPlugin() {
 
             if (args.isEmpty()){
 
-                sendMsg(sender,"§a§l/amsell <値段> (単価ではなく、合計の値段を入力してください)")
+                sendMsg(sender,"§a§l/amsellop <値段> (単価ではなく、合計の値段を入力してください)")
 
                 return false
             }
@@ -171,7 +171,7 @@ class Man10Commerce : JavaPlugin() {
                     val name = if (display.hasItemMeta()) display.itemMeta!!.displayName else display.i18NDisplayName
 
                     Bukkit.getScheduler().runTask(this, Runnable {
-                        Bukkit.broadcastMessage("${prefix}§f§l{name}が§e§l${format(price)}§f§l円で§d§l公式出品されました！")
+                        Bukkit.broadcastMessage("${prefix}§f§l${name}が§e§l${format(price)}§f§l円で§d§l公式出品されました！")
                     })
                 }
             }
