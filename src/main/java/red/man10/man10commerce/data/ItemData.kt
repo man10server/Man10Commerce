@@ -295,7 +295,7 @@ object ItemData {
             data.itemID = rs.getInt("item_id")
             data.price = rs.getDouble("price")
             data.seller = uuid
-//            data.isOp = rs.getInt("is_op") == 1
+            data.isOp = rs.getInt("is_op") == 1
 
             list.add(data)
         }
