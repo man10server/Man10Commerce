@@ -145,14 +145,12 @@ object ItemData {
 
     fun sell(p: Player, item: ItemStack, price: Double): Boolean {
 
-        val isPrime = UserData.isPrimeUser(p)
-
-        if (Man10Commerce.maxItems< UserData.getSellAmount(p) && !isPrime){
+        if (Man10Commerce.maxItems< UserData.getSellAmount(p)){
             Utility.sendMsg(p,"出品数の上限に達しています！")
             return false
         }
 
-        if (Man10Commerce.maxPrice < price &&!isPrime){
+        if (Man10Commerce.maxPrice < price){
             Utility.sendMsg(p,"金額の上限に達しています！")
             return false
         }
@@ -240,11 +238,7 @@ object ItemData {
         p.inventory.addItem(item)
 
         //利益の支払い処理(Primeなら手数料を半分に)
-        if (UserData.isPrimeUser(data.seller!!)){
-//            bank.deposit(data.seller!!,(data.price*(1.0- (fee/2))),"SellItemOnMan10Commerce")
-        }else{
-            bank.deposit(data.seller!!,(data.price*(1.0- fee)),"SellItemOnMan10Commerce","Amanzonの売り上げ")
-        }
+        bank.deposit(data.seller!!,(data.price*(1.0- fee)),"SellItemOnMan10Commerce","Amanzonの売り上げ")
 
 
         Log.buyLog(p, data, item)

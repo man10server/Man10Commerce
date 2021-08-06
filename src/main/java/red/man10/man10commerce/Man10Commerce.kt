@@ -30,7 +30,6 @@ class Man10Commerce : JavaPlugin() {
 
         var maxPrice : Double = 10000000.0 //一般会員の出品額上限
         var maxItems : Int = 54 // 一般会員の出品数上限
-        var primeMoney : Double = 1000000.0 //プライム会員の会員費
         var fee = 0.0
 
         const val OP = "commerce.op"
@@ -71,7 +70,6 @@ class Man10Commerce : JavaPlugin() {
         maxPrice = config.getDouble("maxPrice")
         maxItems = config.getInt("maxItems")
         enable = config.getBoolean("enable")
-        primeMoney = config.getDouble("primeMoney")
 
 
     }
@@ -220,49 +218,6 @@ class Man10Commerce : JavaPlugin() {
                     loadConfig()
                     sender.sendMessage("§a§lReloaded Config")
                 }
-            }
-
-            "balance" ->{
-                if (!sender.hasPermission(USER))return true
-
-                es.execute {
-
-                    if (!UserData.isPrimeUser(sender)){
-                        sendMsg(sender,"この機能が使えるのは、Primeユーザーのみです！")
-                        return@execute
-                    }
-
-                    sendMsg(sender, "§e§l今月の利益(手数料は計算されていません):${format(UserData.getProfitMonth(sender))}")
-                }
-
-            }
-
-            "joinprime" ->{
-                if (!sender.hasPermission(USER))return true
-
-                es.execute {
-                    if (UserData.joinPrime(sender.uniqueId)){
-                        sendMsg(sender,"AmanzonPrimeに入会しました！")
-                        return@execute
-                    }
-                    sendMsg(sender,"AmanzonPrimeの入会に失敗しました")
-                }
-            }
-
-            "leaveprime" ->{
-                if (!sender.hasPermission(USER))return true
-
-                es.execute {
-                    if (UserData.leavePrime(sender.uniqueId)){
-                        sendMsg(sender,"AmanzonPrimeから退会しました！")
-                        return@execute
-                    }
-                    sendMsg(sender,"AmanzonPrimeの退会に失敗しました！")
-
-                }
-
-                return true
-
             }
 
             "reload" ->{

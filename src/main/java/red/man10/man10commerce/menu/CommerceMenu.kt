@@ -64,12 +64,6 @@ object CommerceMenu : Listener{
         setID(sellItemMeta,"SellMenu")
         sellItem.itemMeta = sellItemMeta
 
-//        val prime = ItemStack(Material.NETHER_STAR)
-//        val primeMeta = prime.itemMeta
-//        primeMeta.setDisplayName("§a§lPrime")
-//        setID(primeMeta,"Prime")
-//        prime.itemMeta = primeMeta
-
         val selling = ItemStack(Material.COBBLESTONE)
         val sellingMeta = selling.itemMeta
         sellingMeta.setDisplayName("§e§lアイテムを出品する")
@@ -79,7 +73,6 @@ object CommerceMenu : Listener{
         inv.setItem(1,showItem)
         inv.setItem(3,basic)
         inv.setItem(5,sellItem)
-//        inv.setItem(7,prime)
         inv.setItem(7,selling)
 
         p.openInventory(inv)
@@ -336,48 +329,6 @@ object CommerceMenu : Listener{
 
     }
 
-    private fun openPrimeMenu(p:Player){
-
-
-        val isPrime = UserData.isPrimeUser(p)
-
-        val inv = Bukkit.createInventory(null,9, PRIME_MENU)
-
-        if (!isPrime){
-
-            val item = ItemStack(Material.GREEN_WOOL)
-            val meta = item.itemMeta
-            meta.setDisplayName("§a§lAmanzonPrimeに入会する")
-            meta.lore = mutableListOf(
-                "§e主な特典",
-                "現在ありません",
-                "§e会員費:${format(Man10Commerce.primeMoney)}/月")
-
-            setID(meta,"join")
-
-            item.itemMeta = meta
-
-            inv.setItem(4,item)
-        } else{
-
-            val item = ItemStack(Material.RED_WOOL)
-            val meta = item.itemMeta
-            meta.setDisplayName("§c§lAmanzonPrimeから退会する")
-            meta.lore = mutableListOf("返金はありません")
-
-            setID(meta,"leave")
-
-            item.itemMeta = meta
-
-            inv.setItem(4,item)
-
-        }
-
-        p.openInventory(inv)
-        playerMenuMap[p] = PRIME_MENU
-
-    }
-
     private fun setID(meta:ItemMeta, value:String){
         meta.persistentDataContainer.set(NamespacedKey(plugin,"id"), PersistentDataType.STRING,value)
     }
@@ -482,7 +433,6 @@ object CommerceMenu : Listener{
                     "ItemMenu" -> openItemMenu(p,0)
                     "Basic" -> openOPMenu(p,0)
                     "SellMenu" -> es.execute { openSellItemMenu(p,p.uniqueId,0) }
-                    "Prime"    -> openPrimeMenu(p)
                     "Selling"    -> {
                         p.closeInventory()
                         p.sendMessage(Component.text("${prefix}§a§n売るアイテムを手に持って、/amsell <金額> を入力してください")
@@ -490,13 +440,6 @@ object CommerceMenu : Listener{
                     }
                 }
 
-            }
-
-            PRIME_MENU ->{
-                if (id == "")return
-
-                p.performCommand("amzn ${id}prime")
-                p.closeInventory()
             }
 
             BASIC_MENU ->{
