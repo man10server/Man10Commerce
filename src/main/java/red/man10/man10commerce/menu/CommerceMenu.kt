@@ -161,8 +161,6 @@ object CommerceMenu : Listener{
 
         while (inv.getItem(44) ==null){
 
-            Bukkit.getLogger().info("${keys.size},${inc}")
-
             if (keys.size <= inc+page*45)break
 
             val itemID = keys[inc+page*45]

@@ -135,39 +135,6 @@ object ItemData {
 
     }
 
-    private fun setMinPriceItem(itemID: Int) {
-
-        orderList.remove(itemID)
-
-        val rs = mysql.query("SELECT * FROM order_table where item_id=$itemID ORDER BY price/amount ASC LIMIT 1;") ?: return
-
-        if (!rs.next()){
-            itemList.remove(itemID)
-            mysql.execute("DELETE FROM item_list where id=$itemID;")
-            return
-        }
-
-        val data = Data()
-
-        data.id = rs.getInt("id")
-        data.amount = rs.getInt("amount")
-        data.date = rs.getDate("date")
-        data.itemID = itemID
-        data.price = rs.getDouble("price")
-        data.seller = UUID.fromString(rs.getString("uuid"))
-        data.isOp = rs.getInt("is_op") == 1
-
-        rs.close()
-        mysql.close()
-
-        val nowItem = orderList[itemID]
-
-        if (nowItem == null || data.price < nowItem.price) {
-            orderList[itemID] = data
-        }
-
-    }
-
     fun sell(p: Player, item: ItemStack, price: Double): Boolean {
 
         if (Man10Commerce.maxItems< UserData.getSellAmount(p)){
@@ -270,8 +237,10 @@ object ItemData {
 
         if (!data.isOp){
             mysql.execute("DELETE FROM order_table where id=${data.id};")
+            loadOrderTable()
+        }else{
+            loadOPOrderTable()
         }
-        setMinPriceItem(itemID)
 
         return 1
     }
@@ -279,12 +248,13 @@ object ItemData {
     @Synchronized
     fun close(id:Int,p:Player):Boolean{
 
-        val rs = mysql.query("select item_id,amount from order_table where id=${id};")?:return false
+        val rs = mysql.query("select item_id,amount,is_op from order_table where id=${id};")?:return false
 
         if (!rs.next())return false
 
         val itemID = rs.getInt("item_id")
         val amount = rs.getInt("amount")
+        val isOp = rs.getInt("is_op") == 1
 
         val item = itemList[itemID]!!.clone()
         item.amount = amount
@@ -292,7 +262,8 @@ object ItemData {
 
 
         mysql.execute("DELETE FROM order_table where id=${id};")
-        setMinPriceItem(itemID)
+
+        if (isOp) loadOPOrderTable() else loadOrderTable()
 
         Log.closeLog(p,itemID,item)
 
