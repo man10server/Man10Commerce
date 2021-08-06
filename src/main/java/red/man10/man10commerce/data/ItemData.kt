@@ -27,7 +27,6 @@ object ItemData {
 
     val itemIndex = ConcurrentHashMap<Int, ItemStack>()
     val itemList = ConcurrentHashMap<Int, Data>()
-    val opItemList = ConcurrentHashMap<Int,Data>()
 
     private val mysql = MySQLManager(plugin, "Man10Commerce")
 
@@ -76,7 +75,6 @@ object ItemData {
 
 
         itemList.clear()
-        opItemList.clear()
 
         val rs2 = mysql.query("select * from order_table")
 
@@ -98,7 +96,6 @@ object ItemData {
                 data.isOp = rs2.getInt("is_op") == 1
 
                 itemList[itemID] = data
-                if (data.isOp) opItemList[itemID] = data
             }
 
             rs2.close()
@@ -116,7 +113,6 @@ object ItemData {
 
         if (!rs.next()){
             itemIndex.remove(itemID)
-            opItemList.remove(itemID)
             mysql.execute("DELETE FROM item_list where id=$itemID;")
             return
         }
@@ -138,7 +134,6 @@ object ItemData {
 
         if (nowItem == null || data.price < nowItem.price) {
             itemList[itemID] = data
-            if (data.isOp){ opItemList[itemID] = data }
         }
 
     }

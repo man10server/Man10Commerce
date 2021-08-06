@@ -10,7 +10,6 @@ import red.man10.man10bank.BankAPI
 import red.man10.man10commerce.Utility.format
 import red.man10.man10commerce.Utility.sendMsg
 import red.man10.man10commerce.data.ItemData
-import red.man10.man10commerce.data.UserData
 import red.man10.man10commerce.menu.CommerceMenu
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
@@ -50,10 +49,6 @@ class Man10Commerce : JavaPlugin() {
         loadConfig()
 
         server.pluginManager.registerEvents(CommerceMenu,this)
-
-//        es.execute {
-//            UserData.primeThread()
-//        }
 
     }
 
@@ -119,12 +114,10 @@ class Man10Commerce : JavaPlugin() {
                 if (ItemData.sell(sender,item,price)){
                     sendMsg(sender,"§e§l出品成功しました！")
 
-//                    if (!UserData.isPrimeUser(sender))return@execute
-
                     val name = if (display.hasItemMeta()) display.itemMeta!!.displayName else display.i18NDisplayName
 
                     Bukkit.getScheduler().runTask(this, Runnable {
-                        Bukkit.broadcastMessage("${prefix}§f§l${name}が§e§l${format(price)}§f§l円で出品されました！")
+                        Bukkit.broadcastMessage("${prefix}§f§l${name}§f§l(${item.amount}個)が§e§l${format(price)}§f§l円で出品されました！")
                     })
                 }
             }
@@ -169,7 +162,7 @@ class Man10Commerce : JavaPlugin() {
                     val name = if (display.hasItemMeta()) display.itemMeta!!.displayName else display.i18NDisplayName
 
                     Bukkit.getScheduler().runTask(this, Runnable {
-                        Bukkit.broadcastMessage("${prefix}§f§l${name}が§e§l${format(price)}§f§l円で§d§l公式出品されました！")
+                        Bukkit.broadcastMessage("${prefix}§f§l${name}§f§l(${item.amount}個)が§e§l${format(price)}§f§l円で§d§l公式出品されました！")
                     })
                 }
             }

@@ -14,7 +14,6 @@ import org.bukkit.event.inventory.InventoryCloseEvent
 import org.bukkit.inventory.ItemStack
 import org.bukkit.inventory.meta.ItemMeta
 import org.bukkit.persistence.PersistentDataType
-import red.man10.man10commerce.Man10Commerce
 import red.man10.man10commerce.Man10Commerce.Companion.es
 import red.man10.man10commerce.Man10Commerce.Companion.plugin
 import red.man10.man10commerce.Man10Commerce.Companion.prefix
@@ -23,8 +22,6 @@ import red.man10.man10commerce.Utility.sendMsg
 import red.man10.man10commerce.data.ItemData
 import red.man10.man10commerce.data.ItemData.itemIndex
 import red.man10.man10commerce.data.ItemData.itemList
-import red.man10.man10commerce.data.ItemData.opItemList
-import red.man10.man10commerce.data.UserData
 import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
@@ -38,7 +35,6 @@ object CommerceMenu : Listener{
     private const val ITEM_MENU = "§${prefix}§l出品中のアイテム一覧"
     private const val SELL_MENU = "§${prefix}§l出品したアイテム"
     private const val MAIN_MENU = "§${prefix}§lメニュー"
-    private const val PRIME_MENU = "${prefix}§e§lPrime"
     private const val BASIC_MENU = "${prefix}§d§lAmanzonBasic"
 
     fun openMainMenu(p:Player){
@@ -249,7 +245,7 @@ object CommerceMenu : Listener{
 
         val inv = Bukkit.createInventory(null,54, BASIC_MENU)
 
-        val keys = opItemList.keys().toList()
+        val keys = itemList.keys().toList()
 
         var inc = 0
 
@@ -258,8 +254,6 @@ object CommerceMenu : Listener{
             if (keys.size <= inc+page*45)break
 
             val itemID = keys[inc+page*45]
-
-            inc ++
 
             val data = itemList[itemID]
 
@@ -271,11 +265,14 @@ object CommerceMenu : Listener{
 
             if (!data.isOp)continue
 
+            inc ++
+
             lore.add("§e§l値段:${format(floor(data.price))}")
             lore.add("§e§l単価:${format(floor(data.price/data.amount))}")
             lore.add("§e§l出品者${Bukkit.getOfflinePlayer(data.seller!!).name}")
             lore.add("§e§l個数:${data.amount}")
             lore.add("§e§l${SimpleDateFormat("yyyy-MM/dd").format(data.date)}")
+            lore.add("§d§l公式出品アイテム")
             lore.add("§cシフトクリックで1-Click購入")
 
             val meta = item.itemMeta
