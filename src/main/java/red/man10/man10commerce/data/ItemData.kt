@@ -25,8 +25,9 @@ class Data {
 
 object ItemData {
 
-    val itemIndex = ConcurrentHashMap<Int, ItemStack>()
-    val itemList = ConcurrentHashMap<Int, Data>()
+    val itemList = ConcurrentHashMap<Int, ItemStack>()
+    val orderList = ConcurrentHashMap<Int, Data>()
+    val opOrderList = ConcurrentHashMap<Int, Data>()
 
     private val mysql = MySQLManager(plugin, "Man10Commerce")
 
@@ -35,7 +36,7 @@ object ItemData {
 
         val one = item.asOne()
 
-        if (itemIndex.containsValue(one)) return false
+        if (itemList.containsValue(one)) return false
 
         val name = if (one.hasItemMeta()) one.itemMeta!!.displayName else one.i18NDisplayName
 
@@ -48,7 +49,7 @@ object ItemData {
 
         rs.next()
 
-        itemIndex[rs.getInt("id")] = one
+        itemList[rs.getInt("id")] = one
 
         rs.close()
         mysql.close()
@@ -58,14 +59,14 @@ object ItemData {
 
     fun loadItemIndex() {
 
-        itemIndex.clear()
+        itemList.clear()
 
         val rs = mysql.query("select id,base64 from item_list;")
 
         if (rs != null) {
 
             while (rs.next()) {
-                itemIndex[rs.getInt("id")] = Utility.itemFromBase64(rs.getString("base64"))!!
+                itemList[rs.getInt("id")] = Utility.itemFromBase64(rs.getString("base64"))!!
             }
 
             rs.close()
@@ -73,46 +74,75 @@ object ItemData {
 
         }
 
+    }
 
-        itemList.clear()
+    fun loadOrderTable(){
 
-        val rs2 = mysql.query("select * from order_table")
+        orderList.clear()
+        val rs = mysql.query("select * from order_table where (item_id,(price/amount)) in (select item_id,min(price/amount) from order_table group by `item_id`) order by price;")?:return
 
-        if (rs2 != null) {
-            while (rs2.next()) {
+        while (rs.next()) {
 
-                val itemID = rs2.getInt("item_id")
+            val itemID = rs.getInt("item_id")
 
-                if (itemList.containsKey(itemID)) continue
+            if (orderList.containsKey(itemID)) continue
 
-                val data = Data()
+            val data = Data()
 
-                data.id = rs2.getInt("id")
-                data.amount = rs2.getInt("amount")
-                data.date = rs2.getDate("date")
-                data.itemID = itemID
-                data.price = rs2.getDouble("price")
-                data.seller = UUID.fromString(rs2.getString("uuid"))
-                data.isOp = rs2.getInt("is_op") == 1
+            data.id = rs.getInt("id")
+            data.amount = rs.getInt("amount")
+            data.date = rs.getDate("date")
+            data.itemID = itemID
+            data.price = rs.getDouble("price")
+            data.seller = UUID.fromString(rs.getString("uuid"))
+            data.isOp = rs.getInt("is_op") == 1
 
-                itemList[itemID] = data
-            }
-
-            rs2.close()
-            mysql.close()
-
+            orderList[itemID] = data
         }
+
+        rs.close()
+        mysql.close()
+
+    }
+
+    fun loadOPOrderTable(){
+
+        opOrderList.clear()
+        val rs = mysql.query("select * from order_table where (item_id,(price/amount)) in (select item_id,min(price/amount)" +
+                " from order_table where is_op=1 group by `item_id`) order by price;")?:return
+
+        while (rs.next()) {
+
+            val itemID = rs.getInt("item_id")
+
+            if (opOrderList.containsKey(itemID)) continue
+
+            val data = Data()
+
+            data.id = rs.getInt("id")
+            data.amount = rs.getInt("amount")
+            data.date = rs.getDate("date")
+            data.itemID = itemID
+            data.price = rs.getDouble("price")
+            data.seller = UUID.fromString(rs.getString("uuid"))
+            data.isOp = rs.getInt("is_op") == 1
+
+            opOrderList[itemID] = data
+        }
+
+        rs.close()
+        mysql.close()
 
     }
 
     private fun setMinPriceItem(itemID: Int) {
 
-        itemList.remove(itemID)
+        orderList.remove(itemID)
 
         val rs = mysql.query("SELECT * FROM order_table where item_id=$itemID ORDER BY price/amount ASC LIMIT 1;") ?: return
 
         if (!rs.next()){
-            itemIndex.remove(itemID)
+            itemList.remove(itemID)
             mysql.execute("DELETE FROM item_list where id=$itemID;")
             return
         }
@@ -130,10 +160,10 @@ object ItemData {
         rs.close()
         mysql.close()
 
-        val nowItem = itemList[itemID]
+        val nowItem = orderList[itemID]
 
         if (nowItem == null || data.price < nowItem.price) {
-            itemList[itemID] = data
+            orderList[itemID] = data
         }
 
     }
@@ -156,7 +186,7 @@ object ItemData {
 
         var id = -1
 
-        itemIndex.forEach {
+        itemList.forEach {
             if (it.value.isSimilar(item)) {
                 id = it.key
             }
@@ -175,7 +205,7 @@ object ItemData {
 
         Log.sellLog(p,item,price,id)
 
-        setMinPriceItem(id)
+        loadOrderTable()
 
         item.amount = 0
 
@@ -191,7 +221,7 @@ object ItemData {
 
         var id = -1
 
-        itemIndex.forEach {
+        itemList.forEach {
             if (it.value.isSimilar(item)) {
                 id = it.key
             }
@@ -210,7 +240,7 @@ object ItemData {
 
         Log.sellLog(p,item,price,id)
 
-        setMinPriceItem(id)
+        loadOPOrderTable()
 
         item.amount = 0
 
@@ -220,13 +250,13 @@ object ItemData {
     @Synchronized
     fun buy(p:Player,itemID:Int,orderID:Int):Int{
 
-        val data = itemList[itemID] ?: return 3
+        val data = orderList[itemID] ?: return 3
 
         if (data.id != orderID)return 4
 
         if (!Man10Bank.vault.withdraw(p.uniqueId,data.price))return 0
 
-        val item = itemIndex[itemID]?.clone()?:return 5
+        val item = itemList[itemID]?.clone()?:return 5
 
         item.amount = data.amount
 
@@ -256,7 +286,7 @@ object ItemData {
         val itemID = rs.getInt("item_id")
         val amount = rs.getInt("amount")
 
-        val item = itemIndex[itemID]!!.clone()
+        val item = itemList[itemID]!!.clone()
         item.amount = amount
         p.inventory.addItem(item)
 

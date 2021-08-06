@@ -20,8 +20,9 @@ import red.man10.man10commerce.Man10Commerce.Companion.prefix
 import red.man10.man10commerce.Utility.format
 import red.man10.man10commerce.Utility.sendMsg
 import red.man10.man10commerce.data.ItemData
-import red.man10.man10commerce.data.ItemData.itemIndex
 import red.man10.man10commerce.data.ItemData.itemList
+import red.man10.man10commerce.data.ItemData.opOrderList
+import red.man10.man10commerce.data.ItemData.orderList
 import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
@@ -94,7 +95,7 @@ object CommerceMenu : Listener{
 
             inc ++
 
-            val item = itemIndex[data.itemID]?.clone()?:continue
+            val item = itemList[data.itemID]?.clone()?:continue
 
             val lore = item.lore?: mutableListOf()
 
@@ -154,11 +155,13 @@ object CommerceMenu : Listener{
 
         val inv = Bukkit.createInventory(null,54, ITEM_MENU)
 
-        val keys = itemList.keys().toList()
+        val keys = orderList.keys().toList()
 
         var inc = 0
 
         while (inv.getItem(44) ==null){
+
+            Bukkit.getLogger().info("${keys.size},${inc}")
 
             if (keys.size <= inc+page*45)break
 
@@ -166,8 +169,8 @@ object CommerceMenu : Listener{
 
             inc ++
 
-            val data = itemList[itemID]
-            val item = itemIndex[itemID]?.clone()?:continue
+            val data = orderList[itemID]
+            val item = itemList[itemID]?.clone()?:continue
 
             val lore = item.lore?: mutableListOf()
 
@@ -245,7 +248,7 @@ object CommerceMenu : Listener{
 
         val inv = Bukkit.createInventory(null,54, BASIC_MENU)
 
-        val keys = itemList.keys().toList()
+        val keys = opOrderList.keys().toList()
 
         var inc = 0
 
@@ -255,24 +258,29 @@ object CommerceMenu : Listener{
 
             val itemID = keys[inc+page*45]
 
-            val data = itemList[itemID]
+            inc ++
 
-            val item = itemIndex[itemID]!!.clone()
+            val data = orderList[itemID]
+            val item = itemList[itemID]?.clone()?:continue
 
             val lore = item.lore?: mutableListOf()
 
-            if (data==null)continue
+            if (data==null){
 
-            if (!data.isOp)continue
+                lore.add("§c§l売り切れ")
 
-            inc ++
+                item.lore = lore
+
+                inv.addItem(item)
+                continue
+            }
 
             lore.add("§e§l値段:${format(floor(data.price))}")
             lore.add("§e§l単価:${format(floor(data.price/data.amount))}")
             lore.add("§e§l出品者${Bukkit.getOfflinePlayer(data.seller!!).name}")
             lore.add("§e§l個数:${data.amount}")
             lore.add("§e§l${SimpleDateFormat("yyyy-MM/dd").format(data.date)}")
-            lore.add("§d§l公式出品アイテム")
+            if (data.isOp) lore.add("§d§l公式出品アイテム")
             lore.add("§cシフトクリックで1-Click購入")
 
             val meta = item.itemMeta
@@ -319,6 +327,7 @@ object CommerceMenu : Listener{
             inv.setItem(53,nextItem)
 
         }
+
 
         p.openInventory(inv)
         playerMenuMap[p] = BASIC_MENU

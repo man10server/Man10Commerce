@@ -45,6 +45,8 @@ class Man10Commerce : JavaPlugin() {
         plugin = this
         bank = BankAPI(plugin)
         ItemData.loadItemIndex()
+        ItemData.loadOrderTable()
+        ItemData.loadOPOrderTable()
 
         loadConfig()
 
@@ -117,7 +119,7 @@ class Man10Commerce : JavaPlugin() {
                     val name = if (display.hasItemMeta()) display.itemMeta!!.displayName else display.i18NDisplayName
 
                     Bukkit.getScheduler().runTask(this, Runnable {
-                        Bukkit.broadcastMessage("${prefix}§f§l${name}§f§l(${item.amount}個)が§e§l${format(price)}§f§l円で出品されました！")
+                        Bukkit.broadcastMessage("${prefix}§f§l${name}§f§l(${display.amount}個)が§e§l${format(price)}§f§l円で出品されました！")
                     })
                 }
             }
@@ -162,7 +164,7 @@ class Man10Commerce : JavaPlugin() {
                     val name = if (display.hasItemMeta()) display.itemMeta!!.displayName else display.i18NDisplayName
 
                     Bukkit.getScheduler().runTask(this, Runnable {
-                        Bukkit.broadcastMessage("${prefix}§f§l${name}§f§l(${item.amount}個)が§e§l${format(price)}§f§l円で§d§l公式出品されました！")
+                        Bukkit.broadcastMessage("${prefix}§f§l${name}§f§l(${display.amount}個)が§e§l${format(price)}§f§l円で§d§l公式出品されました！")
                     })
                 }
             }
