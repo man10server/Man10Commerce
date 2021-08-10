@@ -68,6 +68,7 @@ class Man10Commerce : JavaPlugin() {
         maxItems = config.getInt("maxItems")
         enable = config.getBoolean("enable")
 
+        ItemData.loadCategoriesData()
 
     }
 

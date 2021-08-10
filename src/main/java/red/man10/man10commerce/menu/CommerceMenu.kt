@@ -21,9 +21,9 @@ import red.man10.man10commerce.Man10Commerce.Companion.prefix
 import red.man10.man10commerce.Utility.format
 import red.man10.man10commerce.Utility.sendMsg
 import red.man10.man10commerce.data.ItemData
-import red.man10.man10commerce.data.ItemData.itemList
-import red.man10.man10commerce.data.ItemData.opOrderList
-import red.man10.man10commerce.data.ItemData.orderList
+import red.man10.man10commerce.data.ItemData.itemDictionary
+import red.man10.man10commerce.data.ItemData.opOrderMap
+import red.man10.man10commerce.data.ItemData.orderMap
 import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
@@ -96,7 +96,7 @@ object CommerceMenu : Listener{
 
             inc ++
 
-            val item = itemList[data.itemID]?.clone()?:continue
+            val item = itemDictionary[data.itemID]?.clone()?:continue
 
             val lore = item.lore?: mutableListOf()
 
@@ -156,7 +156,7 @@ object CommerceMenu : Listener{
 
         val inv = Bukkit.createInventory(null,54, ITEM_MENU)
 
-        val keys = orderList.keys().toList()
+        val keys = orderMap.keys().toList()
 
         var inc = 0
 
@@ -168,8 +168,8 @@ object CommerceMenu : Listener{
 
             inc ++
 
-            val data = orderList[itemID]
-            val item = itemList[itemID]?.clone()?:continue
+            val data = orderMap[itemID]
+            val item = itemDictionary[itemID]?.clone()?:continue
 
             val lore = item.lore?: mutableListOf()
 
@@ -247,7 +247,7 @@ object CommerceMenu : Listener{
 
         val inv = Bukkit.createInventory(null,54, BASIC_MENU)
 
-        val keys = opOrderList.keys().toList()
+        val keys = opOrderMap.keys().toList()
 
         var inc = 0
 
@@ -259,8 +259,8 @@ object CommerceMenu : Listener{
 
             inc ++
 
-            val data = orderList[itemID]
-            val item = itemList[itemID]?.clone()?:continue
+            val data = orderMap[itemID]
+            val item = itemDictionary[itemID]?.clone()?:continue
 
             val lore = item.lore?: mutableListOf()
 

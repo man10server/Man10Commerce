@@ -1,5 +1,8 @@
 package red.man10.man10commerce.data
 
+import net.kyori.adventure.text.Component
+import org.bukkit.Material
+import org.bukkit.configuration.file.YamlConfiguration
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
 import red.man10.man10bank.Man10Bank
@@ -8,6 +11,8 @@ import red.man10.man10commerce.Man10Commerce.Companion.bank
 import red.man10.man10commerce.Man10Commerce.Companion.fee
 import red.man10.man10commerce.Man10Commerce.Companion.plugin
 import red.man10.man10commerce.Utility
+import java.io.File
+import java.lang.Exception
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 
@@ -25,9 +30,11 @@ class Data {
 
 object ItemData {
 
-    val itemList = ConcurrentHashMap<Int, ItemStack>()
-    val orderList = ConcurrentHashMap<Int, Data>()
-    val opOrderList = ConcurrentHashMap<Int, Data>()
+    val itemDictionary = ConcurrentHashMap<Int, ItemStack>()//item_idとitemStackの辞書
+    val orderMap = ConcurrentHashMap<Int, Data>()//order_idと注文情報のマップ
+    val opOrderMap = ConcurrentHashMap<Int, Data>()
+
+    private val categories = ConcurrentHashMap<String,Category>()
 
     private val mysql = MySQLManager(plugin, "Man10Commerce")
 
@@ -36,7 +43,7 @@ object ItemData {
 
         val one = item.asOne()
 
-        if (itemList.containsValue(one)) return false
+        if (itemDictionary.containsValue(one)) return false
 
         val name = if (one.hasItemMeta()) one.itemMeta!!.displayName else one.i18NDisplayName
 
@@ -49,7 +56,7 @@ object ItemData {
 
         rs.next()
 
-        itemList[rs.getInt("id")] = one
+        itemDictionary[rs.getInt("id")] = one
 
         rs.close()
         mysql.close()
@@ -59,14 +66,14 @@ object ItemData {
 
     fun loadItemIndex() {
 
-        itemList.clear()
+        itemDictionary.clear()
 
         val rs = mysql.query("select id,base64 from item_list;")
 
         if (rs != null) {
 
             while (rs.next()) {
-                itemList[rs.getInt("id")] = Utility.itemFromBase64(rs.getString("base64"))!!
+                itemDictionary[rs.getInt("id")] = Utility.itemFromBase64(rs.getString("base64"))!!
             }
 
             rs.close()
@@ -78,14 +85,14 @@ object ItemData {
 
     fun loadOrderTable(){
 
-        orderList.clear()
+        orderMap.clear()
         val rs = mysql.query("select * from order_table where (item_id,(price/amount)) in (select item_id,min(price/amount) from order_table group by `item_id`) order by price;")?:return
 
         while (rs.next()) {
 
             val itemID = rs.getInt("item_id")
 
-            if (orderList.containsKey(itemID)) continue
+            if (orderMap.containsKey(itemID)) continue
 
             val data = Data()
 
@@ -97,7 +104,7 @@ object ItemData {
             data.seller = UUID.fromString(rs.getString("uuid"))
             data.isOp = rs.getInt("is_op") == 1
 
-            orderList[itemID] = data
+            orderMap[itemID] = data
         }
 
         rs.close()
@@ -107,7 +114,7 @@ object ItemData {
 
     fun loadOPOrderTable(){
 
-        opOrderList.clear()
+        opOrderMap.clear()
         val rs = mysql.query("select * from order_table where (item_id,(price/amount)) in (select item_id,min(price/amount)" +
                 " from order_table where is_op=1 group by `item_id`) order by price;")?:return
 
@@ -115,7 +122,7 @@ object ItemData {
 
             val itemID = rs.getInt("item_id")
 
-            if (opOrderList.containsKey(itemID)) continue
+            if (opOrderMap.containsKey(itemID)) continue
 
             val data = Data()
 
@@ -127,7 +134,7 @@ object ItemData {
             data.seller = UUID.fromString(rs.getString("uuid"))
             data.isOp = rs.getInt("is_op") == 1
 
-            opOrderList[itemID] = data
+            opOrderMap[itemID] = data
         }
 
         rs.close()
@@ -153,7 +160,7 @@ object ItemData {
 
         var id = -1
 
-        itemList.forEach {
+        itemDictionary.forEach {
             if (it.value.isSimilar(item)) {
                 id = it.key
             }
@@ -188,7 +195,7 @@ object ItemData {
 
         var id = -1
 
-        itemList.forEach {
+        itemDictionary.forEach {
             if (it.value.isSimilar(item)) {
                 id = it.key
             }
@@ -217,13 +224,13 @@ object ItemData {
     @Synchronized
     fun buy(p:Player,itemID:Int,orderID:Int):Int{
 
-        val data = orderList[itemID] ?: return 3
+        val data = orderMap[itemID] ?: return 3
 
         if (data.id != orderID)return 4
 
         if (!Man10Bank.vault.withdraw(p.uniqueId,data.price))return 0
 
-        val item = itemList[itemID]?.clone()?:return 5
+        val item = itemDictionary[itemID]?.clone()?:return 5
 
         item.amount = data.amount
 
@@ -256,7 +263,7 @@ object ItemData {
         val amount = rs.getInt("amount")
         val isOp = rs.getInt("is_op") == 1
 
-        val item = itemList[itemID]!!.clone()
+        val item = itemDictionary[itemID]!!.clone()
         item.amount = amount
         p.inventory.addItem(item)
 
@@ -295,5 +302,98 @@ object ItemData {
 
         return list
     }
+
+    fun loadCategoriesData(){
+
+        val categoryFolder = File(plugin.dataFolder,File.separator+"categories")
+
+        if (!categoryFolder.exists())categoryFolder.mkdir()
+
+        val files = categoryFolder.listFiles()?.toMutableList()?:return
+
+        for (file in files){
+
+            if (file.path.endsWith(".yml") || file.isDirectory)continue
+
+            val yml = YamlConfiguration.loadConfiguration(file)
+            val data = Category()
+
+            val name = yml.getString("CategoryName")?:"none"
+
+            data.customModelData = yml.getIntegerList("CustomModelData")
+            data.displayName = yml.getStringList("DisplayName")
+
+            val materialList = mutableListOf<Material>()
+
+            for (m in yml.getStringList("Material")){
+                try {
+                    materialList.add(Material.valueOf(m))
+                }catch (e:Exception){ }
+            }
+
+            data.material = materialList
+
+            val icon = ItemStack(Material.valueOf(yml.getString("CategoryIconMaterial")?:"STONE"))
+            val meta = icon.itemMeta
+            meta.displayName(Component.text(yml.getString("CategoryIconTitle")?:"Title"))
+            meta.setCustomModelData(yml.getInt("CategoryIconCMD"))
+            icon.itemMeta = meta
+
+            data.categoryIcon = icon
+
+            categories[name] = data
+        }
+    }
+
+    fun getCategorizedItemID(categoryName:String):MutableList<Int>{
+
+        val category = categories[categoryName]?:return Collections.emptyList()
+
+        val list = mutableListOf<Int>()
+
+        val isEmptyMaterial = category.material.isEmpty()
+        val isEmptyDisplay = category.displayName.isEmpty()
+        val isEmptyCMD = category.customModelData.isEmpty()
+
+        for (data in itemDictionary){
+
+            val item = data.value
+            val meta = item.itemMeta
+
+            var matchMaterial = false
+            var matchDisplay = false
+            var matchCMD = false
+
+            if (isEmptyMaterial){
+                matchMaterial = true
+            }else if (category.material.contains(item.type))matchMaterial = true
+
+            val display = (meta?.displayName ?: item.i18NDisplayName?:"none").replace("§[a-z0-9]".toRegex(),"")
+
+            if (isEmptyDisplay){
+                matchDisplay = true
+            } else if ((category.displayName.filter { display.contains(it) }).isNotEmpty())matchDisplay = true
+
+            val cmd = if (meta.hasCustomModelData()) meta.customModelData else 0
+
+            if (isEmptyCMD){
+                matchCMD = true
+            }else if (category.customModelData.contains(cmd))matchCMD = true
+
+            if (matchCMD && matchDisplay && matchMaterial)list.add(data.key)
+        }
+
+        return list
+    }
+}
+
+class Category{
+
+    lateinit var categoryIcon : ItemStack
+
+    var material = mutableListOf<Material>()
+    var displayName = mutableListOf<String>()
+    var customModelData = mutableListOf<Int>()
+
 
 }

@@ -1,0 +1,9 @@
+CategoryName: "Example" #識別名
+
+CategoryIconMaterial: STONE #アイコンのアイテム
+CategoryIconTitle: "Title"  #アイコンのタイトル
+CategoryIconCMD: 0  #アイコンのカスタムモデルデータ
+
+DisplayName:
+CustomModelData:
+Material:
