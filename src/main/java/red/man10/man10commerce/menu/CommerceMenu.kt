@@ -345,7 +345,7 @@ object CommerceMenu : Listener{
 
         }
 
-        if (setCount==44){
+        if (setCount>=44){
             val nextItem = ItemStack(Material.PAPER)
             val nextMeta = nextItem.itemMeta
             nextMeta.setDisplayName("§§l次ページへ")
