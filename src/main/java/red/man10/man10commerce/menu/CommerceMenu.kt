@@ -14,6 +14,7 @@ import org.bukkit.event.inventory.InventoryCloseEvent
 import org.bukkit.inventory.ItemStack
 import org.bukkit.inventory.meta.ItemMeta
 import org.bukkit.persistence.PersistentDataType
+import red.man10.man10commerce.Man10Commerce.Companion.OP
 import red.man10.man10commerce.Man10Commerce.Companion.es
 import red.man10.man10commerce.Man10Commerce.Companion.plugin
 import red.man10.man10commerce.Man10Commerce.Companion.prefix
@@ -371,14 +372,22 @@ object CommerceMenu : Listener{
                     "reload" ->{ openItemMenu(p,page) }
 
                     else ->{
-                        if (action != InventoryAction.MOVE_TO_OTHER_INVENTORY)return
 
-                        val meta = item.itemMeta!!
+                        val meta = item.itemMeta?:return
 
                         val orderID = meta.persistentDataContainer[NamespacedKey(plugin,"order_id"), PersistentDataType.INTEGER]?:-1
                         val itemID = meta.persistentDataContainer[NamespacedKey(plugin,"item_id"), PersistentDataType.INTEGER]?:-1
 
                         if (orderID == -1)return
+
+                        if (p.hasPermission(OP) && action == InventoryAction.CLONE_STACK){
+                            ItemData.close(orderID,p)
+                            sendMsg(p,"§c§l出品を取り下げました")
+                            Bukkit.getScheduler().runTask(plugin, Runnable { openItemMenu(p,page) })
+                            return
+                        }
+
+                        if (action != InventoryAction.MOVE_TO_OTHER_INVENTORY)return
 
                         es.execute {
 
