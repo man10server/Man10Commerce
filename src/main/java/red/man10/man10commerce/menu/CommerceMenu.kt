@@ -33,10 +33,13 @@ object CommerceMenu : Listener{
 
     private val playerMenuMap = ConcurrentHashMap<Player,String>()
     private val pageMap = ConcurrentHashMap<Player,Int>()
+    private val categoryMap = ConcurrentHashMap<Player,String>()
 
     private const val ITEM_MENU = "§${prefix}§l出品中のアイテム一覧"
     private const val SELL_MENU = "§${prefix}§l出品したアイテム"
     private const val MAIN_MENU = "§${prefix}§lメニュー"
+    private const val CATEGORY_MENU = "§${prefix}§lカテゴリーメニュー"
+    private const val CATEGORY_ITEM = "§${prefix}§lカテゴリーアイテム"
     private const val BASIC_MENU = "${prefix}§d§lAmanzonBasic"
 
     fun openMainMenu(p:Player){
@@ -48,6 +51,13 @@ object CommerceMenu : Listener{
         shouItemMeta.setDisplayName("§a§l出品されているアイテムをみる")
         setID(shouItemMeta,"ItemMenu")
         showItem.itemMeta = shouItemMeta
+
+        val category = ItemStack(Material.BOOK)
+        val categoryMeta = category.itemMeta
+        categoryMeta.setDisplayName("§a§lカテゴリーごとに見る")
+        categoryMeta.lore = mutableListOf("§fオリジナルアイテムなどが","§fカテゴリーごとに分かれています")
+        setID(categoryMeta,"Category")
+        category.itemMeta = categoryMeta
 
         val basic = ItemStack(Material.DIAMOND)
         val basicMeta = basic.itemMeta
@@ -68,10 +78,11 @@ object CommerceMenu : Listener{
         setID(sellingMeta,"Selling")
         selling.itemMeta = sellingMeta
 
-        inv.setItem(1,showItem)
-        inv.setItem(3,basic)
-        inv.setItem(5,sellItem)
-        inv.setItem(7,selling)
+        inv.setItem(0,showItem)
+        inv.setItem(2,category)
+        inv.setItem(4,basic)
+        inv.setItem(6,sellItem)
+        inv.setItem(8,selling)
 
         p.openInventory(inv)
         playerMenuMap[p] = MAIN_MENU
@@ -242,6 +253,114 @@ object CommerceMenu : Listener{
 
     }
 
+    private fun openCategoryMenu(p:Player){
+
+        val inv = Bukkit.createInventory(null,18, CATEGORY_MENU)
+
+        for (data in ItemData.categories.values){
+            inv.addItem(data.categoryIcon)
+        }
+
+        p.openInventory(inv)
+        playerMenuMap[p] = CATEGORY_MENU
+
+    }
+
+    //カテゴリーわけされた出品アイテム一覧を見る
+    private fun openCategoryList(p:Player, category:String, page:Int){
+
+        val inv = Bukkit.createInventory(null,54, CATEGORY_ITEM)
+
+        val keys = orderMap.keys().toList()
+        val categorizeID = ItemData.getCategorizedItemID(category)
+
+        var inc = 0
+
+        while (inv.getItem(44) ==null){
+
+            if (keys.size <= inc+page*45)break
+
+            val itemID = keys[inc+page*45]
+
+            inc ++
+
+            val data = orderMap[itemID]
+            val item = itemDictionary[itemID]?.clone()?:continue
+
+            if (!categorizeID.contains(itemID))continue
+
+            val lore = item.lore?: mutableListOf()
+
+            if (data==null){
+
+                lore.add("§c§l売り切れ")
+
+                item.lore = lore
+
+                inv.addItem(item)
+                continue
+            }
+
+            lore.add("§e§l値段:${format(floor(data.price))}")
+            lore.add("§e§l単価:${format(floor(data.price/data.amount))}")
+            lore.add("§e§l出品者${Bukkit.getOfflinePlayer(data.seller!!).name}")
+            lore.add("§e§l個数:${data.amount}")
+            lore.add("§e§l${SimpleDateFormat("yyyy-MM/dd").format(data.date)}")
+            if (data.isOp) lore.add("§d§l公式出品アイテム")
+            lore.add("§cシフトクリックで1-Click購入")
+
+            val meta = item.itemMeta
+            meta.persistentDataContainer.set(NamespacedKey(plugin,"order_id"), PersistentDataType.INTEGER,data.id)
+            meta.persistentDataContainer.set(NamespacedKey(plugin,"item_id"), PersistentDataType.INTEGER,data.itemID)
+            item.itemMeta = meta
+
+            item.lore = lore
+
+            inv.addItem(item)
+
+        }
+
+        val reloadItem = ItemStack(Material.COMPASS)
+        val reloadMeta = reloadItem.itemMeta
+        reloadMeta.setDisplayName("§6§lリロード")
+        setID(reloadMeta,"reload")
+        reloadItem.itemMeta = reloadMeta
+        inv.setItem(49,reloadItem)
+
+
+        if (page!=0){
+
+            val prevItem = ItemStack(Material.PAPER)
+            val prevMeta = prevItem.itemMeta
+            prevMeta.setDisplayName("§§l前ページへ")
+            setID(prevMeta,"prev")
+
+            prevItem.itemMeta = prevMeta
+
+            inv.setItem(45,prevItem)
+
+        }
+
+        if (inc >=44){
+            val nextItem = ItemStack(Material.PAPER)
+            val nextMeta = nextItem.itemMeta
+            nextMeta.setDisplayName("§§l次ページへ")
+
+            setID(nextMeta,"next")
+
+            nextItem.itemMeta = nextMeta
+
+            inv.setItem(53,nextItem)
+
+        }
+
+        p.openInventory(inv)
+        playerMenuMap[p] = ITEM_MENU
+        categoryMap[p] = category
+        pageMap[p] = page
+
+    }
+
     //Amanzon Basic
     private fun openOPMenu(p:Player, page:Int){
 
@@ -334,7 +453,7 @@ object CommerceMenu : Listener{
 
     }
 
-    private fun setID(meta:ItemMeta, value:String){
+    fun setID(meta:ItemMeta, value:String){
         meta.persistentDataContainer.set(NamespacedKey(plugin,"id"), PersistentDataType.STRING,value)
     }
 
@@ -396,13 +515,63 @@ object CommerceMenu : Listener{
                                 1 -> {sendMsg(p,"§a§l購入成功！")}
                                 else ->{ sendMsg(p,"エラー:${ret} サーバー運営者、GMに報告してください")}
                             }
-//                            if (ItemData.buy(p,itemID,orderID)){
-//                                sendMsg(p,"§a§l購入成功！")
-//                            }else{
-//                                sendMsg(p,"§c§l購入失敗!銀行にお金がないか、売り切れています！")
-//                            }
 
                             Bukkit.getScheduler().runTask(plugin, Runnable { openItemMenu(p,page) })
+                        }
+
+                        return
+                    }
+                }
+            }
+
+            CATEGORY_MENU ->{
+
+                if (id != ""){
+                    openCategoryList(p,id,0)
+                    return
+                }
+
+            }
+
+            CATEGORY_ITEM ->{
+
+                val page = pageMap[p]?:0
+                val category = categoryMap[p]?:"none"
+
+                when(id){
+                    "prev" ->{ openCategoryList(p,category,page-1) }
+
+                    "next" ->{ openCategoryList(p,category,page+1) }
+
+                    "reload" ->{ openCategoryList(p,category,page) }
+
+                    else ->{
+
+                        val meta = item.itemMeta?:return
+
+                        val orderID = meta.persistentDataContainer[NamespacedKey(plugin,"order_id"), PersistentDataType.INTEGER]?:-1
+                        val itemID = meta.persistentDataContainer[NamespacedKey(plugin,"item_id"), PersistentDataType.INTEGER]?:-1
+
+                        if (orderID == -1)return
+
+                        if (p.hasPermission(OP) && action == InventoryAction.CLONE_STACK){
+                            ItemData.close(orderID,p)
+                            sendMsg(p,"§c§l出品を取り下げました")
+                            Bukkit.getScheduler().runTask(plugin, Runnable { openCategoryList(p,category,page) })
+                            return
+                        }
+
+                        if (action != InventoryAction.MOVE_TO_OTHER_INVENTORY)return
+
+                        es.execute {
+
+                            when(val ret = ItemData.buy(p,itemID,orderID)){
+                                0 -> { sendMsg(p,"§c§l購入失敗！電子マネーが足りません！") }
+                                1 -> {sendMsg(p,"§a§l購入成功！")}
+                                else ->{ sendMsg(p,"エラー:${ret} サーバー運営者、GMに報告してください")}
+                            }
+
+                            Bukkit.getScheduler().runTask(plugin, Runnable { openCategoryList(p,category,page) })
                         }
 
                         return
@@ -444,6 +613,7 @@ object CommerceMenu : Listener{
 
                 when(id){
                     "ItemMenu" -> openItemMenu(p,0)
+                    "Category" -> openCategoryMenu(p)
                     "Basic" -> openOPMenu(p,0)
                     "SellMenu" -> es.execute { openSellItemMenu(p,p.uniqueId,0) }
                     "Selling"    -> {
@@ -452,7 +622,6 @@ object CommerceMenu : Listener{
                             .clickEvent(ClickEvent.suggestCommand("/amsell ")))
                     }
                 }
-
             }
 
             BASIC_MENU ->{
@@ -490,7 +659,6 @@ object CommerceMenu : Listener{
                         return
                     }
                 }
-
             }
         }
 

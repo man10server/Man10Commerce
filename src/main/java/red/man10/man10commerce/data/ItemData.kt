@@ -1,6 +1,7 @@
 package red.man10.man10commerce.data
 
 import net.kyori.adventure.text.Component
+import org.bukkit.Bukkit
 import org.bukkit.Material
 import org.bukkit.configuration.file.YamlConfiguration
 import org.bukkit.entity.Player
@@ -11,8 +12,8 @@ import red.man10.man10commerce.Man10Commerce.Companion.bank
 import red.man10.man10commerce.Man10Commerce.Companion.fee
 import red.man10.man10commerce.Man10Commerce.Companion.plugin
 import red.man10.man10commerce.Utility
+import red.man10.man10commerce.menu.CommerceMenu
 import java.io.File
-import java.lang.Exception
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 
@@ -34,7 +35,7 @@ object ItemData {
     val orderMap = ConcurrentHashMap<Int, Data>()//order_idと注文情報のマップ
     val opOrderMap = ConcurrentHashMap<Int, Data>()
 
-    private val categories = ConcurrentHashMap<String,Category>()
+    val categories = ConcurrentHashMap<String,Category>()
 
     private val mysql = MySQLManager(plugin, "Man10Commerce")
 
@@ -311,9 +312,11 @@ object ItemData {
 
         val files = categoryFolder.listFiles()?.toMutableList()?:return
 
+        Bukkit.getLogger().info("Start Loading Categories")
+
         for (file in files){
 
-            if (file.path.endsWith(".yml") || file.isDirectory)continue
+            if (!file.path.endsWith(".yml") || file.isDirectory)continue
 
             val yml = YamlConfiguration.loadConfiguration(file)
             val data = Category()
@@ -337,12 +340,17 @@ object ItemData {
             val meta = icon.itemMeta
             meta.displayName(Component.text(yml.getString("CategoryIconTitle")?:"Title"))
             meta.setCustomModelData(yml.getInt("CategoryIconCMD"))
+            CommerceMenu.setID(meta,name)
             icon.itemMeta = meta
 
             data.categoryIcon = icon
 
+            Bukkit.getLogger().info("category:$name")
+
             categories[name] = data
         }
+
+        Bukkit.getLogger().info("Finish Loading Categories")
     }
 
     fun getCategorizedItemID(categoryName:String):MutableList<Int>{
