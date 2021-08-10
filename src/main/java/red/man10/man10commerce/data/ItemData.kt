@@ -306,6 +306,8 @@ object ItemData {
 
     fun loadCategoriesData(){
 
+        categories.clear()
+
         val categoryFolder = File(plugin.dataFolder,File.separator+"categories")
 
         if (!categoryFolder.exists())categoryFolder.mkdir()

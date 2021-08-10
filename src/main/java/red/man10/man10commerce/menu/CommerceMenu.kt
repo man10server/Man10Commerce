@@ -275,10 +275,12 @@ object CommerceMenu : Listener{
         val categorizeID = ItemData.getCategorizedItemID(category)
 
         var inc = 0
+        var setCount = 0
 
         while (inv.getItem(44) ==null){
 
             if (keys.size <= inc+page*45)break
+            if (setCount>=categorizeID.size)break
 
             val itemID = keys[inc+page*45]
 
@@ -318,6 +320,8 @@ object CommerceMenu : Listener{
 
             inv.addItem(item)
 
+            setCount ++
+
         }
 
         val reloadItem = ItemStack(Material.COMPASS)
@@ -341,7 +345,7 @@ object CommerceMenu : Listener{
 
         }
 
-        if (inc >=44){
+        if (setCount==44){
             val nextItem = ItemStack(Material.PAPER)
             val nextMeta = nextItem.itemMeta
             nextMeta.setDisplayName("§§l次ページへ")
@@ -355,7 +359,7 @@ object CommerceMenu : Listener{
         }
 
         p.openInventory(inv)
-        playerMenuMap[p] = ITEM_MENU
+        playerMenuMap[p] = CATEGORY_MENU
         categoryMap[p] = category
         pageMap[p] = page
 
