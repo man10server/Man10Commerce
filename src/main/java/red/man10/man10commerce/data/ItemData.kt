@@ -74,7 +74,7 @@ object ItemData {
         if (rs != null) {
 
             while (rs.next()) {
-                itemDictionary[rs.getInt("id")] = Utility.itemFromBase64(rs.getString("base64"))!!
+                itemDictionary[rs.getInt("id")] = Utility.itemFromBase64(rs.getString("base64"))?:continue
             }
 
             rs.close()
