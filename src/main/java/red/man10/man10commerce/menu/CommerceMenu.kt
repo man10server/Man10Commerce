@@ -173,6 +173,13 @@ object CommerceMenu : Listener{
 
         var inc = 0
 
+        if (page==0){
+            for (data in ItemData.categories.values){
+                inv.addItem(data.categoryIcon)
+                inc++
+            }
+        }
+
         while (inv.getItem(44) ==null){
 
             if (keys.size <= inc+page*45)break
@@ -542,6 +549,11 @@ object CommerceMenu : Listener{
 
                     else ->{
 
+                        if (id != ""){
+                            openCategoryList(p,id,0)
+                            return
+                        }
+
                         val meta = item.itemMeta?:return
 
                         val orderID = meta.persistentDataContainer[NamespacedKey(plugin,"order_id"), PersistentDataType.INTEGER]?:-1
@@ -614,7 +626,10 @@ object CommerceMenu : Listener{
                             return
                         }
 
-                        if (action != InventoryAction.MOVE_TO_OTHER_INVENTORY)return
+                        if (action != InventoryAction.MOVE_TO_OTHER_INVENTORY){
+                            es.execute { showItemList(p,itemID) }
+                            return
+                        }
 
                         es.execute {
 
@@ -731,6 +746,11 @@ object CommerceMenu : Listener{
                         val itemID = meta.persistentDataContainer[NamespacedKey(plugin,"item_id"), PersistentDataType.INTEGER]?:-1
 
                         if (orderID == -1)return
+
+                        if (action != InventoryAction.MOVE_TO_OTHER_INVENTORY){
+                            es.execute { showItemList(p,itemID) }
+                            return
+                        }
 
                         es.execute {
 
