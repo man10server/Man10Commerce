@@ -5,6 +5,7 @@ import net.kyori.adventure.text.event.ClickEvent
 import org.bukkit.Bukkit
 import org.bukkit.Material
 import org.bukkit.NamespacedKey
+import org.bukkit.Sound
 import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
@@ -35,11 +36,11 @@ object CommerceMenu : Listener{
     private val pageMap = ConcurrentHashMap<Player,Int>()
     private val categoryMap = ConcurrentHashMap<Player,String>()
 
-    private const val ITEM_MENU = "§${prefix}§l出品中のアイテム一覧"
+    private const val ITEM_MENU = "${prefix}§l出品中のアイテム一覧"
     private const val SELL_MENU = "§${prefix}§l出品したアイテム"
     private const val MAIN_MENU = "§${prefix}§lメニュー"
-    private const val CATEGORY_MENU = "§${prefix}§lカテゴリーメニュー"
-    private const val CATEGORY_ITEM = "§${prefix}§lカテゴリーアイテム"
+    private const val CATEGORY_MENU = "${prefix}§lカテゴリーメニュー"
+    private const val CATEGORY_ITEM = "${prefix}§lカテゴリーアイテム"
     private const val BASIC_MENU = "${prefix}§d§lAmanzonBasic"
 
     fun openMainMenu(p:Player){
@@ -62,7 +63,7 @@ object CommerceMenu : Listener{
         val basic = ItemStack(Material.DIAMOND)
         val basicMeta = basic.itemMeta
         basicMeta.displayName(text("§a§lAmazonBasic"))
-        basicMeta.lore = mutableListOf("§f運営が販売しているアイテムを買うことができます")
+        basicMeta.lore = mutableListOf("§f運営が販売している","アイテムを買うことができます")
         setID(basicMeta,"Basic")
         basic.itemMeta = basicMeta
 
@@ -132,7 +133,7 @@ object CommerceMenu : Listener{
 
             val prevItem = ItemStack(Material.PAPER)
             val prevMeta = prevItem.itemMeta
-            prevMeta.displayName(text("§§l前ページへ"))
+            prevMeta.displayName(text("§6§l前ページへ"))
             setID(prevMeta,"prev")
 
             prevItem.itemMeta = prevMeta
@@ -144,7 +145,7 @@ object CommerceMenu : Listener{
         if (inc >=44){
             val nextItem = ItemStack(Material.PAPER)
             val nextMeta = nextItem.itemMeta
-            nextMeta.displayName(text("§§l次ページへ"))
+            nextMeta.displayName(text("§6§l次ページへ"))
 
             setID(nextMeta,"next")
 
@@ -198,7 +199,7 @@ object CommerceMenu : Listener{
             lore.add("§e§l単価:${format(floor(data.price/data.amount))}")
             lore.add("§e§l出品者${Bukkit.getOfflinePlayer(data.seller!!).name}")
             lore.add("§e§l個数:${data.amount}")
-            lore.add("§e§l${SimpleDateFormat("yyyy-MM/dd").format(data.date)}")
+            lore.add("§e§l${SimpleDateFormat("yyyy-MM-dd").format(data.date)}")
             if (data.isOp) lore.add("§d§l公式出品アイテム")
             lore.add("§cシフトクリックで1-Click購入")
 
@@ -225,7 +226,7 @@ object CommerceMenu : Listener{
 
             val prevItem = ItemStack(Material.PAPER)
             val prevMeta = prevItem.itemMeta
-            prevMeta.displayName(text("§§l前ページへ"))
+            prevMeta.displayName(text("§6§l前ページへ"))
             setID(prevMeta,"prev")
 
             prevItem.itemMeta = prevMeta
@@ -237,7 +238,7 @@ object CommerceMenu : Listener{
         if (inc >=44){
             val nextItem = ItemStack(Material.PAPER)
             val nextMeta = nextItem.itemMeta
-            nextMeta.displayName(text("§§l次ページへ"))
+            nextMeta.displayName(text("§6§l次ページへ"))
 
             setID(nextMeta,"next")
 
@@ -272,10 +273,8 @@ object CommerceMenu : Listener{
         val inv = Bukkit.createInventory(null,54, text(CATEGORY_ITEM))
 
         val keys = ItemData.getCategorized(category)?.keys?.toList()?: mutableListOf()
-//        val categorizeID =
 
         var inc = 0
-        var setCount = 0
 
         while (inv.getItem(44) ==null){
 
@@ -307,7 +306,7 @@ object CommerceMenu : Listener{
             lore.add("§e§l単価:${format(floor(data.price/data.amount))}")
             lore.add("§e§l出品者${Bukkit.getOfflinePlayer(data.seller!!).name}")
             lore.add("§e§l個数:${data.amount}")
-            lore.add("§e§l${SimpleDateFormat("yyyy-MM/dd").format(data.date)}")
+            lore.add("§e§l${SimpleDateFormat("yyyy-MM-dd").format(data.date)}")
             if (data.isOp) lore.add("§d§l公式出品アイテム")
             lore.add("§cシフトクリックで1-Click購入")
 
@@ -320,7 +319,7 @@ object CommerceMenu : Listener{
 
             inv.addItem(item)
 
-            setCount ++
+//            setCount ++
 
         }
 
@@ -336,7 +335,7 @@ object CommerceMenu : Listener{
 
             val prevItem = ItemStack(Material.PAPER)
             val prevMeta = prevItem.itemMeta
-            prevMeta.displayName(text("§§l前ページへ"))
+            prevMeta.displayName(text("§6§l前ページへ"))
             setID(prevMeta,"prev")
 
             prevItem.itemMeta = prevMeta
@@ -345,10 +344,10 @@ object CommerceMenu : Listener{
 
         }
 
-        if (setCount>=44){
+        if (inc>=44){
             val nextItem = ItemStack(Material.PAPER)
             val nextMeta = nextItem.itemMeta
-            nextMeta.displayName(text("§§l次ページへ"))
+            nextMeta.displayName(text("§6§l次ページへ"))
 
             setID(nextMeta,"next")
 
@@ -359,7 +358,7 @@ object CommerceMenu : Listener{
         }
 
         p.openInventory(inv)
-        playerMenuMap[p] = CATEGORY_MENU
+        playerMenuMap[p] = CATEGORY_ITEM
         categoryMap[p] = category
         pageMap[p] = page
 
@@ -428,7 +427,7 @@ object CommerceMenu : Listener{
 
             val prevItem = ItemStack(Material.PAPER)
             val prevMeta = prevItem.itemMeta
-            prevMeta.displayName(text("§§l前ページへ"))
+            prevMeta.displayName(text("§6§l前ページへ"))
             setID(prevMeta,"prev")
 
             prevItem.itemMeta = prevMeta
@@ -440,7 +439,7 @@ object CommerceMenu : Listener{
         if (inc >=44){
             val nextItem = ItemStack(Material.PAPER)
             val nextMeta = nextItem.itemMeta
-            nextMeta.displayName(text("§§l次ページへ"))
+            nextMeta.displayName(text("§6§l次ページへ"))
 
             setID(nextMeta,"next")
 
@@ -480,6 +479,8 @@ object CommerceMenu : Listener{
         val item = e.currentItem?:return
         val action = e.action
         val id = getID(item)
+
+        p.playSound(p.location,Sound.UI_BUTTON_CLICK,0.1F,1.0F)
 
         when(menuName){
 
