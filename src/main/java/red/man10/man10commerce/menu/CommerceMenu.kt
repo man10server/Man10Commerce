@@ -271,8 +271,8 @@ object CommerceMenu : Listener{
 
         val inv = Bukkit.createInventory(null,54, text(CATEGORY_ITEM))
 
-        val keys = orderMap.keys().toList()
-        val categorizeID = ItemData.getCategorizedItemID(category)
+        val keys = ItemData.getCategorized(category)?.keys?.toList()?: mutableListOf()
+//        val categorizeID =
 
         var inc = 0
         var setCount = 0
@@ -280,7 +280,7 @@ object CommerceMenu : Listener{
         while (inv.getItem(44) ==null){
 
             if (keys.size <= inc+page*45)break
-            if (setCount>=categorizeID.size)break
+//            if (setCount>=categorizeID.size)break
 
             val itemID = keys[inc+page*45]
 
@@ -289,7 +289,7 @@ object CommerceMenu : Listener{
             val data = orderMap[itemID]
             val item = itemDictionary[itemID]?.clone()?:continue
 
-            if (!categorizeID.contains(itemID))continue
+//            if (!categorizeID.contains(itemID))continue
 
             val lore = item.lore?: mutableListOf()
 

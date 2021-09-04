@@ -15,6 +15,7 @@ import red.man10.man10commerce.menu.CommerceMenu
 import java.io.File
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
+import kotlin.collections.HashMap
 
 class Data {
 
@@ -45,7 +46,7 @@ object ItemData {
 
         if (itemDictionary.containsValue(one)) return false
 
-        val name = if (one.hasItemMeta()) one.itemMeta!!.displayName else one.i18NDisplayName
+        val name = item.itemMeta?.displayName?:item.i18NDisplayName
 
         mysql.execute(
             "INSERT INTO item_list " +
@@ -143,6 +144,59 @@ object ItemData {
 
     }
 
+    fun loadCategoryData(){
+
+        categories.clear()
+
+        val categoryFolder = File(plugin.dataFolder,File.separator+"categories")
+
+        if (!categoryFolder.exists())categoryFolder.mkdir()
+
+        val files = categoryFolder.listFiles()?.toMutableList()?:return
+
+        Bukkit.getLogger().info("Start Loading Categories")
+
+        for (file in files){
+
+            if (!file.path.endsWith(".yml") || file.isDirectory)continue
+
+            val yml = YamlConfiguration.loadConfiguration(file)
+            val data = Category()
+
+            val name = yml.getString("CategoryName")?:"none"
+
+            data.customModelData = yml.getIntegerList("CustomModelData")
+            data.displayName = yml.getStringList("DisplayName")
+
+            val materialList = mutableListOf<Material>()
+
+            for (m in yml.getStringList("Material")){
+                try {
+                    materialList.add(Material.valueOf(m))
+                }catch (e:Exception){ }
+            }
+
+            data.material = materialList
+
+            val icon = ItemStack(Material.valueOf(yml.getString("CategoryIconMaterial")?:"STONE"))
+            val meta = icon.itemMeta
+            meta.displayName(Component.text(yml.getString("CategoryIconTitle")?:"Title"))
+            meta.setCustomModelData(yml.getInt("CategoryIconCMD"))
+            CommerceMenu.setID(meta,name)
+            icon.itemMeta = meta
+
+            data.categoryIcon = icon
+
+            Bukkit.getLogger().info("category:$name")
+
+            categories[name] = data
+        }
+
+        Bukkit.getLogger().info("Finish Loading Categories")
+    }
+
+
+
     fun sell(p: Player, item: ItemStack, price: Double): Boolean {
 
         if (Man10Commerce.maxItems< UserData.getSellAmount(p)){
@@ -157,7 +211,7 @@ object ItemData {
 
         registerItemIndex(item)
 
-        val name = if (item.hasItemMeta()) item.itemMeta!!.displayName else item.i18NDisplayName
+        val name = item.itemMeta?.displayName?:item.i18NDisplayName
 
         var id = -1
 
@@ -192,7 +246,7 @@ object ItemData {
 
         registerItemIndex(item)
 
-        val name = if (item.hasItemMeta()) item.itemMeta!!.displayName else item.i18NDisplayName
+        val name = item.itemMeta?.displayName?:item.i18NDisplayName
 
         var id = -1
 
@@ -302,60 +356,9 @@ object ItemData {
         return list
     }
 
-    fun loadCategoriesData(){
+    fun getCategorized(categoryName: String): Map<Int, Data>? {
 
-        categories.clear()
-
-        val categoryFolder = File(plugin.dataFolder,File.separator+"categories")
-
-        if (!categoryFolder.exists())categoryFolder.mkdir()
-
-        val files = categoryFolder.listFiles()?.toMutableList()?:return
-
-        Bukkit.getLogger().info("Start Loading Categories")
-
-        for (file in files){
-
-            if (!file.path.endsWith(".yml") || file.isDirectory)continue
-
-            val yml = YamlConfiguration.loadConfiguration(file)
-            val data = Category()
-
-            val name = yml.getString("CategoryName")?:"none"
-
-            data.customModelData = yml.getIntegerList("CustomModelData")
-            data.displayName = yml.getStringList("DisplayName")
-
-            val materialList = mutableListOf<Material>()
-
-            for (m in yml.getStringList("Material")){
-                try {
-                    materialList.add(Material.valueOf(m))
-                }catch (e:Exception){ }
-            }
-
-            data.material = materialList
-
-            val icon = ItemStack(Material.valueOf(yml.getString("CategoryIconMaterial")?:"STONE"))
-            val meta = icon.itemMeta
-            meta.displayName(Component.text(yml.getString("CategoryIconTitle")?:"Title"))
-            meta.setCustomModelData(yml.getInt("CategoryIconCMD"))
-            CommerceMenu.setID(meta,name)
-            icon.itemMeta = meta
-
-            data.categoryIcon = icon
-
-            Bukkit.getLogger().info("category:$name")
-
-            categories[name] = data
-        }
-
-        Bukkit.getLogger().info("Finish Loading Categories")
-    }
-
-    fun getCategorizedItemID(categoryName:String):MutableList<Int>{
-
-        val category = categories[categoryName]?:return Collections.emptyList()
+        val category = categories[categoryName] ?: return null
 
         val list = mutableListOf<Int>()
 
@@ -363,7 +366,7 @@ object ItemData {
         val isEmptyDisplay = category.displayName.isEmpty()
         val isEmptyCMD = category.customModelData.isEmpty()
 
-        for (data in itemDictionary){
+        for (data in itemDictionary) {
 
             val item = data.value
             val meta = item.itemMeta
@@ -372,26 +375,26 @@ object ItemData {
             var matchDisplay = false
             var matchCMD = false
 
-            if (isEmptyMaterial){
+            if (isEmptyMaterial) {
                 matchMaterial = true
-            }else if (category.material.contains(item.type))matchMaterial = true
+            } else if (category.material.contains(item.type)) matchMaterial = true
 
-            val display = (meta?.displayName ?: item.i18NDisplayName?:"none").replace("§[a-z0-9]".toRegex(),"")
+            val display = (meta?.displayName ?: item.i18NDisplayName ?: "none").replace("§[a-z0-9]".toRegex(), "")
 
-            if (isEmptyDisplay){
+            if (isEmptyDisplay) {
                 matchDisplay = true
-            } else if ((category.displayName.filter { display.contains(it) }).isNotEmpty())matchDisplay = true
+            } else if ((category.displayName.filter { display.contains(it) }).isNotEmpty()) matchDisplay = true
 
             val cmd = if (meta.hasCustomModelData()) meta.customModelData else 0
 
-            if (isEmptyCMD){
+            if (isEmptyCMD) {
                 matchCMD = true
-            }else if (category.customModelData.contains(cmd))matchCMD = true
+            } else if (category.customModelData.contains(cmd)) matchCMD = true
 
-            if (matchCMD && matchDisplay && matchMaterial)list.add(data.key)
+            if (matchCMD && matchDisplay && matchMaterial) list.add(data.key)
         }
 
-        return list
+        return orderMap.filterKeys { list.contains(it) }
     }
 }
 

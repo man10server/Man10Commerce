@@ -1,6 +1,5 @@
 package red.man10.man10commerce
 
-import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.Component.text
 import org.bukkit.Bukkit
 import org.bukkit.Material
@@ -69,7 +68,7 @@ class Man10Commerce : JavaPlugin() {
         maxItems = config.getInt("maxItems")
         enable = config.getBoolean("enable")
 
-        ItemData.loadCategoriesData()
+        ItemData.loadCategoryData()
 
     }
 
@@ -119,7 +118,7 @@ class Man10Commerce : JavaPlugin() {
 
                 sendMsg(sender,"§e§l出品成功しました！")
 
-                val name = if (display.hasItemMeta()) display.itemMeta!!.displayName else display.i18NDisplayName
+                val name = display.itemMeta?.displayName?:display.i18NDisplayName
 
                 Bukkit.getScheduler().runTask(this, Runnable {
                     Bukkit.broadcast(text("${prefix}§f${name}§f(${display.amount}個)が§e§l単価${format(price)}§f円で出品されました！"))
@@ -164,7 +163,7 @@ class Man10Commerce : JavaPlugin() {
 
                 sendMsg(sender,"§e§l出品成功しました！")
 
-                val name = if (display.hasItemMeta()) display.itemMeta!!.displayName else display.i18NDisplayName
+                val name = display.itemMeta?.displayName?:display.i18NDisplayName
 
                 Bukkit.getScheduler().runTask(this, Runnable {
                     Bukkit.broadcast(text("${prefix}§f§l${name}§f§l(${display.amount}個)が§e§l単価${format(price)}§f§l円で§d§l公式出品されました！"))
