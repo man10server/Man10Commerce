@@ -1,6 +1,6 @@
 package red.man10.man10commerce.menu
 
-import net.kyori.adventure.text.Component
+import net.kyori.adventure.text.Component.text
 import net.kyori.adventure.text.event.ClickEvent
 import org.bukkit.Bukkit
 import org.bukkit.Material
@@ -44,37 +44,37 @@ object CommerceMenu : Listener{
 
     fun openMainMenu(p:Player){
 
-        val inv = Bukkit.createInventory(null,9, MAIN_MENU)
+        val inv = Bukkit.createInventory(null,9, text(MAIN_MENU))
 
         val showItem = ItemStack(Material.GRASS_BLOCK)
         val shouItemMeta = showItem.itemMeta
-        shouItemMeta.setDisplayName("§a§l出品されているアイテムをみる")
+        shouItemMeta.displayName(text("§a§l出品されているアイテムをみる"))
         setID(shouItemMeta,"ItemMenu")
         showItem.itemMeta = shouItemMeta
 
         val category = ItemStack(Material.BOOK)
         val categoryMeta = category.itemMeta
-        categoryMeta.setDisplayName("§a§lカテゴリーごとに見る")
+        categoryMeta.displayName(text("§a§lカテゴリーごとに見る"))
         categoryMeta.lore = mutableListOf("§fオリジナルアイテムなどが","§fカテゴリーごとに分かれています")
         setID(categoryMeta,"Category")
         category.itemMeta = categoryMeta
 
         val basic = ItemStack(Material.DIAMOND)
         val basicMeta = basic.itemMeta
-        basicMeta.setDisplayName("§a§lAmazonBasic")
+        basicMeta.displayName(text("§a§lAmazonBasic"))
         basicMeta.lore = mutableListOf("§f運営が販売しているアイテムを買うことができます")
         setID(basicMeta,"Basic")
         basic.itemMeta = basicMeta
 
         val sellItem = ItemStack(Material.CHEST)
         val sellItemMeta = sellItem.itemMeta
-        sellItemMeta.setDisplayName("§a§l出品したアイテムを確かめる")
+        sellItemMeta.displayName(text("§a§l出品したアイテムを確かめる"))
         setID(sellItemMeta,"SellMenu")
         sellItem.itemMeta = sellItemMeta
 
         val selling = ItemStack(Material.COBBLESTONE)
         val sellingMeta = selling.itemMeta
-        sellingMeta.setDisplayName("§e§lアイテムを出品する")
+        sellingMeta.displayName(text("§e§lアイテムを出品する"))
         setID(sellingMeta,"Selling")
         selling.itemMeta = sellingMeta
 
@@ -95,7 +95,7 @@ object CommerceMenu : Listener{
 
         val list = ItemData.sellList(seller)
 
-        val inv = Bukkit.createInventory(null,54, SELL_MENU)
+        val inv = Bukkit.createInventory(null,54, text(SELL_MENU))
 
         var inc = 0
 
@@ -132,7 +132,7 @@ object CommerceMenu : Listener{
 
             val prevItem = ItemStack(Material.PAPER)
             val prevMeta = prevItem.itemMeta
-            prevMeta.setDisplayName("§§l前ページへ")
+            prevMeta.displayName(text("§§l前ページへ"))
             setID(prevMeta,"prev")
 
             prevItem.itemMeta = prevMeta
@@ -144,7 +144,7 @@ object CommerceMenu : Listener{
         if (inc >=44){
             val nextItem = ItemStack(Material.PAPER)
             val nextMeta = nextItem.itemMeta
-            nextMeta.setDisplayName("§§l次ページへ")
+            nextMeta.displayName(text("§§l次ページへ"))
 
             setID(nextMeta,"next")
 
@@ -215,7 +215,7 @@ object CommerceMenu : Listener{
 
         val reloadItem = ItemStack(Material.COMPASS)
         val reloadMeta = reloadItem.itemMeta
-        reloadMeta.setDisplayName("§6§lリロード")
+        reloadMeta.displayName(text("§6§lリロード"))
         setID(reloadMeta,"reload")
         reloadItem.itemMeta = reloadMeta
         inv.setItem(49,reloadItem)
@@ -225,7 +225,7 @@ object CommerceMenu : Listener{
 
             val prevItem = ItemStack(Material.PAPER)
             val prevMeta = prevItem.itemMeta
-            prevMeta.setDisplayName("§§l前ページへ")
+            prevMeta.displayName(text("§§l前ページへ"))
             setID(prevMeta,"prev")
 
             prevItem.itemMeta = prevMeta
@@ -237,7 +237,7 @@ object CommerceMenu : Listener{
         if (inc >=44){
             val nextItem = ItemStack(Material.PAPER)
             val nextMeta = nextItem.itemMeta
-            nextMeta.setDisplayName("§§l次ページへ")
+            nextMeta.displayName(text("§§l次ページへ"))
 
             setID(nextMeta,"next")
 
@@ -255,7 +255,7 @@ object CommerceMenu : Listener{
 
     private fun openCategoryMenu(p:Player){
 
-        val inv = Bukkit.createInventory(null,18, CATEGORY_MENU)
+        val inv = Bukkit.createInventory(null,18, text(CATEGORY_MENU))
 
         for (data in ItemData.categories.values){
             inv.addItem(data.categoryIcon)
@@ -269,7 +269,7 @@ object CommerceMenu : Listener{
     //カテゴリーわけされた出品アイテム一覧を見る
     private fun openCategoryList(p:Player, category:String, page:Int){
 
-        val inv = Bukkit.createInventory(null,54, CATEGORY_ITEM)
+        val inv = Bukkit.createInventory(null,54, text(CATEGORY_ITEM))
 
         val keys = orderMap.keys().toList()
         val categorizeID = ItemData.getCategorizedItemID(category)
@@ -326,7 +326,7 @@ object CommerceMenu : Listener{
 
         val reloadItem = ItemStack(Material.COMPASS)
         val reloadMeta = reloadItem.itemMeta
-        reloadMeta.setDisplayName("§6§lリロード")
+        reloadMeta.displayName(text("§6§lリロード"))
         setID(reloadMeta,"reload")
         reloadItem.itemMeta = reloadMeta
         inv.setItem(49,reloadItem)
@@ -336,7 +336,7 @@ object CommerceMenu : Listener{
 
             val prevItem = ItemStack(Material.PAPER)
             val prevMeta = prevItem.itemMeta
-            prevMeta.setDisplayName("§§l前ページへ")
+            prevMeta.displayName(text("§§l前ページへ"))
             setID(prevMeta,"prev")
 
             prevItem.itemMeta = prevMeta
@@ -348,7 +348,7 @@ object CommerceMenu : Listener{
         if (setCount>=44){
             val nextItem = ItemStack(Material.PAPER)
             val nextMeta = nextItem.itemMeta
-            nextMeta.setDisplayName("§§l次ページへ")
+            nextMeta.displayName(text("§§l次ページへ"))
 
             setID(nextMeta,"next")
 
@@ -418,7 +418,7 @@ object CommerceMenu : Listener{
 
         val reloadItem = ItemStack(Material.COMPASS)
         val reloadMeta = reloadItem.itemMeta
-        reloadMeta.setDisplayName("§6§lリロード")
+        reloadMeta.displayName(text("§6§lリロード"))
         setID(reloadMeta,"reload")
         reloadItem.itemMeta = reloadMeta
         inv.setItem(49,reloadItem)
@@ -428,7 +428,7 @@ object CommerceMenu : Listener{
 
             val prevItem = ItemStack(Material.PAPER)
             val prevMeta = prevItem.itemMeta
-            prevMeta.setDisplayName("§§l前ページへ")
+            prevMeta.displayName(text("§§l前ページへ"))
             setID(prevMeta,"prev")
 
             prevItem.itemMeta = prevMeta
@@ -440,7 +440,7 @@ object CommerceMenu : Listener{
         if (inc >=44){
             val nextItem = ItemStack(Material.PAPER)
             val nextMeta = nextItem.itemMeta
-            nextMeta.setDisplayName("§§l次ページへ")
+            nextMeta.displayName(text("§§l次ページへ"))
 
             setID(nextMeta,"next")
 
@@ -622,7 +622,8 @@ object CommerceMenu : Listener{
                     "SellMenu" -> es.execute { openSellItemMenu(p,p.uniqueId,0) }
                     "Selling"    -> {
                         p.closeInventory()
-                        p.sendMessage(Component.text("${prefix}§a§n売るアイテムを手に持って、/amsell <金額> を入力してください")
+                        p.sendMessage(
+                            text("${prefix}§a§n売るアイテムを手に持って、/amsell <金額> を入力してください")
                             .clickEvent(ClickEvent.suggestCommand("/amsell ")))
                     }
                 }
