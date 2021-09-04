@@ -396,6 +396,34 @@ object ItemData {
 
         return orderMap.filterKeys { list.contains(it) }
     }
+
+    @Synchronized
+    fun getAllItem(itemID:Int):List<Data>{
+
+        val list = mutableListOf<Data>()
+
+        val rs = mysql.query("select * from order_table where item_id=$itemID order by price;")?:return Collections.emptyList()
+
+        while (rs.next()){
+
+            val data = Data()
+
+            data.id = rs.getInt("id")
+            data.amount = rs.getInt("amount")
+            data.date = rs.getDate("date")
+            data.itemID = itemID
+            data.price = rs.getDouble("price")*data.amount
+            data.seller = UUID.fromString(rs.getString("uuid"))
+            data.isOp = rs.getInt("is_op") == 1
+
+            list.add(data)
+        }
+
+        rs.close()
+        mysql.close()
+
+        return list
+    }
 }
 
 class Category{

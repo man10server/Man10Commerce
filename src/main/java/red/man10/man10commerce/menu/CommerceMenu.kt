@@ -37,11 +37,12 @@ object CommerceMenu : Listener{
     private val categoryMap = ConcurrentHashMap<Player,String>()
 
     private const val ITEM_MENU = "${prefix}§l出品中のアイテム一覧"
-    private const val SELL_MENU = "§${prefix}§l出品したアイテム"
-    private const val MAIN_MENU = "§${prefix}§lメニュー"
+    private const val SELL_MENU = "${prefix}§l出品したアイテム"
+    private const val MAIN_MENU = "${prefix}§lメニュー"
     private const val CATEGORY_MENU = "${prefix}§lカテゴリーメニュー"
     private const val CATEGORY_ITEM = "${prefix}§lカテゴリーアイテム"
     private const val BASIC_MENU = "${prefix}§d§lAmanzonBasic"
+    private const val ITEM_LIST_MENU = "${prefix}同じアイテムのムリスト"
 
     fun openMainMenu(p:Player){
 
@@ -456,6 +457,50 @@ object CommerceMenu : Listener{
 
     }
 
+    private fun showItemList(p: Player, itemID:Int){
+
+        val inv = Bukkit.createInventory(null,54, text(ITEM_LIST_MENU))
+
+        val list = ItemData.getAllItem(itemID)
+
+        Bukkit.getScheduler().runTask(plugin, Runnable {
+
+            for (data in list){
+                if (inv.last()!=null)break
+
+                val item = itemDictionary[itemID]?.clone()?:return@Runnable
+
+                item.amount = data.amount
+
+                val lore = item.lore?: mutableListOf()
+
+                lore.add("§e§l値段:${format(floor(data.price))}")
+                lore.add("§e§l単価:${format(floor(data.price/data.amount))}")
+                lore.add("§e§l出品者${Bukkit.getOfflinePlayer(data.seller!!).name}")
+                lore.add("§e§l個数:${data.amount}")
+                lore.add("§e§l${SimpleDateFormat("yyyy-MM-dd").format(data.date)}")
+                if (data.isOp) lore.add("§d§l公式出品アイテム")
+                lore.add("§cシフトクリックで1-Click購入")
+
+                val meta = item.itemMeta
+                meta.persistentDataContainer.set(NamespacedKey(plugin,"order_id"), PersistentDataType.INTEGER,data.id)
+                meta.persistentDataContainer.set(NamespacedKey(plugin,"item_id"), PersistentDataType.INTEGER,data.itemID)
+                item.itemMeta = meta
+
+                item.lore = lore
+
+                inv.addItem(item)
+
+            }
+
+            p.openInventory(inv)
+            playerMenuMap[p] = ITEM_LIST_MENU
+            pageMap[p] = itemID
+
+        })
+
+    }
+
     fun setID(meta:ItemMeta, value:String){
         meta.persistentDataContainer.set(NamespacedKey(plugin,"id"), PersistentDataType.STRING,value)
     }
@@ -511,7 +556,10 @@ object CommerceMenu : Listener{
                             return
                         }
 
-                        if (action != InventoryAction.MOVE_TO_OTHER_INVENTORY)return
+                        if (action != InventoryAction.MOVE_TO_OTHER_INVENTORY){
+                            es.execute { showItemList(p,itemID) }
+                            return
+                        }
 
                         es.execute {
 
@@ -582,6 +630,39 @@ object CommerceMenu : Listener{
                         return
                     }
                 }
+            }
+
+            ITEM_LIST_MENU ->{
+
+                val itemID = pageMap[p]?:0
+
+                val meta = item.itemMeta?:return
+
+                val orderID = meta.persistentDataContainer[NamespacedKey(plugin,"order_id"), PersistentDataType.INTEGER]?:-1
+
+                if (orderID == -1)return
+
+                if (p.hasPermission(OP) && action == InventoryAction.CLONE_STACK){
+                    ItemData.close(orderID,p)
+                    sendMsg(p,"§c§l出品を取り下げました")
+                    showItemList(p,itemID)
+                    return
+                }
+
+                if (action != InventoryAction.MOVE_TO_OTHER_INVENTORY)return
+
+                es.execute {
+
+                    when(val ret = ItemData.buy(p,itemID,orderID)){
+                        0 -> { sendMsg(p,"§c§l購入失敗！電子マネーが足りません！") }
+                        1 -> {sendMsg(p,"§a§l購入成功！")}
+                        else ->{ sendMsg(p,"エラー:${ret} サーバー運営者、GMに報告してください")}
+                    }
+
+                    showItemList(p,itemID)
+                }
+
+                return
             }
 
             SELL_MENU ->{
