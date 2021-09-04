@@ -1,5 +1,7 @@
 package red.man10.man10commerce
 
+import net.kyori.adventure.text.Component
+import net.kyori.adventure.text.Component.text
 import org.bukkit.Bukkit
 import org.bukkit.Material
 import org.bukkit.command.Command
@@ -26,10 +28,10 @@ class Man10Commerce : JavaPlugin() {
         var enable = true
 
         var minPrice : Double =  10.0
-
         var maxPrice : Double = 10000000.0 //一般会員の出品額上限
+
         var maxItems : Int = 54 // 一般会員の出品数上限
-        var fee = 0.0
+//        var fee = 0.0
 
         const val OP = "commerce.op"
         const val USER = "commerce.user"
@@ -62,7 +64,6 @@ class Man10Commerce : JavaPlugin() {
 
         reloadConfig()
 
-        fee = config.getDouble("fee")
         minPrice = config.getDouble("minPrice")
         maxPrice = config.getDouble("maxPrice")
         maxItems = config.getInt("maxItems")
@@ -89,7 +90,7 @@ class Man10Commerce : JavaPlugin() {
 
             if (args.isEmpty()){
 
-                sendMsg(sender,"§a§l/amsell <値段> (単価ではなく、合計の値段を入力してください)")
+                sendMsg(sender,"§a§l/amsell <値段> (アイテム一つあたりの値段を入力してください)")
 
                 return false
             }
@@ -109,20 +110,20 @@ class Man10Commerce : JavaPlugin() {
             }
 
             if (price< minPrice){
-                sendMsg(sender,"§c§l${minPrice}円以下での出品はできません！")
+                sendMsg(sender,"§c§l${minPrice}円未満の出品はできません！")
                 return true
             }
 
             es.execute {
-                if (ItemData.sell(sender,item,price)){
-                    sendMsg(sender,"§e§l出品成功しました！")
+                if (!ItemData.sell(sender,item,price))return@execute
 
-                    val name = if (display.hasItemMeta()) display.itemMeta!!.displayName else display.i18NDisplayName
+                sendMsg(sender,"§e§l出品成功しました！")
 
-                    Bukkit.getScheduler().runTask(this, Runnable {
-                        Bukkit.broadcastMessage("${prefix}§f§l${name}§f§l(${display.amount}個)が§e§l${format(price)}§f§l円で出品されました！")
-                    })
-                }
+                val name = if (display.hasItemMeta()) display.itemMeta!!.displayName else display.i18NDisplayName
+
+                Bukkit.getScheduler().runTask(this, Runnable {
+                    Bukkit.broadcast(text("${prefix}§f${name}§f(${display.amount}個)が§e§l単価${format(price)}§f円で出品されました！"))
+                })
             }
 
             return true
@@ -159,15 +160,15 @@ class Man10Commerce : JavaPlugin() {
             }
 
             es.execute {
-                if (ItemData.sellOP(sender,item,price)){
-                    sendMsg(sender,"§e§l出品成功しました！")
+                if (!ItemData.sellOP(sender,item,price))return@execute
 
-                    val name = if (display.hasItemMeta()) display.itemMeta!!.displayName else display.i18NDisplayName
+                sendMsg(sender,"§e§l出品成功しました！")
 
-                    Bukkit.getScheduler().runTask(this, Runnable {
-                        Bukkit.broadcastMessage("${prefix}§f§l${name}§f§l(${display.amount}個)が§e§l${format(price)}§f§l円で§d§l公式出品されました！")
-                    })
-                }
+                val name = if (display.hasItemMeta()) display.itemMeta!!.displayName else display.i18NDisplayName
+
+                Bukkit.getScheduler().runTask(this, Runnable {
+                    Bukkit.broadcast(text("${prefix}§f§l${name}§f§l(${display.amount}個)が§e§l単価${format(price)}§f§l円で§d§l公式出品されました！"))
+                })
             }
 
             return true
@@ -179,7 +180,6 @@ class Man10Commerce : JavaPlugin() {
 
             if (!sender.hasPermission(OP) && !enable){
                 sendMsg(sender,"§f現在営業を停止しています")
-
                 return false
             }
 
@@ -195,6 +195,7 @@ class Man10Commerce : JavaPlugin() {
 
                 enable = true
                 config.set("enable", enable)
+                sendMsg(sender,"営業を開始させました")
                 saveConfig()
             }
 
@@ -203,17 +204,9 @@ class Man10Commerce : JavaPlugin() {
 
                 enable = false
                 config.set("enable", enable)
+                sendMsg(sender,"営業を停止させました")
                 saveConfig()
 
-            }
-
-            "config" ->{
-                if (!sender.hasPermission(OP))return true
-
-                es.execute {
-                    loadConfig()
-                    sender.sendMessage("§a§lReloaded Config")
-                }
             }
 
             "reload" ->{
@@ -229,5 +222,17 @@ class Man10Commerce : JavaPlugin() {
         }
 
         return false
+    }
+
+    override fun onTabComplete(
+        sender: CommandSender,
+        command: Command,
+        alias: String,
+        args: Array<out String>
+    ): MutableList<String> {
+        if (alias == "amsell" && args.size==1){
+            return mutableListOf("アイテム一つあたりの値段を入力")
+        }
+        return super.onTabComplete(sender, command, alias, args)!!
     }
 }
