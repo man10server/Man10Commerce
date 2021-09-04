@@ -9,7 +9,6 @@ import org.bukkit.inventory.ItemStack
 import red.man10.man10bank.Man10Bank
 import red.man10.man10commerce.Man10Commerce
 import red.man10.man10commerce.Man10Commerce.Companion.bank
-import red.man10.man10commerce.Man10Commerce.Companion.fee
 import red.man10.man10commerce.Man10Commerce.Companion.plugin
 import red.man10.man10commerce.Utility
 import red.man10.man10commerce.menu.CommerceMenu
@@ -87,7 +86,8 @@ object ItemData {
     fun loadOrderTable(){
 
         orderMap.clear()
-        val rs = mysql.query("select * from order_table where (item_id,(price/amount)) in (select item_id,min(price/amount) from order_table group by `item_id`) order by price;")?:return
+//        val rs = mysql.query("select * from order_table where (item_id,(price/amount)) in (select item_id,min(price/amount) from order_table group by `item_id`) order by price;")?:return
+        val rs = mysql.query("select * from order_table order by price;")?:return
 
         while (rs.next()) {
 
@@ -101,7 +101,7 @@ object ItemData {
             data.amount = rs.getInt("amount")
             data.date = rs.getDate("date")
             data.itemID = itemID
-            data.price = rs.getDouble("price")
+            data.price = rs.getDouble("price")*data.amount
             data.seller = UUID.fromString(rs.getString("uuid"))
             data.isOp = rs.getInt("is_op") == 1
 
@@ -237,9 +237,7 @@ object ItemData {
 
         p.inventory.addItem(item)
 
-        //利益の支払い処理(Primeなら手数料を半分に)
-        bank.deposit(data.seller!!,(data.price*(1.0- fee)),"SellItemOnMan10Commerce","Amanzonの売り上げ")
-
+        bank.deposit(data.seller!!,(data.price*data.amount),"SellItemOnMan10Commerce","Amanzonの売り上げ")
 
         Log.buyLog(p, data, item)
 

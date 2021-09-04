@@ -27,7 +27,7 @@ class Man10Commerce : JavaPlugin() {
 
         var enable = true
 
-        var minPrice : Double =  10.0
+        var minPrice : Double =  1.0
         var maxPrice : Double = 10000000.0 //一般会員の出品額上限
 
         var maxItems : Int = 54 // 一般会員の出品数上限
