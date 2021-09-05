@@ -42,7 +42,7 @@ object CommerceMenu : Listener{
     private const val CATEGORY_MENU = "${prefix}§lカテゴリーメニュー"
     private const val CATEGORY_ITEM = "${prefix}§lカテゴリーアイテム"
     private const val BASIC_MENU = "${prefix}§d§lAmanzonBasic"
-    private const val ITEM_LIST_MENU = "${prefix}§l同じアイテムのムリスト"
+    private const val ITEM_LIST_MENU = "${prefix}§l同じアイテムのリスト"
 
     fun openMainMenu(p:Player){
 
@@ -774,7 +774,7 @@ object CommerceMenu : Listener{
     @EventHandler
     fun closeInventory(e:InventoryCloseEvent){
 
-        val p = e.player
+        val p = e.player as Player
 
         if (playerMenuMap.containsKey(p)) playerMenuMap.remove(p)
         if (pageMap.containsKey(p)) pageMap.remove(p)
