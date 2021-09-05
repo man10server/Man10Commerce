@@ -42,7 +42,7 @@ object CommerceMenu : Listener{
     private const val CATEGORY_MENU = "${prefix}§lカテゴリーメニュー"
     private const val CATEGORY_ITEM = "${prefix}§lカテゴリーアイテム"
     private const val BASIC_MENU = "${prefix}§d§lAmanzonBasic"
-    private const val ITEM_LIST_MENU = "${prefix}同じアイテムのムリスト"
+    private const val ITEM_LIST_MENU = "${prefix}§l同じアイテムのムリスト"
 
     fun openMainMenu(p:Player){
 
@@ -80,11 +80,11 @@ object CommerceMenu : Listener{
         setID(sellingMeta,"Selling")
         selling.itemMeta = sellingMeta
 
-        inv.setItem(0,showItem)
-        inv.setItem(2,category)
-        inv.setItem(4,basic)
-        inv.setItem(6,sellItem)
-        inv.setItem(8,selling)
+        inv.setItem(1,showItem)
+//        inv.setItem(2,category)
+        inv.setItem(3,basic)
+        inv.setItem(5,sellItem)
+        inv.setItem(7,selling)
 
         p.openInventory(inv)
         playerMenuMap[p] = MAIN_MENU
