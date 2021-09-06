@@ -35,6 +35,7 @@ object CommerceMenu : Listener{
     private val playerMenuMap = ConcurrentHashMap<Player,String>()
     private val pageMap = ConcurrentHashMap<Player,Int>()
     private val categoryMap = ConcurrentHashMap<Player,String>()
+    private val guiStack = ConcurrentHashMap<Player,Stack<String>>()
 
     private const val ITEM_MENU = "${prefix}§l出品中のアイテム一覧"
     private const val SELL_MENU = "${prefix}§l出品したアイテム"
@@ -54,13 +55,13 @@ object CommerceMenu : Listener{
         setID(shouItemMeta,"ItemMenu")
         showItem.itemMeta = shouItemMeta
 
-        val category = ItemStack(Material.BOOK)
-        val categoryMeta = category.itemMeta
-        categoryMeta.displayName(text("§a§lカテゴリーごとに見る"))
-        categoryMeta.lore = mutableListOf("§fオリジナルアイテムなどが","§fカテゴリーごとに分かれています")
-        setID(categoryMeta,"Category")
-        category.itemMeta = categoryMeta
-
+//        val category = ItemStack(Material.BOOK)
+//        val categoryMeta = category.itemMeta
+//        categoryMeta.displayName(text("§a§lカテゴリーごとに見る"))
+//        categoryMeta.lore = mutableListOf("§fオリジナルアイテムなどが","§fカテゴリーごとに分かれています")
+//        setID(categoryMeta,"Category")
+//        category.itemMeta = categoryMeta
+//
         val basic = ItemStack(Material.DIAMOND)
         val basicMeta = basic.itemMeta
         basicMeta.displayName(text("§a§lAmazonBasic"))
@@ -173,13 +174,6 @@ object CommerceMenu : Listener{
 
         var inc = 0
 
-        if (page==0){
-            for (data in ItemData.categories.values){
-                inv.addItem(data.categoryIcon)
-                inc++
-            }
-        }
-
         while (inv.getItem(44) ==null){
 
             if (keys.size <= inc+page*45)break
@@ -265,6 +259,15 @@ object CommerceMenu : Listener{
     private fun openCategoryMenu(p:Player){
 
         val inv = Bukkit.createInventory(null,18, text(CATEGORY_MENU))
+
+        val allItemIcon = ItemStack(Material.COBBLESTONE)
+
+        val meta = allItemIcon.itemMeta
+        meta.displayName(text("§a§lすべてのアイテムをみる"))
+        setID(meta,"all")
+        allItemIcon.itemMeta = meta
+
+        inv.addItem(allItemIcon)
 
         for (data in ItemData.categories.values){
             inv.addItem(data.categoryIcon)
@@ -592,6 +595,12 @@ object CommerceMenu : Listener{
             CATEGORY_MENU ->{
 
                 if (id != ""){
+
+                    if (id=="all") {
+                        openItemMenu(p,0)
+                        return
+                    }
+
                     openCategoryList(p,id,0)
                     return
                 }
@@ -713,8 +722,8 @@ object CommerceMenu : Listener{
             MAIN_MENU ->{
 
                 when(id){
-                    "ItemMenu" -> openItemMenu(p,0)
-                    "Category" -> openCategoryMenu(p)
+                    "ItemMenu" -> openCategoryMenu(p)
+//                    "Category" ->
                     "Basic" -> openOPMenu(p,0)
                     "SellMenu" -> es.execute { openSellItemMenu(p,p.uniqueId,0) }
                     "Selling"    -> {
