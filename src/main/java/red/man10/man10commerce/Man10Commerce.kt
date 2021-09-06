@@ -12,6 +12,7 @@ import red.man10.man10commerce.Utility.format
 import red.man10.man10commerce.Utility.sendMsg
 import red.man10.man10commerce.data.ItemData
 import red.man10.man10commerce.menu.CommerceMenu
+import java.util.*
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
@@ -215,6 +216,8 @@ class Man10Commerce : JavaPlugin() {
                     loadConfig()
                     sender.sendMessage("§a§lReloaded Config")
                     ItemData.loadItemIndex()
+                    ItemData.loadOrderTable()
+                    ItemData.loadOPOrderTable()
                     sendMsg(sender,"Reload Table")
                 }
             }
@@ -232,6 +235,6 @@ class Man10Commerce : JavaPlugin() {
         if (alias == "amsell" && args.size==1){
             return mutableListOf("アイテム一つあたりの値段を入力")
         }
-        return super.onTabComplete(sender, command, alias, args)!!
+        return super.onTabComplete(sender, command, alias, args)?:Collections.emptyList()
     }
 }

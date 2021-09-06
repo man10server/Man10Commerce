@@ -290,7 +290,7 @@ object ItemData {
 
         p.inventory.addItem(item)
 
-        bank.deposit(data.seller!!,(data.price*data.amount),"SellItemOnMan10Commerce","Amanzonの売り上げ")
+        bank.deposit(data.seller!!,(data.price),"SellItemOnMan10Commerce","Amanzonの売り上げ")
 
         Log.buyLog(p, data, item)
 
