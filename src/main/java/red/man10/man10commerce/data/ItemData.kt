@@ -203,10 +203,17 @@ object ItemData {
             return false
         }
 
+        if (price< item.amount*Man10Commerce.minPrice){
+            Utility.sendMsg(p, "§c§l合計価格が${Man10Commerce.minPrice}円未満の出品はできません！")
+            return false
+        }
+
         if (Man10Commerce.maxPrice < price){
             Utility.sendMsg(p,"金額の上限に達しています！")
             return false
         }
+
+        //TODO:耐久削れてるアイテムは出品しない
 
         registerItemIndex(item)
 
@@ -279,6 +286,8 @@ object ItemData {
     fun buy(p:Player,itemID:Int,orderID:Int):Int{
 
         val data = orderMap[itemID] ?: return 3
+
+        //TODO:アイテム一覧から買った場合の処理修正
 
         if (data.id != orderID)return 4
 

@@ -109,10 +109,6 @@ class Man10Commerce : JavaPlugin() {
                 return true
             }
 
-            if (price< minPrice){
-                sendMsg(sender,"§c§l${minPrice}円未満の出品はできません！")
-                return true
-            }
 
             es.execute {
                 if (!ItemData.sell(sender,item,price))return@execute
