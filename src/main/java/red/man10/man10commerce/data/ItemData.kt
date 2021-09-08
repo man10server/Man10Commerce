@@ -45,7 +45,7 @@ object ItemData {
 
         if (itemDictionary.containsValue(one)) return false
 
-        val name = item.itemMeta?.displayName?:item.i18NDisplayName
+        val name = Man10Commerce.getDisplayName(item)
 
         mysql.execute(
             "INSERT INTO item_list " +
@@ -203,7 +203,7 @@ object ItemData {
             return false
         }
 
-        if (price< item.amount*Man10Commerce.minPrice){
+        if (price> item.amount*Man10Commerce.minPrice){
             Utility.sendMsg(p, "§c§l合計価格が${Man10Commerce.minPrice}円未満の出品はできません！")
             return false
         }
@@ -217,8 +217,7 @@ object ItemData {
 
         registerItemIndex(item)
 
-        val name = item.itemMeta?.displayName?:item.i18NDisplayName
-
+        val name = Man10Commerce.getDisplayName(item)
         var id = -1
 
         itemDictionary.forEach {
@@ -252,7 +251,7 @@ object ItemData {
 
         registerItemIndex(item)
 
-        val name = item.itemMeta?.displayName?:item.i18NDisplayName
+        val name = Man10Commerce.getDisplayName(item)
 
         var id = -1
 
@@ -399,7 +398,7 @@ object ItemData {
                 matchMaterial = true
             } else if (category.material.contains(item.type)) matchMaterial = true
 
-            val display = (meta?.displayName ?: item.i18NDisplayName ?: "none").replace("§[a-z0-9]".toRegex(), "")
+            val display = (Man10Commerce.getDisplayName(item).replace("§[a-z0-9]".toRegex(), ""))
 
             if (isEmptyDisplay) {
                 matchDisplay = true

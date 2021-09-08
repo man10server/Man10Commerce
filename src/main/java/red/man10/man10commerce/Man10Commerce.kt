@@ -6,6 +6,7 @@ import org.bukkit.Material
 import org.bukkit.command.Command
 import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
+import org.bukkit.inventory.ItemStack
 import org.bukkit.plugin.java.JavaPlugin
 import red.man10.man10bank.BankAPI
 import red.man10.man10commerce.Utility.format
@@ -35,6 +36,12 @@ class Man10Commerce : JavaPlugin() {
 
         const val OP = "commerce.op"
         const val USER = "commerce.user"
+
+        fun getDisplayName(item: ItemStack): String {
+
+            return if (item.hasItemMeta() && item.itemMeta.hasDisplayName()) item.itemMeta?.displayName
+                    ?: "" else item.i18NDisplayName?:""
+        }
 
     }
 
@@ -115,8 +122,7 @@ class Man10Commerce : JavaPlugin() {
 
                 sendMsg(sender,"§e§l出品成功しました！")
 
-                val name = display.itemMeta?.displayName?:display.i18NDisplayName
-
+                val name = getDisplayName(display)
                 Bukkit.getScheduler().runTask(this, Runnable {
                     Bukkit.broadcast(text("${prefix}§f${name}§f(${display.amount}個)が§e§l単価${format(price)}§f円で出品されました！"))
                 })
@@ -160,7 +166,7 @@ class Man10Commerce : JavaPlugin() {
 
                 sendMsg(sender,"§e§l出品成功しました！")
 
-                val name = display.itemMeta?.displayName?:display.i18NDisplayName
+                val name = getDisplayName(display)
 
                 Bukkit.getScheduler().runTask(this, Runnable {
                     Bukkit.broadcast(text("${prefix}§f§l${name}§f§l(${display.amount}個)が§e§l単価${format(price)}§f§l円で§d§l公式出品されました！"))
@@ -170,7 +176,7 @@ class Man10Commerce : JavaPlugin() {
             return true
         }
 
-        if (args.isNullOrEmpty()){
+        if (args.isEmpty()){
 
             if (!sender.hasPermission(USER))return false
 
