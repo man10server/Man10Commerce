@@ -203,7 +203,7 @@ object ItemData {
             return false
         }
 
-        if (price> item.amount*Man10Commerce.minPrice){
+        if (Man10Commerce.minPrice> item.amount*price){
             Utility.sendMsg(p, "§c§l合計価格が${Man10Commerce.minPrice}円未満の出品はできません！")
             return false
         }
