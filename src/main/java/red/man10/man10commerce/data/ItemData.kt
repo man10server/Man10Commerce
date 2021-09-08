@@ -216,7 +216,7 @@ object ItemData {
 
         val meta = item.itemMeta
 
-        if (meta is Damageable && meta.hasDamage()){
+        if (item.type!= Material.DIAMOND && meta is Damageable && meta.hasDamage()){
             Utility.sendMsg(p,"§c§l耐久値が削れているので出品できません！")
             return false
         }

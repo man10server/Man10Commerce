@@ -35,7 +35,6 @@ object CommerceMenu : Listener{
     private val playerMenuMap = ConcurrentHashMap<Player,String>()
     private val pageMap = ConcurrentHashMap<Player,Int>()
     private val categoryMap = ConcurrentHashMap<Player,String>()
-    private val guiStack = ConcurrentHashMap<Player,Stack<String>>()
 
     private const val ITEM_MENU = "${prefix}§l出品中のアイテム一覧"
     private const val SELL_MENU = "${prefix}§l出品したアイテム"
@@ -581,6 +580,8 @@ object CommerceMenu : Listener{
                             when(val ret = ItemData.buy(p,itemID,orderID)){
                                 0 -> { sendMsg(p,"§c§l購入失敗！電子マネーが足りません！") }
                                 1 -> {sendMsg(p,"§a§l購入成功！")}
+                                4 -> {sendMsg(p,"§a§lインベントリに空きがありません！")}
+                                3,5 -> { sendMsg(p,"購入しようとしたアイテムが売り切れています！")}
                                 else ->{ sendMsg(p,"エラー:${ret} サーバー運営者、GMに報告してください")}
                             }
 
