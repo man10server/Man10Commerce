@@ -6,6 +6,7 @@ import org.bukkit.Material
 import org.bukkit.configuration.file.YamlConfiguration
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
+import org.bukkit.inventory.meta.Damageable
 import red.man10.man10bank.Man10Bank
 import red.man10.man10commerce.Man10Commerce
 import red.man10.man10commerce.Man10Commerce.Companion.bank
@@ -199,7 +200,7 @@ object ItemData {
     fun sell(p: Player, item: ItemStack, price: Double): Boolean {
 
         if (Man10Commerce.maxItems< UserData.getSellAmount(p)){
-            Utility.sendMsg(p,"出品数の上限に達しています！")
+            Utility.sendMsg(p,"§c§l出品数の上限に達しています！")
             return false
         }
 
@@ -209,11 +210,16 @@ object ItemData {
         }
 
         if (Man10Commerce.maxPrice < price){
-            Utility.sendMsg(p,"金額の上限に達しています！")
+            Utility.sendMsg(p,"§c§l金額の上限に達しています！")
             return false
         }
 
-        //TODO:耐久削れてるアイテムは出品しない
+        val meta = item.itemMeta
+
+        if (meta is Damageable && meta.hasDamage()){
+            Utility.sendMsg(p,"§c§l耐久値が削れているので出品できません！")
+            return false
+        }
 
         registerItemIndex(item)
 

@@ -40,7 +40,7 @@ class Man10Commerce : JavaPlugin() {
         fun getDisplayName(item: ItemStack): String {
 
             return if (item.hasItemMeta() && item.itemMeta.hasDisplayName()) item.itemMeta?.displayName
-                    ?: "" else item.i18NDisplayName?:""
+                    ?: item.itemMeta.localizedName else item.i18NDisplayName?:""
         }
 
     }
