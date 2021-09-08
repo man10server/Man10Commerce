@@ -297,7 +297,11 @@ object ItemData {
         if (data.id != orderID){
             val rs = mysql.query("select * from order_table where id=$orderID;")?:return 3
 
-            rs.next()
+            if (!rs.next()){
+                rs.close()
+                mysql.close()
+                return 3
+            }
             data.id = orderID
             data.amount = rs.getInt("amount")
             data.date = rs.getDate("date")
@@ -306,6 +310,8 @@ object ItemData {
             data.seller = UUID.fromString(rs.getString("uuid"))
             data.isOp = rs.getInt("is_op") == 1
 
+            rs.close()
+            mysql.close()
         }
 
         if (!Man10Bank.vault.withdraw(p.uniqueId,data.price))return 0
