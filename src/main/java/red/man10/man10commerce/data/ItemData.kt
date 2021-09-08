@@ -285,11 +285,23 @@ object ItemData {
     @Synchronized
     fun buy(p:Player,itemID:Int,orderID:Int):Int{
 
+        if (p.inventory.firstEmpty() == -1)return 4
+
         val data = orderMap[itemID] ?: return 3
 
-        //TODO:アイテム一覧から買った場合の処理修正
+        if (data.id != orderID){
+            val rs = mysql.query("select * from order_table where id=$orderID;")?:return 3
 
-        if (data.id != orderID)return 4
+            rs.next()
+            data.id = orderID
+            data.amount = rs.getInt("amount")
+            data.date = rs.getDate("date")
+            data.itemID = itemID
+            data.price = rs.getDouble("price")*data.amount
+            data.seller = UUID.fromString(rs.getString("uuid"))
+            data.isOp = rs.getInt("is_op") == 1
+
+        }
 
         if (!Man10Bank.vault.withdraw(p.uniqueId,data.price))return 0
 

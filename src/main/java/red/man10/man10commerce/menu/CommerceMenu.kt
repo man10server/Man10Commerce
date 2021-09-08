@@ -645,6 +645,8 @@ object CommerceMenu : Listener{
                             when(val ret = ItemData.buy(p,itemID,orderID)){
                                 0 -> { sendMsg(p,"§c§l購入失敗！電子マネーが足りません！") }
                                 1 -> {sendMsg(p,"§a§l購入成功！")}
+                                4 -> {sendMsg(p,"§a§lインベントリに空きがありません！")}
+                                3,5 -> { sendMsg(p,"購入しようとしたアイテムが売り切れています！")}
                                 else ->{ sendMsg(p,"エラー:${ret} サーバー運営者、GMに報告してください")}
                             }
 
@@ -680,6 +682,8 @@ object CommerceMenu : Listener{
                     when(val ret = ItemData.buy(p,itemID,orderID)){
                         0 -> { sendMsg(p,"§c§l購入失敗！電子マネーが足りません！") }
                         1 -> {sendMsg(p,"§a§l購入成功！")}
+                        4 -> {sendMsg(p,"§a§lインベントリに空きがありません！")}
+                        3,5 -> { sendMsg(p,"購入しようとしたアイテムが売り切れています！")}
                         else ->{ sendMsg(p,"エラー:${ret} サーバー運営者、GMに報告してください")}
                     }
 
@@ -766,6 +770,8 @@ object CommerceMenu : Listener{
                             when(val ret = ItemData.buy(p,itemID,orderID)){
                                 0 -> { sendMsg(p,"§c§l購入失敗！電子マネーが足りません！") }
                                 1 -> {sendMsg(p,"§a§l購入成功！")}
+                                4 -> {sendMsg(p,"§a§lインベントリに空きがありません！")}
+                                3,5 -> { sendMsg(p,"購入しようとしたアイテムが売り切れています！")}
                                 else ->{ sendMsg(p,"エラー:${ret} サーバー運営者、GMに報告してください")}
                             }
 
