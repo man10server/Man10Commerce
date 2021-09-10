@@ -16,6 +16,7 @@ import red.man10.man10commerce.menu.CommerceMenu
 import java.io.File
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.LinkedBlockingQueue
 
 class Data {
 
@@ -38,6 +39,87 @@ object ItemData {
     val categories = ConcurrentHashMap<String,Category>()
 
     private val mysql = MySQLManager(plugin, "Man10Commerce")
+    private val queue = LinkedBlockingQueue<Pair<Triple<Player,Int,Int>,BuyTransaction>>()
+
+    init {
+        Bukkit.getScheduler().runTaskAsynchronously(plugin, Runnable { buyingQueue() })
+    }
+
+    private fun buyQueue(p:Player,itemID:Int,orderID:Int,sql:MySQLManager):Int{
+
+        if (p.inventory.firstEmpty() == -1)return 4
+
+        val data = orderMap[itemID] ?: return 3
+
+        if (data.id != orderID){
+            val rs = sql.query("select * from order_table where id=$orderID;")?:return 3
+
+            if (!rs.next()){
+                rs.close()
+                sql.close()
+                return 3
+            }
+            data.id = orderID
+            data.amount = rs.getInt("amount")
+            data.date = rs.getDate("date")
+            data.itemID = itemID
+            data.price = rs.getDouble("price")*data.amount
+            data.seller = UUID.fromString(rs.getString("uuid"))
+            data.isOp = rs.getInt("is_op") == 1
+
+            rs.close()
+            sql.close()
+        }
+
+        if (!Man10Bank.vault.withdraw(p.uniqueId,data.price))return 0
+
+        val item = itemDictionary[itemID]?.clone()?:return 5
+
+        item.amount = data.amount
+
+        p.inventory.addItem(item)
+
+        bank.deposit(data.seller!!,(data.price),"SellItemOnMan10Commerce","Amanzonの売り上げ")
+
+        Log.buyLog(p, data, item)
+
+        if (!data.isOp){
+            sql.execute("DELETE FROM order_table where id=${data.id};")
+            loadOrderTable()
+        }else{
+            loadOPOrderTable()
+        }
+
+        return 1
+    }
+
+    fun interface BuyTransaction{
+        fun onTransactionResult(resultCode:Int)
+    }
+
+    private fun buyingQueue(){
+
+        val sql = MySQLManager(plugin,"Queue")
+
+        while (true){
+
+            val queue = queue.take()
+
+            val p = queue.first.first
+            val itemID = queue.first.second
+            val orderID = queue.first.third
+
+            val code = buyQueue(p,itemID,orderID, sql)
+
+            queue.second.onTransactionResult(code)
+
+        }
+    }
+
+    fun buy(p:Player, itemID:Int, orderID:Int, transaction:BuyTransaction){
+        queue.add(Pair(Triple(p,itemID,orderID),transaction))
+    }
+
 
     //新アイテムを登録する
     private fun registerItemIndex(item: ItemStack): Boolean {
@@ -285,55 +367,6 @@ object ItemData {
         item.amount = 0
 
         return true
-    }
-
-    @Synchronized
-    fun buy(p:Player,itemID:Int,orderID:Int):Int{
-
-        if (p.inventory.firstEmpty() == -1)return 4
-
-        val data = orderMap[itemID] ?: return 3
-
-        if (data.id != orderID){
-            val rs = mysql.query("select * from order_table where id=$orderID;")?:return 3
-
-            if (!rs.next()){
-                rs.close()
-                mysql.close()
-                return 3
-            }
-            data.id = orderID
-            data.amount = rs.getInt("amount")
-            data.date = rs.getDate("date")
-            data.itemID = itemID
-            data.price = rs.getDouble("price")*data.amount
-            data.seller = UUID.fromString(rs.getString("uuid"))
-            data.isOp = rs.getInt("is_op") == 1
-
-            rs.close()
-            mysql.close()
-        }
-
-        if (!Man10Bank.vault.withdraw(p.uniqueId,data.price))return 0
-
-        val item = itemDictionary[itemID]?.clone()?:return 5
-
-        item.amount = data.amount
-
-        p.inventory.addItem(item)
-
-        bank.deposit(data.seller!!,(data.price),"SellItemOnMan10Commerce","Amanzonの売り上げ")
-
-        Log.buyLog(p, data, item)
-
-        if (!data.isOp){
-            mysql.execute("DELETE FROM order_table where id=${data.id};")
-            loadOrderTable()
-        }else{
-            loadOPOrderTable()
-        }
-
-        return 1
     }
 
     @Synchronized
