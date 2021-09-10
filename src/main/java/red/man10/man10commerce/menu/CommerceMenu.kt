@@ -583,8 +583,10 @@ object CommerceMenu : Listener{
                                 3,5 -> { sendMsg(p,"購入しようとしたアイテムが売り切れています！")}
                                 else ->{ sendMsg(p,"エラー:${code} サーバー運営者、GMに報告してください")}
                             }
+
+                            Bukkit.getScheduler().runTask(plugin, Runnable { openItemMenu(p,page) })
                         }
-                        openItemMenu(p,page)
+
 
                         return
                     }
@@ -647,9 +649,9 @@ object CommerceMenu : Listener{
                                 3,5 -> { sendMsg(p,"購入しようとしたアイテムが売り切れています！")}
                                 else ->{ sendMsg(p,"エラー:${code} サーバー運営者、GMに報告してください")}
                             }
-                        }
 
-                        openCategoryList(p,category,page)
+                            Bukkit.getScheduler().runTask(plugin, Runnable { openCategoryList(p,category,page) })
+                        }
 
                         return
                     }
@@ -683,8 +685,10 @@ object CommerceMenu : Listener{
                         3,5 -> { sendMsg(p,"購入しようとしたアイテムが売り切れています！")}
                         else ->{ sendMsg(p,"エラー:${code} サーバー運営者、GMに報告してください")}
                     }
+
+                    Bukkit.getScheduler().runTask(plugin, Runnable { showItemList(p,itemID) })
                 }
-                showItemList(p,itemID)
+
                 return
             }
 
@@ -768,9 +772,11 @@ object CommerceMenu : Listener{
                                 3,5 -> { sendMsg(p,"購入しようとしたアイテムが売り切れています！")}
                                 else ->{ sendMsg(p,"エラー:${code} サーバー運営者、GMに報告してください")}
                             }
+
+                            Bukkit.getScheduler().runTask(plugin, Runnable { openOPMenu(p,page) })
                         }
 
-                        openOPMenu(p,page)
+
                         return
                     }
                 }
