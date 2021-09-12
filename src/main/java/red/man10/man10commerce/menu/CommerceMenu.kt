@@ -555,6 +555,9 @@ object CommerceMenu : Listener{
 
             p.openInventory(inv)
 
+            val oldData = peekStack(p)
+            if (oldData!=null && oldData.name == ITEM_LIST_MENU && oldData.page==itemID) popStack(p)
+
             val data = MenuData()
             data.name = ITEM_LIST_MENU
             data.page = itemID
