@@ -6,6 +6,8 @@ import org.bukkit.command.CommandExecutor
 import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
+import red.man10.man10commerce.Man10Commerce.Companion.debug
+import red.man10.man10commerce.Man10Commerce.Companion.es
 import red.man10.man10commerce.data.ItemData
 
 class TestCommand :CommandExecutor{
@@ -22,11 +24,14 @@ class TestCommand :CommandExecutor{
 
                 val amount = args[1].toInt()
 
-                Man10Commerce.debug = true
+                debug = true
 
                 val item = sender.inventory.itemInMainHand
 
-                testSell(sender, amount, item)
+                es.execute {
+                    testSell(sender, amount, item)
+                    debug = false
+                }
 
             }
 
@@ -35,11 +40,18 @@ class TestCommand :CommandExecutor{
                 val amount = args[1].toInt()
                 val multi = args[2].toInt()
 
-                for (i in 0 until multi){
-                    val item = sender.inventory.itemInMainHand
+                debug = true
 
-                    testSell(sender, amount, item)
+                es.execute {
+                    for (i in 0 until multi){
+                        val item = sender.inventory.itemInMainHand
+
+                        es.execute{testSell(sender, amount, item)}
+                    }
+                    debug = false
+
                 }
+
 
             }
 
@@ -55,11 +67,11 @@ class TestCommand :CommandExecutor{
                 val key = args[1].toInt()
                 val itemID = args[2].toInt()
 
-                Man10Commerce.debug = true
+                debug = true
 
                 Bukkit.getLogger().info("StartTestBuy")
 
-                Man10Commerce.es.execute {
+                es.execute {
                     for (i in 0 until key){
                         ItemData.buy(sender, itemID, i) { code: Int ->
                             when (code) {
@@ -80,12 +92,13 @@ class TestCommand :CommandExecutor{
                                 }
                             }
                             Bukkit.getLogger().info("TestFinish:${i} code:${code}")
+                            if ((i-1) == key) {
+                                Bukkit.getLogger().info("FinishedTestBuy")
+                                debug = false
+                            }
                         }
 
                     }
-                    Bukkit.getLogger().info("FinishedTestBuy")
-
-                    Man10Commerce.debug = false
                 }
 
 
@@ -98,27 +111,20 @@ class TestCommand :CommandExecutor{
 
 
     private fun testSell(sender:Player, amount:Int, item:ItemStack){
-        Man10Commerce.es.execute {
+        val price = 10.0
 
-            val price = 10.0
+        Bukkit.getLogger().info("StartTestSell:${amount}")
 
-            Bukkit.getLogger().info("StartTestSell:${amount}")
+        for (i in 0 until amount){
 
-            for (i in 0 until amount){
+            if (!ItemData.sell(sender,item,price))continue
 
-                Man10Commerce.debug = true
+            Utility.sendMsg(sender, "§e§l出品成功しました！")
 
-                if (!ItemData.sell(sender,item,price))continue
-
-                Utility.sendMsg(sender, "§e§l出品成功しました！")
-
-                Bukkit.getLogger().info("TestFinish:${i}")
-            }
-
-            Bukkit.getLogger().info("FinishedTestSell")
-
-            Man10Commerce.debug = false
+            Bukkit.getLogger().info("TestFinish:${i}")
         }
+
+        Bukkit.getLogger().info("FinishedTestSell")
 
     }
 }
