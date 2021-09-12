@@ -170,7 +170,7 @@ object CommerceMenu : Listener{
             p.openInventory(inv)
 
             val oldData = peekStack(p)
-            if (oldData!=null && oldData.page==page && oldData.name == SELL_MENU)return@Runnable
+            if (oldData!=null && oldData.name == SELL_MENU){ popStack(p) }
 
             val data = MenuData()
             data.name = SELL_MENU
@@ -271,7 +271,7 @@ object CommerceMenu : Listener{
 //        pageMap[p] = page
 
         val oldData = peekStack(p)
-        if (oldData!=null && oldData.page==page && oldData.name == ITEM_MENU)return
+        if (oldData!=null && oldData.name == ITEM_MENU){ popStack(p) }
 
         val data = MenuData()
         data.name = ITEM_MENU
@@ -402,9 +402,9 @@ object CommerceMenu : Listener{
         }
 
         p.openInventory(inv)
-//        pageMap[p] = page
+
         val oldData = peekStack(p)
-        if (oldData!=null && oldData.page==page && oldData.name == CATEGORY_MENU)return
+        if (oldData!=null && oldData.name == CATEGORY_MENU){ popStack(p) }
 
         val data = MenuData()
         data.name = CATEGORY_ITEM
@@ -506,7 +506,7 @@ object CommerceMenu : Listener{
 //        pageMap[p] = page
 
         val oldData = peekStack(p)
-        if (oldData!=null && oldData.page==page && oldData.name == BASIC_MENU)return
+        if (oldData!=null && oldData.name == BASIC_MENU){ popStack(p) }
 
         val data = MenuData()
         data.name = BASIC_MENU
