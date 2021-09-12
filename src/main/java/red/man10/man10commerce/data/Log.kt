@@ -3,9 +3,15 @@ package red.man10.man10commerce.data
 import org.bukkit.Bukkit
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
+import red.man10.man10commerce.Man10Commerce.Companion.es
+import red.man10.man10commerce.Man10Commerce.Companion.plugin
 import red.man10.man10commerce.data.MySQLManager.Companion.mysqlQueue
 
 object Log {
+
+    init {
+        es.execute { mysqlQueue(plugin,"LogQueue") }
+    }
 
     fun sellLog(p:Player,item: ItemStack,price:Double,itemID:Int){
 
