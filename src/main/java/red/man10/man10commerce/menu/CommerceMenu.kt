@@ -25,6 +25,7 @@ import red.man10.man10commerce.data.ItemData
 import red.man10.man10commerce.data.ItemData.itemDictionary
 import red.man10.man10commerce.data.ItemData.opOrderMap
 import red.man10.man10commerce.data.ItemData.orderMap
+import red.man10.man10commerce.menu.CommerceMenu.Menu
 import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
@@ -32,9 +33,14 @@ import kotlin.math.floor
 
 object CommerceMenu : Listener{
 
-    private val playerMenuMap = ConcurrentHashMap<Player,String>()
-    private val pageMap = ConcurrentHashMap<Player,Int>()
-    private val categoryMap = ConcurrentHashMap<Player,String>()
+    private val menuStack = ConcurrentHashMap<Player,Stack<MenuData>>()
+
+    class MenuData{
+        var name = ""
+        var page = 0
+        var category : String? = ""
+        lateinit var menu : Menu
+    }
 
     private const val ITEM_MENU = "${prefix}§l出品中のアイテム一覧"
     private const val SELL_MENU = "${prefix}§l出品したアイテム"
@@ -87,7 +93,11 @@ object CommerceMenu : Listener{
         inv.setItem(7,selling)
 
         p.openInventory(inv)
-        playerMenuMap[p] = MAIN_MENU
+
+        val data = MenuData()
+        data.name = MAIN_MENU
+        data.menu= Menu { openMainMenu(p) }
+        pushStack(p,data)
     }
 
     //自分が出品したアイテムを確認する
@@ -158,8 +168,16 @@ object CommerceMenu : Listener{
 
         Bukkit.getScheduler().runTask(plugin, Runnable {
             p.openInventory(inv)
-            playerMenuMap[p] = SELL_MENU
-            pageMap[p] = page
+
+            val oldData = peekStack(p)
+            if (oldData!=null && oldData.page==page && oldData.name == SELL_MENU)return@Runnable
+
+            val data = MenuData()
+            data.name = SELL_MENU
+            data.page = page
+            data.menu= Menu { openSellItemMenu(p,seller, page) }
+
+            pushStack(p,data)
         })
 
     }
@@ -250,14 +268,24 @@ object CommerceMenu : Listener{
         }
 
         p.openInventory(inv)
-        playerMenuMap[p] = ITEM_MENU
-        pageMap[p] = page
+//        pageMap[p] = page
+
+        val oldData = peekStack(p)
+        if (oldData!=null && oldData.page==page && oldData.name == ITEM_MENU)return
+
+        val data = MenuData()
+        data.name = ITEM_MENU
+        data.page = page
+        data.menu= Menu { openItemMenu(p,page) }
+
+        pushStack(p,data)
 
     }
 
-    private fun openCategoryMenu(p:Player){
+    //カテゴリー一覧
+    fun openCategoryMenu(p:Player){
 
-        val inv = Bukkit.createInventory(null,18, text(CATEGORY_MENU))
+        val inv = Bukkit.createInventory(null,27, text(CATEGORY_MENU))
 
         val allItemIcon = ItemStack(Material.COBBLESTONE)
 
@@ -273,7 +301,13 @@ object CommerceMenu : Listener{
         }
 
         p.openInventory(inv)
-        playerMenuMap[p] = CATEGORY_MENU
+
+        val data = MenuData()
+        data.name = CATEGORY_MENU
+        data.menu= Menu { openCategoryMenu(p) }
+
+        pushStack(p,data)
+
 
     }
 
@@ -368,9 +402,17 @@ object CommerceMenu : Listener{
         }
 
         p.openInventory(inv)
-        playerMenuMap[p] = CATEGORY_ITEM
-        categoryMap[p] = category
-        pageMap[p] = page
+//        pageMap[p] = page
+        val oldData = peekStack(p)
+        if (oldData!=null && oldData.page==page && oldData.name == CATEGORY_MENU)return
+
+        val data = MenuData()
+        data.name = CATEGORY_ITEM
+        data.page = page
+        data.category = category
+        data.menu= Menu { openCategoryList(p, category, page) }
+
+        pushStack(p,data)
 
     }
 
@@ -461,8 +503,17 @@ object CommerceMenu : Listener{
 
 
         p.openInventory(inv)
-        playerMenuMap[p] = BASIC_MENU
-        pageMap[p] = page
+//        pageMap[p] = page
+
+        val oldData = peekStack(p)
+        if (oldData!=null && oldData.page==page && oldData.name == BASIC_MENU)return
+
+        val data = MenuData()
+        data.name = BASIC_MENU
+        data.page = page
+        data.menu= Menu { openOPMenu(p,page) }
+
+        pushStack(p,data)
 
     }
 
@@ -503,8 +554,13 @@ object CommerceMenu : Listener{
             }
 
             p.openInventory(inv)
-            playerMenuMap[p] = ITEM_LIST_MENU
-            pageMap[p] = itemID
+
+            val data = MenuData()
+            data.name = ITEM_LIST_MENU
+            data.page = itemID
+            data.menu= Menu { showItemList(p, itemID) }
+
+            pushStack(p,data)
 
         })
 
@@ -526,21 +582,20 @@ object CommerceMenu : Listener{
 
         val p = e.whoClicked as Player
 
-        val menuName = playerMenuMap[p]?:return
+        val menuData = peekStack(p)?:return
 
         e.isCancelled = true
 
         val item = e.currentItem?:return
         val action = e.action
         val id = getID(item)
+        val page = menuData.page
 
         p.playSound(p.location,Sound.UI_BUTTON_CLICK,0.1F,1.0F)
 
-        when(menuName){
+        when(menuData.name){
 
             ITEM_MENU ->{
-
-                val page = pageMap[p]?:0
 
                 when(id){
                     "prev" ->{ openItemMenu(p,page-1) }
@@ -610,8 +665,7 @@ object CommerceMenu : Listener{
 
             CATEGORY_ITEM ->{
 
-                val page = pageMap[p]?:0
-                val category = categoryMap[p]?:"none"
+                val category = menuData.category?:"all"
 
                 when(id){
                     "prev" ->{ openCategoryList(p,category,page-1) }
@@ -660,8 +714,6 @@ object CommerceMenu : Listener{
 
             ITEM_LIST_MENU ->{
 
-                val itemID = pageMap[p]?:0
-
                 val meta = item.itemMeta?:return
 
                 val orderID = meta.persistentDataContainer[NamespacedKey(plugin,"order_id"), PersistentDataType.INTEGER]?:-1
@@ -671,22 +723,22 @@ object CommerceMenu : Listener{
                 if (p.hasPermission(OP) && action == InventoryAction.CLONE_STACK){
                     ItemData.close(orderID,p)
                     sendMsg(p,"§c§l出品を取り下げました")
-                    showItemList(p,itemID)
+                    showItemList(p, page)
                     return
                 }
 
-                if (action != InventoryAction.MOVE_TO_OTHER_INVENTORY)return
+                if (action != InventoryAction.MOVE_TO_OTHER_INVENTORY) { return }
 
-                ItemData.buy(p,itemID,orderID){ code:Int ->
-                    when(code){
-                        0 -> { sendMsg(p,"§c§l購入失敗！電子マネーが足りません！") }
-                        1 -> {sendMsg(p,"§a§l購入成功！")}
-                        4 -> {sendMsg(p,"§a§lインベントリに空きがありません！")}
-                        3,5 -> { sendMsg(p,"購入しようとしたアイテムが売り切れています！")}
-                        else ->{ sendMsg(p,"エラー:${code} サーバー運営者、GMに報告してください")}
+                ItemData.buy(p, page, orderID) { code: Int ->
+                    when (code) {
+                        0 -> { sendMsg(p, "§c§l購入失敗！電子マネーが足りません！") }
+                        1 -> { sendMsg(p, "§a§l購入成功！") }
+                        4 -> { sendMsg(p, "§a§lインベントリに空きがありません！") }
+                        3, 5 -> { sendMsg(p, "購入しようとしたアイテムが売り切れています！") }
+                        else -> { sendMsg(p, "エラー:${code} サーバー運営者、GMに報告してください") }
                     }
 
-                    Bukkit.getScheduler().runTask(plugin, Runnable { showItemList(p,itemID) })
+                    Bukkit.getScheduler().runTask(plugin, Runnable { showItemList(p, page) })
                 }
 
                 return
@@ -694,9 +746,7 @@ object CommerceMenu : Listener{
 
             SELL_MENU ->{
 
-                if (action != InventoryAction.MOVE_TO_OTHER_INVENTORY)return
-
-                val page = pageMap[p]?:0
+                if (action != InventoryAction.MOVE_TO_OTHER_INVENTORY){return}
 
                 val meta = item.itemMeta!!
                 val orderID = meta.persistentDataContainer[NamespacedKey(plugin,"order_id"), PersistentDataType.INTEGER]?:0
@@ -739,8 +789,6 @@ object CommerceMenu : Listener{
             }
 
             BASIC_MENU ->{
-
-                val page = pageMap[p]?:0
 
                 when(id){
                     "prev" ->{ openOPMenu(p,page-1) }
@@ -785,12 +833,39 @@ object CommerceMenu : Listener{
 
     }
 
+    private fun pushStack(p:Player, data:MenuData){
+        val stack = menuStack[p]?: Stack()
+        stack.push(data)
+        menuStack[p] = stack
+    }
+
+    private fun popStack(p:Player):MenuData?{
+        val stack = menuStack[p]?:return null
+        if (stack.isEmpty())return null
+        val id = stack.pop()
+        menuStack[p] = stack
+        return id
+    }
+
+    private fun peekStack(p: Player): MenuData? {
+        val stack = menuStack[p] ?: return null
+        if (stack.isEmpty()) return null
+        //        menuStack[p] = stack
+        return stack.peek()
+    }
+
     @EventHandler
     fun closeInventory(e:InventoryCloseEvent){
 
         val p = e.player as Player
 
-        if (playerMenuMap.containsKey(p)) playerMenuMap.remove(p)
-        if (pageMap.containsKey(p)) pageMap.remove(p)
+        if (e.reason != InventoryCloseEvent.Reason.PLAYER)return
+
+        popStack(p)
+        val menu = (popStack(p)?:return).menu
+
+        Bukkit.getScheduler().runTask(plugin, Runnable { menu.menuFunc() })
     }
+
+    fun interface Menu{ fun menuFunc() }
 }

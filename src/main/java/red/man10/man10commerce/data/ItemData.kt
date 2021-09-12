@@ -38,7 +38,6 @@ object ItemData {
 
     val categories = ConcurrentHashMap<String,Category>()
 
-    private val mysql = MySQLManager(plugin, "Man10Commerce")
     private val queue = LinkedBlockingQueue<Pair<Triple<Player,Int,Int>,BuyTransaction>>()
 
     init {
@@ -122,7 +121,7 @@ object ItemData {
 
 
     //新アイテムを登録する
-    private fun registerItemIndex(item: ItemStack): Boolean {
+    private fun registerItemIndex(item: ItemStack,mysql:MySQLManager): Boolean {
 
         val one = item.asOne()
 
@@ -151,6 +150,8 @@ object ItemData {
 
         itemDictionary.clear()
 
+        val mysql = MySQLManager(plugin, "Man10Commerce")
+
         val rs = mysql.query("select id,base64 from item_list;")
 
         if (rs != null) {
@@ -170,6 +171,9 @@ object ItemData {
 
         orderMap.clear()
 //        val rs = mysql.query("select * from order_table where (item_id,(price/amount)) in (select item_id,min(price/amount) from order_table group by `item_id`) order by price;")?:return
+
+        val mysql = MySQLManager(plugin, "Man10Commerce")
+
         val rs = mysql.query("select * from order_table order by price;")?:return
 
         while (rs.next()) {
@@ -199,6 +203,9 @@ object ItemData {
     fun loadOPOrderTable(){
 
         opOrderMap.clear()
+
+        val mysql = MySQLManager(plugin, "Man10Commerce")
+
         val rs = mysql.query("select * from order_table where (item_id,(price/amount)) in (select item_id,min(price/amount)" +
                 " from order_table where is_op=1 group by `item_id`) order by price;")?:return
 
@@ -277,8 +284,6 @@ object ItemData {
         Bukkit.getLogger().info("Finish Loading Categories")
     }
 
-
-
     fun sell(p: Player, item: ItemStack, price: Double): Boolean {
 
         if (Man10Commerce.maxItems< UserData.getSellAmount(p)){
@@ -303,7 +308,9 @@ object ItemData {
             return false
         }
 
-        registerItemIndex(item)
+        val mysql = MySQLManager(plugin, "Man10Commerce")
+
+        registerItemIndex(item,mysql)
 
         val name = Man10Commerce.getDisplayName(item)
         var id = -1
@@ -337,7 +344,9 @@ object ItemData {
     //運営用ショップ
     fun sellOP(p: Player, item: ItemStack, price: Double): Boolean {
 
-        registerItemIndex(item)
+        val mysql = MySQLManager(plugin, "Man10Commerce")
+
+        registerItemIndex(item,mysql)
 
         val name = Man10Commerce.getDisplayName(item)
 
@@ -372,6 +381,8 @@ object ItemData {
     @Synchronized
     fun close(id:Int,p:Player):Boolean{
 
+        val mysql = MySQLManager(plugin, "Man10Commerce")
+
         val rs = mysql.query("select item_id,amount,is_op from order_table where id=${id};")?:return false
 
         if (!rs.next())return false
@@ -397,6 +408,8 @@ object ItemData {
     fun sellList(uuid:UUID): MutableList<Data> {
 
         val list = mutableListOf<Data>()
+
+        val mysql = MySQLManager(plugin, "Man10Commerce")
 
         val rs = mysql.query("select * from order_table where uuid='${uuid}';")?:return list
 
@@ -461,10 +474,11 @@ object ItemData {
         return orderMap.filterKeys { list.contains(it) }
     }
 
-    @Synchronized
     fun getAllItem(itemID:Int):List<Data>{
 
         val list = mutableListOf<Data>()
+
+        val mysql = MySQLManager(plugin, "Man10Commerce")
 
         val rs = mysql.query("select * from order_table where item_id=$itemID order by price;")?:return Collections.emptyList()
 

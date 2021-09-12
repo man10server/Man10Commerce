@@ -192,6 +192,18 @@ class Man10Commerce : JavaPlugin() {
 
         when(args[0]){
 
+            "category" ->{
+                if (!sender.hasPermission(USER))return false
+
+                if (!sender.hasPermission(OP) && !enable){
+                    sendMsg(sender,"§f現在営業を停止しています")
+                    return false
+                }
+
+                CommerceMenu.openCategoryMenu(sender)
+
+            }
+
             "on" ->{
                 if (!sender.hasPermission(OP))return true
 
