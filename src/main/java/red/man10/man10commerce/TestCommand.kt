@@ -37,14 +37,14 @@ class TestCommand :CommandExecutor{
 
             "sell2" ->{
 
+                if (!sender.hasPermission(Man10Commerce.OP))return false
+
                 val amount = args[1].toInt()
                 val multi = args[2].toInt()
 
                 debug = true
-
+                val item = sender.inventory.itemInMainHand
                 for (i in 0 until multi){
-                    val item = sender.inventory.itemInMainHand
-
                     es.execute{testSell(sender, amount, item)}
                 }
 
@@ -52,7 +52,6 @@ class TestCommand :CommandExecutor{
             }
 
             "buy" ->{
-
                 if (!sender.hasPermission(Man10Commerce.OP))return false
 
                 if (args.size<3){
@@ -67,39 +66,31 @@ class TestCommand :CommandExecutor{
 
                 Bukkit.getLogger().info("StartTestBuy")
 
-                es.execute {
-                    for (i in 0 until key){
-                        ItemData.buy(sender, itemID, i) { code: Int ->
-                            when (code) {
-                                0 -> {
-                                    Utility.sendMsg(sender, "§c§l購入失敗！電子マネーが足りません！")
-                                }
-                                1 -> {
-                                    Utility.sendMsg(sender, "§a§l購入成功！")
-                                }
-                                4 -> {
-                                    Utility.sendMsg(sender, "§a§lインベントリに空きがありません！")
-                                }
-                                3, 5 -> {
-                                    Utility.sendMsg(sender, "購入しようとしたアイテムが売り切れています！")
-                                }
-                                else -> {
-                                    Utility.sendMsg(sender, "エラー:${code} サーバー運営者、GMに報告してください")
-                                }
-                            }
-                            Bukkit.getLogger().info("TestFinish:${i} code:${code}")
-                            if ((i-1) == key) {
-                                Bukkit.getLogger().info("FinishedTestBuy")
-                                debug = false
-                            }
-                        }
+                es.execute {testBuy(sender, key, itemID)}
+            }
 
-                    }
+            "buy2" ->{
+                if (!sender.hasPermission(Man10Commerce.OP))return false
+
+                if (args.size<4){
+                    Utility.sendMsg(sender, "/amzn buy2 idKey itemID thread")
+                    return true
                 }
 
+                val key = args[1].toInt()
+                val itemID = args[2].toInt()
+                val multi = args[3].toInt()
 
+                debug = true
+                Bukkit.getLogger().info("StartTestBuy")
+
+                for (i in 0 until multi){
+                    es.execute {testBuy(sender, key, itemID)}
+                }
 
             }
+
+            "debugoff" ->{ debug = false }
         }
 
         return true
@@ -111,7 +102,7 @@ class TestCommand :CommandExecutor{
 
         Bukkit.getLogger().info("StartTestSell:${amount}")
 
-        for (i in 0 until amount){
+        for (i in 0 .. amount){
 
             if (!ItemData.sell(sender,item,price))continue
 
@@ -121,6 +112,37 @@ class TestCommand :CommandExecutor{
         }
 
         Bukkit.getLogger().info("FinishedTestSell")
+
+    }
+
+    private fun testBuy(sender:Player, key:Int,itemID:Int){
+        for (i in 0 .. key){
+            ItemData.buy(sender, itemID, i) { code: Int ->
+                when (code) {
+                    0 -> {
+                        Utility.sendMsg(sender, "§c§l購入失敗！電子マネーが足りません！")
+                    }
+                    1 -> {
+                        Utility.sendMsg(sender, "§a§l購入成功！")
+                    }
+                    4 -> {
+                        Utility.sendMsg(sender, "§a§lインベントリに空きがありません！")
+                    }
+                    3, 5 -> {
+                        Utility.sendMsg(sender, "購入しようとしたアイテムが売り切れています！")
+                    }
+                    else -> {
+                        Utility.sendMsg(sender, "エラー:${code} サーバー運営者、GMに報告してください")
+                    }
+                }
+                Bukkit.getLogger().info("TestFinish:${i} code:${code}")
+                if ((i-1) == key) {
+                    Bukkit.getLogger().info("FinishedTestBuy")
+                    debug = false
+                }
+            }
+
+        }
 
     }
 }
