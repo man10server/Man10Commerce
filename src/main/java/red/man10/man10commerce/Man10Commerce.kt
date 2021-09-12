@@ -37,6 +37,8 @@ class Man10Commerce : JavaPlugin() {
         const val OP = "commerce.op"
         const val USER = "commerce.user"
 
+        var debug = false
+
         fun getDisplayName(item: ItemStack): String {
 
             return if (item.hasItemMeta() && item.itemMeta.hasDisplayName()) item.itemMeta?.displayName
@@ -191,6 +193,75 @@ class Man10Commerce : JavaPlugin() {
         }
 
         when(args[0]){
+
+            "testsell" ->{
+                if (!sender.hasPermission(OP))return false
+
+                val amount = args[1].toInt()
+
+                debug = true
+
+                val item = sender.inventory.itemInMainHand
+                val display = item.clone()
+                val price = 10.0
+
+                es.execute {
+
+                    Bukkit.getLogger().info("StartTestSell:${amount}")
+
+                    for (i in 0 until amount){
+
+                        if (!ItemData.sell(sender,item,price))continue
+
+                        sendMsg(sender,"§e§l出品成功しました！")
+
+                        val name = getDisplayName(display)
+                        Bukkit.getScheduler().runTask(this, Runnable {
+                            Bukkit.broadcast(text("${prefix}§f${name}§f(${display.amount}個)が§e§l単価${format(price)}§f円で出品されました！"))
+                        })
+                        Bukkit.getLogger().info("TestFinish:${i}")
+
+                    }
+
+                    Bukkit.getLogger().info("FinishedTestSell")
+
+                    debug = false
+                }
+            }
+
+            "testbuy" ->{
+
+                if (!sender.hasPermission(OP))return false
+
+                val key = args[1].toInt()
+                val itemID = args[2].toInt()
+
+                debug = true
+
+                Bukkit.getLogger().info("StartTestBuy")
+
+                es.execute {
+                    for (i in 0 until key){
+                        ItemData.buy(sender, itemID, key) { code: Int ->
+                            when (code) {
+                                0 -> { sendMsg(sender, "§c§l購入失敗！電子マネーが足りません！") }
+                                1 -> { sendMsg(sender, "§a§l購入成功！") }
+                                4 -> { sendMsg(sender, "§a§lインベントリに空きがありません！") }
+                                3, 5 -> { sendMsg(sender, "購入しようとしたアイテムが売り切れています！") }
+                                else -> { sendMsg(sender, "エラー:${code} サーバー運営者、GMに報告してください") }
+                            }
+                        }
+
+                        Bukkit.getLogger().info("TestFinish:${i}")
+
+                    }
+                }
+
+                Bukkit.getLogger().info("FinishedTestBuy")
+
+                debug = false
+
+            }
 
             "category" ->{
                 if (!sender.hasPermission(USER))return false

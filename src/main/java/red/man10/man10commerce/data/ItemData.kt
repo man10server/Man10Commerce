@@ -10,6 +10,7 @@ import org.bukkit.inventory.meta.Damageable
 import red.man10.man10bank.Man10Bank
 import red.man10.man10commerce.Man10Commerce
 import red.man10.man10commerce.Man10Commerce.Companion.bank
+import red.man10.man10commerce.Man10Commerce.Companion.debug
 import red.man10.man10commerce.Man10Commerce.Companion.plugin
 import red.man10.man10commerce.Utility
 import red.man10.man10commerce.menu.CommerceMenu
@@ -336,7 +337,8 @@ object ItemData {
 
         loadOrderTable()
 
-        item.amount = 0
+
+        if (!debug){item.amount = 0}
 
         return true
     }
