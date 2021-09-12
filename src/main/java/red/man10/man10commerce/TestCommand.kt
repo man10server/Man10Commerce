@@ -19,7 +19,7 @@ class TestCommand :CommandExecutor{
 
         when(args[0]){
 
-            "testsell" ->{
+            "sell" ->{
                 if (!sender.hasPermission(Man10Commerce.OP))return false
 
                 val amount = args[1].toInt()
@@ -35,27 +35,23 @@ class TestCommand :CommandExecutor{
 
             }
 
-            "testsell2" ->{
+            "sell2" ->{
 
                 val amount = args[1].toInt()
                 val multi = args[2].toInt()
 
                 debug = true
 
-                es.execute {
-                    for (i in 0 until multi){
-                        val item = sender.inventory.itemInMainHand
+                for (i in 0 until multi){
+                    val item = sender.inventory.itemInMainHand
 
-                        es.execute{testSell(sender, amount, item)}
-                    }
-                    debug = false
-
+                    es.execute{testSell(sender, amount, item)}
                 }
 
 
             }
 
-            "testbuy" ->{
+            "buy" ->{
 
                 if (!sender.hasPermission(Man10Commerce.OP))return false
 
