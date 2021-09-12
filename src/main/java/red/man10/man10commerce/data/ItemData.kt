@@ -84,9 +84,9 @@ object ItemData {
 
         if (!data.isOp){
             sql.execute("DELETE FROM order_table where id=${data.id};")
-            loadOrderTable()
+            loadOrderTable(sql)
         }else{
-            loadOPOrderTable()
+            loadOPOrderTable(sql)
         }
 
         return 1
@@ -167,12 +167,10 @@ object ItemData {
 
     }
 
-    fun loadOrderTable(){
+    fun loadOrderTable(mysql: MySQLManager){
 
         orderMap.clear()
 //        val rs = mysql.query("select * from order_table where (item_id,(price/amount)) in (select item_id,min(price/amount) from order_table group by `item_id`) order by price;")?:return
-
-        val mysql = MySQLManager(plugin, "Man10Commerce")
 
         val rs = mysql.query("select * from order_table order by price;")?:return
 
@@ -200,11 +198,9 @@ object ItemData {
 
     }
 
-    fun loadOPOrderTable(){
+    fun loadOPOrderTable(mysql: MySQLManager){
 
         opOrderMap.clear()
-
-        val mysql = MySQLManager(plugin, "Man10Commerce")
 
         val rs = mysql.query("select * from order_table where (item_id,(price/amount)) in (select item_id,min(price/amount)" +
                 " from order_table where is_op=1 group by `item_id`) order by price;")?:return
@@ -334,7 +330,7 @@ object ItemData {
 
         Log.sellLog(p,item,price,id)
 
-        loadOrderTable()
+        loadOrderTable(mysql)
 
         item.amount = 0
 
@@ -371,7 +367,7 @@ object ItemData {
 
         Log.sellLog(p,item,price,id)
 
-        loadOPOrderTable()
+        loadOPOrderTable(mysql)
 
         item.amount = 0
 
@@ -398,7 +394,7 @@ object ItemData {
 
         mysql.execute("DELETE FROM order_table where id=${id};")
 
-        if (isOp) loadOPOrderTable() else loadOrderTable()
+        if (isOp) loadOPOrderTable(mysql) else loadOrderTable(mysql)
 
         Log.closeLog(p,itemID,item)
 

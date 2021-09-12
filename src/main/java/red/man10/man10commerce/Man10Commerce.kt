@@ -12,6 +12,7 @@ import red.man10.man10bank.BankAPI
 import red.man10.man10commerce.Utility.format
 import red.man10.man10commerce.Utility.sendMsg
 import red.man10.man10commerce.data.ItemData
+import red.man10.man10commerce.data.MySQLManager
 import red.man10.man10commerce.menu.CommerceMenu
 import java.util.*
 import java.util.concurrent.ExecutorService
@@ -54,8 +55,11 @@ class Man10Commerce : JavaPlugin() {
         plugin = this
         bank = BankAPI(plugin)
         ItemData.loadItemIndex()
-        ItemData.loadOrderTable()
-        ItemData.loadOPOrderTable()
+
+        val mysql = MySQLManager(this,"onEnable")
+
+        ItemData.loadOrderTable(mysql)
+        ItemData.loadOPOrderTable(mysql)
 
         loadConfig()
 
@@ -230,8 +234,13 @@ class Man10Commerce : JavaPlugin() {
                     loadConfig()
                     sender.sendMessage("§a§lReloaded Config")
                     ItemData.loadItemIndex()
-                    ItemData.loadOrderTable()
-                    ItemData.loadOPOrderTable()
+
+                    val mysql = MySQLManager(this,"onEnable")
+
+                    ItemData.loadOrderTable(mysql)
+                    ItemData.loadOPOrderTable(mysql)
+
+
                     sendMsg(sender,"Reload Table")
                 }
             }
