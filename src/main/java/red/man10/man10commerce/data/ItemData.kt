@@ -47,7 +47,7 @@ object ItemData {
 
     private fun buyQueue(p:Player,itemID:Int,orderID:Int,sql:MySQLManager):Int{
 
-        if (p.inventory.firstEmpty() == -1)return 4
+        if (!debug && p.inventory.firstEmpty() == -1)return 4
 
         val data = orderMap[itemID] ?: return 3
 

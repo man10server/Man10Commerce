@@ -12,3 +12,5 @@ commands:
     default: op
   amsellop:
     default: op
+  amzntest:
+    default: op
