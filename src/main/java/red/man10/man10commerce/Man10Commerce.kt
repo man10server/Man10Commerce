@@ -62,7 +62,7 @@ class Man10Commerce : JavaPlugin() {
         loadConfig()
 
         server.pluginManager.registerEvents(CommerceMenu,this)
-        getCommand("amzmtest")!!.setExecutor(TestCommand())
+        getCommand("amzntest")!!.setExecutor(TestCommand())
 
     }
 
