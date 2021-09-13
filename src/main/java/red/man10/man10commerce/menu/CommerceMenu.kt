@@ -404,7 +404,7 @@ object CommerceMenu : Listener{
         p.openInventory(inv)
 
         val oldData = peekStack(p)
-        if (oldData!=null && oldData.name == CATEGORY_MENU){ popStack(p) }
+        if (oldData!=null && oldData.name == CATEGORY_ITEM){ popStack(p) }
 
         val data = MenuData()
         data.name = CATEGORY_ITEM
