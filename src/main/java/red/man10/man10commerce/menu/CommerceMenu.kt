@@ -633,15 +633,7 @@ object CommerceMenu : Listener{
                             return
                         }
 
-                        ItemData.buy(p,itemID,orderID){ code:Int ->
-                            when(code){
-                                0 -> { sendMsg(p,"§c§l購入失敗！電子マネーが足りません！") }
-                                1 -> {sendMsg(p,"§a§l購入成功！")}
-                                4 -> {sendMsg(p,"§a§lインベントリに空きがありません！")}
-                                3,5 -> { sendMsg(p,"購入しようとしたアイテムが売り切れています！")}
-                                else ->{ sendMsg(p,"エラー:${code} サーバー運営者、GMに報告してください")}
-                            }
-
+                        ItemData.buy(p,itemID,orderID){
                             Bukkit.getScheduler().runTask(plugin, Runnable { openItemMenu(p,page) })
                         }
 
@@ -698,15 +690,7 @@ object CommerceMenu : Listener{
                             return
                         }
 
-                        ItemData.buy(p,itemID,orderID){ code:Int ->
-                            when(code){
-                                0 -> { sendMsg(p,"§c§l購入失敗！電子マネーが足りません！") }
-                                1 -> {sendMsg(p,"§a§l購入成功！")}
-                                4 -> {sendMsg(p,"§a§lインベントリに空きがありません！")}
-                                3,5 -> { sendMsg(p,"購入しようとしたアイテムが売り切れています！")}
-                                else ->{ sendMsg(p,"エラー:${code} サーバー運営者、GMに報告してください")}
-                            }
-
+                        ItemData.buy(p,itemID,orderID){
                             Bukkit.getScheduler().runTask(plugin, Runnable { openCategoryList(p,category,page) })
                         }
 
@@ -732,15 +716,7 @@ object CommerceMenu : Listener{
 
                 if (action != InventoryAction.MOVE_TO_OTHER_INVENTORY) { return }
 
-                ItemData.buy(p, page, orderID) { code: Int ->
-                    when (code) {
-                        0 -> { sendMsg(p, "§c§l購入失敗！電子マネーが足りません！") }
-                        1 -> { sendMsg(p, "§a§l購入成功！") }
-                        4 -> { sendMsg(p, "§a§lインベントリに空きがありません！") }
-                        3, 5 -> { sendMsg(p, "購入しようとしたアイテムが売り切れています！") }
-                        else -> { sendMsg(p, "エラー:${code} サーバー運営者、GMに報告してください") }
-                    }
-
+                ItemData.buy(p, page, orderID) {
                     Bukkit.getScheduler().runTask(plugin, Runnable { showItemList(p, page) })
                 }
 
@@ -815,15 +791,7 @@ object CommerceMenu : Listener{
                             return
                         }
 
-                        ItemData.buy(p,itemID,orderID){ code:Int ->
-                            when(code){
-                                0 -> { sendMsg(p,"§c§l購入失敗！電子マネーが足りません！") }
-                                1 -> {sendMsg(p,"§a§l購入成功！")}
-                                4 -> {sendMsg(p,"§a§lインベントリに空きがありません！")}
-                                3,5 -> { sendMsg(p,"購入しようとしたアイテムが売り切れています！")}
-                                else ->{ sendMsg(p,"エラー:${code} サーバー運営者、GMに報告してください")}
-                            }
-
+                        ItemData.buy(p,itemID,orderID){
                             Bukkit.getScheduler().runTask(plugin, Runnable { openOPMenu(p,page) })
                         }
 

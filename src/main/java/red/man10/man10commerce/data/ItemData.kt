@@ -12,6 +12,7 @@ import red.man10.man10commerce.Man10Commerce
 import red.man10.man10commerce.Man10Commerce.Companion.bank
 import red.man10.man10commerce.Man10Commerce.Companion.plugin
 import red.man10.man10commerce.Utility
+import red.man10.man10commerce.Utility.sendMsg
 import red.man10.man10commerce.menu.CommerceMenu
 import java.io.File
 import java.util.*
@@ -108,10 +109,33 @@ object ItemData {
             val itemID = queue.first.second
             val orderID = queue.first.third
 
-            val code = buyQueue(p,itemID,orderID, sql)
+            var code = 0
 
-            queue.second.onTransactionResult(code)
+            try {
+                code = buyQueue(p,itemID,orderID, sql)
+            }catch (e:Exception){
+                sendMsg(p,"エラー発生運営に報告してください:${e.message}")
+            } finally {
+                when (code) {
+                    0 -> {
+                        sendMsg(p, "§c§l購入失敗！電子マネーが足りません！")
+                    }
+                    1 -> {
+                        sendMsg(p, "§a§l購入成功！")
+                    }
+                    4 -> {
+                        sendMsg(p, "§a§lインベントリに空きがありません！")
+                    }
+                    3, 5 -> {
+                        sendMsg(p, "購入しようとしたアイテムが売り切れています！")
+                    }
+                    else -> {
+                        sendMsg(p, "エラー:${code} サーバー運営者、GMに報告してください")
+                    }
+                }
 
+                queue.second.onTransactionResult(code)
+            }
         }
     }
 
@@ -283,24 +307,24 @@ object ItemData {
     fun sell(p: Player, item: ItemStack, price: Double): Boolean {
 
         if (Man10Commerce.maxItems< UserData.getSellAmount(p)){
-            Utility.sendMsg(p,"§c§l出品数の上限に達しています！")
+            sendMsg(p,"§c§l出品数の上限に達しています！")
             return false
         }
 
         if (Man10Commerce.minPrice> item.amount*price){
-            Utility.sendMsg(p, "§c§l合計価格が${Man10Commerce.minPrice}円未満の出品はできません！")
+            sendMsg(p, "§c§l合計価格が${Man10Commerce.minPrice}円未満の出品はできません！")
             return false
         }
 
         if (Man10Commerce.maxPrice < price){
-            Utility.sendMsg(p,"§c§l金額の上限に達しています！")
+            sendMsg(p,"§c§l金額の上限に達しています！")
             return false
         }
 
         val meta = item.itemMeta
 
         if (item.type!= Material.DIAMOND && meta is Damageable && meta.hasDamage()){
-            Utility.sendMsg(p,"§c§l耐久値が削れているので出品できません！")
+            sendMsg(p,"§c§l耐久値が削れているので出品できません！")
             return false
         }
 
@@ -318,7 +342,7 @@ object ItemData {
         }
 
         if (id == -1){
-            Utility.sendMsg(p,"§c出品失敗！サーバー管理者にレポートしてください！sell error 1")
+            sendMsg(p,"§c出品失敗！サーバー管理者にレポートしてください！sell error 1")
             return false
         }
 
@@ -355,7 +379,7 @@ object ItemData {
         }
 
         if (id == -1){
-            Utility.sendMsg(p,"§c出品失敗！サーバー管理者にレポートしてください！sell error 2")
+            sendMsg(p,"§c出品失敗！サーバー管理者にレポートしてください！sell error 2")
             return false
         }
 
