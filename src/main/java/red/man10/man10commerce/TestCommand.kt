@@ -118,23 +118,6 @@ class TestCommand :CommandExecutor{
     private fun testBuy(sender:Player, key:Int,itemID:Int){
         for (i in 0 .. key){
             ItemData.buy(sender, itemID, i) { code: Int ->
-                when (code) {
-                    0 -> {
-                        Utility.sendMsg(sender, "§c§l購入失敗！電子マネーが足りません！")
-                    }
-                    1 -> {
-                        Utility.sendMsg(sender, "§a§l購入成功！")
-                    }
-                    4 -> {
-                        Utility.sendMsg(sender, "§a§lインベントリに空きがありません！")
-                    }
-                    3, 5 -> {
-                        Utility.sendMsg(sender, "購入しようとしたアイテムが売り切れています！")
-                    }
-                    else -> {
-                        Utility.sendMsg(sender, "エラー:${code} サーバー運営者、GMに報告してください")
-                    }
-                }
                 Bukkit.getLogger().info("TestFinish:${i} code:${code}")
                 if ((i-1) == key) {
                     Bukkit.getLogger().info("FinishedTestBuy")
