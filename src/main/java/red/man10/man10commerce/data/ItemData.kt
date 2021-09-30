@@ -18,6 +18,7 @@ import java.io.File
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.LinkedBlockingQueue
+import kotlin.collections.HashMap
 
 class Data {
 
@@ -84,11 +85,11 @@ object ItemData {
         Log.buyLog(p, data, item)
 
         if (!data.isOp){
-            sql.execute("DELETE FROM order_table where id=${data.id};")
-            loadOrderTable(sql)
+            sql.execute("DELETE FROM order_table where id=${orderID};")
         }else{
             loadOPOrderTable(sql)
         }
+        loadOrderTable(sql)
 
         return 1
     }
@@ -193,10 +194,11 @@ object ItemData {
 
     fun loadOrderTable(mysql: MySQLManager){
 
-        orderMap.clear()
 //        val rs = mysql.query("select * from order_table where (item_id,(price/amount)) in (select item_id,min(price/amount) from order_table group by `item_id`) order by price;")?:return
 
         val rs = mysql.query("select * from order_table order by price;")?:return
+
+        orderMap.clear()
 
         while (rs.next()) {
 
@@ -224,10 +226,10 @@ object ItemData {
 
     fun loadOPOrderTable(mysql: MySQLManager){
 
-        opOrderMap.clear()
-
         val rs = mysql.query("select * from order_table where (item_id,(price/amount)) in (select item_id,min(price/amount)" +
                 " from order_table where is_op=1 group by `item_id`) order by price;")?:return
+
+        opOrderMap.clear()
 
         while (rs.next()) {
 
@@ -265,6 +267,8 @@ object ItemData {
 
         Bukkit.getLogger().info("Start Loading Categories")
 
+        val maps = HashMap<String,Category>()
+
         for (file in files){
 
             if (!file.path.endsWith(".yml") || file.isDirectory)continue
@@ -298,8 +302,12 @@ object ItemData {
 
             Bukkit.getLogger().info("category:$name")
 
-            categories[name] = data
+            maps[name] = data
         }
+
+        val sortedKey = maps.keys.sorted()
+
+        for (key in sortedKey){ categories[key] = maps[key]!! }
 
         Bukkit.getLogger().info("Finish Loading Categories")
     }
