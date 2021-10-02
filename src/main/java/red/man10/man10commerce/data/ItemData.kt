@@ -13,6 +13,7 @@ import red.man10.man10commerce.Man10Commerce.Companion.bank
 import red.man10.man10commerce.Man10Commerce.Companion.plugin
 import red.man10.man10commerce.Utility
 import red.man10.man10commerce.Utility.sendMsg
+import red.man10.man10commerce.data.MySQLManager.Companion.escapeStringForMySQL
 import red.man10.man10commerce.menu.CommerceMenu
 import java.io.File
 import java.util.*
@@ -156,7 +157,7 @@ object ItemData {
 
         mysql.execute(
             "INSERT INTO item_list " +
-                    "(item_name, item_type, base64) VALUES ('${name}', '${one.type}', '${Utility.itemToBase64(one)}');"
+                    "(item_name, item_type, base64) VALUES ('${escapeStringForMySQL(name)}', '${one.type}', '${Utility.itemToBase64(one)}');"
         )
 
         val rs = mysql.query("select id from item_list ORDER BY id DESC LIMIT 1;")!!
@@ -357,7 +358,7 @@ object ItemData {
         mysql.execute(
             "INSERT INTO order_table " +
                     "(player, uuid, item_id, item_name, date, amount, price) " +
-                    "VALUES ('${p.name}', '${p.uniqueId}', $id, '${name}', now(), ${item.amount}, $price);"
+                    "VALUES ('${p.name}', '${p.uniqueId}', $id, '${escapeStringForMySQL(name)}', now(), ${item.amount}, $price);"
         )
 
         Log.sellLog(p,item,price,id)
@@ -394,7 +395,7 @@ object ItemData {
         mysql.execute(
             "INSERT INTO order_table " +
                     "(player, uuid, item_id, item_name, date, amount, price, is_op) " +
-                    "VALUES ('${p.name}', '${p.uniqueId}', $id, '${name}', now(), ${item.amount}, $price, 1);"
+                    "VALUES ('${p.name}', '${p.uniqueId}', $id, '${escapeStringForMySQL(name)}', now(), ${item.amount}, $price, 1);"
         )
 
         Log.sellLog(p,item,price,id)

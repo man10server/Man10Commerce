@@ -40,10 +40,8 @@ class Man10Commerce : JavaPlugin() {
 
         fun getDisplayName(item: ItemStack): String {
 
-            val name = if (item.hasItemMeta() && item.itemMeta.hasDisplayName()) item.itemMeta?.displayName
+            return if (item.hasItemMeta() && item.itemMeta.hasDisplayName()) item.itemMeta?.displayName
                 ?: item.itemMeta.localizedName else item.i18NDisplayName?:""
-
-            return MySQLManager.escapeStringForMySQL(name)
         }
 
     }
