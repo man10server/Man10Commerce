@@ -300,6 +300,17 @@ object CommerceMenu : Listener{
             inv.addItem(data.categoryIcon)
         }
 
+        val notCategorized = ItemStack(Material.BARRIER)
+
+        val meta2 = notCategorized.itemMeta
+        meta2.displayName(text("§a§lカテゴリーわけされてないアイテムを見る"))
+        setID(meta2,"not")
+        notCategorized.itemMeta = meta2
+
+        inv.addItem(notCategorized)
+
+
+
         p.openInventory(inv)
 
         val data = MenuData()
@@ -316,7 +327,7 @@ object CommerceMenu : Listener{
 
         val inv = Bukkit.createInventory(null,54, text(CATEGORY_ITEM))
 
-        val keys = ItemData.getCategorized(category)?.keys?.toList()?: mutableListOf()
+        val keys = ItemData.getCategorized(category).keys.toList()
 
         var inc = 0
 

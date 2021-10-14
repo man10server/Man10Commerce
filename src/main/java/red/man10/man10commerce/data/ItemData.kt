@@ -10,6 +10,7 @@ import org.bukkit.inventory.meta.Damageable
 import red.man10.man10bank.Man10Bank
 import red.man10.man10commerce.Man10Commerce
 import red.man10.man10commerce.Man10Commerce.Companion.bank
+import red.man10.man10commerce.Man10Commerce.Companion.getDisplayName
 import red.man10.man10commerce.Man10Commerce.Companion.plugin
 import red.man10.man10commerce.Utility
 import red.man10.man10commerce.Utility.sendMsg
@@ -153,7 +154,7 @@ object ItemData {
 
         if (itemDictionary.containsValue(one)) return false
 
-        val name = Man10Commerce.getDisplayName(item)
+        val name = getDisplayName(item)
 
         mysql.execute(
             "INSERT INTO item_list " +
@@ -341,7 +342,7 @@ object ItemData {
 
         registerItemIndex(item,mysql)
 
-        val name = Man10Commerce.getDisplayName(item)
+        val name = getDisplayName(item)
         var id = -1
 
         itemDictionary.forEach {
@@ -377,7 +378,7 @@ object ItemData {
 
         registerItemIndex(item,mysql)
 
-        val name = Man10Commerce.getDisplayName(item)
+        val name = getDisplayName(item)
 
         var id = -1
 
@@ -462,45 +463,54 @@ object ItemData {
         return list
     }
 
-    fun getCategorized(categoryName: String): Map<Int, Data>? {
+    fun getCategorized(categoryName: String): Map<Int, Data> {
 
-        val category = categories[categoryName] ?: return null
+        if (categoryName=="not"){
+            return getNotCategorized()
+        }
 
-        val list = mutableListOf<Int>()
+        val category = categories[categoryName] ?: return Collections.emptyMap()
 
         val isEmptyMaterial = category.material.isEmpty()
         val isEmptyDisplay = category.displayName.isEmpty()
         val isEmptyCMD = category.customModelData.isEmpty()
 
-        for (data in itemDictionary) {
+        val filteredList = itemDictionary
+            .filter {
+                item ->
 
-            val item = data.value
-            val meta = item.itemMeta
+                val meta = item.value.itemMeta
+                val cmd = if (meta==null || !meta.hasCustomModelData()) 0 else meta.customModelData
+                val display = getDisplayName(item.value).replace("§[a-z0-9]".toRegex(), "")
 
-            var matchMaterial = false
-            var matchDisplay = false
-            var matchCMD = false
+                if (isEmptyMaterial) { true }else { category.material.contains(item.value.type) } &&
+                        if (isEmptyCMD) { true }else { category.customModelData.contains(cmd) } &&
+                        if (isEmptyDisplay) { true } else { (category.displayName.filter { (display).contains(it) }).isNotEmpty() }
+            }.keys
 
-            if (isEmptyMaterial) {
-                matchMaterial = true
-            } else if (category.material.contains(item.type)) matchMaterial = true
+        return orderMap.filterKeys { filteredList.contains(it) }
+    }
 
-            val display = (Man10Commerce.getDisplayName(item).replace("§[a-z0-9]".toRegex(), ""))
+    private fun getNotCategorized(): Map<Int,Data>{
 
-            if (isEmptyDisplay) {
-                matchDisplay = true
-            } else if ((category.displayName.filter { display.contains(it) }).isNotEmpty()) matchDisplay = true
+        val materials = mutableSetOf<Material>()
+        val displays = mutableSetOf<String>()
 
-            val cmd = if (meta.hasCustomModelData()) meta.customModelData else 0
-
-            if (isEmptyCMD) {
-                matchCMD = true
-            } else if (category.customModelData.contains(cmd)) matchCMD = true
-
-            if (matchCMD && matchDisplay && matchMaterial) list.add(data.key)
+        for (category in categories.values){
+            materials.addAll(category.material)
+            displays.addAll(category.displayName)
         }
 
-        return orderMap.filterKeys { list.contains(it) }
+        val filteredList = itemDictionary
+            .filter {
+                item ->
+                val display = getDisplayName(item.value).replace("§[a-z0-9]".toRegex(), "")
+
+                materials.contains(item.value.type) || (displays.filter { (display).contains(it) }).isNotEmpty()
+            }.keys
+
+        return orderMap.filterKeys { !filteredList.contains(it) }
+
     }
 
     fun getAllItem(itemID:Int):List<Data>{
