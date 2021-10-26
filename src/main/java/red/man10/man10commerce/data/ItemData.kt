@@ -314,6 +314,7 @@ object ItemData {
         Bukkit.getLogger().info("Finish Loading Categories")
     }
 
+    @Synchronized
     fun sell(p: Player, item: ItemStack, price: Double): Boolean {
 
         if (Man10Commerce.maxItems< UserData.getSellAmount(p)){
@@ -365,8 +366,6 @@ object ItemData {
         Log.sellLog(p,item,price,id)
 
         loadOrderTable(mysql)
-
-        item.amount = 0
 
         return true
     }

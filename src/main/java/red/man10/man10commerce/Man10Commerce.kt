@@ -106,29 +106,35 @@ class Man10Commerce : JavaPlugin() {
                 return false
             }
 
-            val item = sender.inventory.itemInMainHand
-            val display = item.clone()
+            val itemInHand = sender.inventory.itemInMainHand
+            val clone = itemInHand.clone()
 
-            if (item.type == Material.AIR){ return true }
+            if (itemInHand.type == Material.AIR){
+                sendMsg(sender,"§cアイテムをメインの手に持ってください")
+                return true
+            }
+
+            itemInHand.amount = 0
 
             val price = args[0].toDoubleOrNull()
 
             if (price == null){
-
                 sendMsg(sender,"§c§l金額は数字を使ってください！")
-
+                sender.inventory.addItem(clone)
                 return true
             }
 
-
             es.execute {
-                if (!ItemData.sell(sender,item,price))return@execute
+                if (!ItemData.sell(sender,clone,price)){
+                    sender.inventory.addItem(clone)
+                    return@execute
+                }
 
                 sendMsg(sender,"§e§l出品成功しました！")
 
-                val name = getDisplayName(display)
+                val name = getDisplayName(clone)
                 Bukkit.getScheduler().runTask(this, Runnable {
-                    Bukkit.broadcast(text("${prefix}§f${name}§f(${display.amount}個)が§e§l単価${format(price)}§f円で出品されました！"))
+                    Bukkit.broadcast(text("${prefix}§f${name}§f(${clone.amount}個)が§e§l単価${format(price)}§f円で出品されました！"))
                 })
             }
 
