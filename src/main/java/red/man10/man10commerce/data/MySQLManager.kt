@@ -131,6 +131,7 @@ class MySQLManager(private val plugin: JavaPlugin, private val conName: String) 
     //      実行
     ////////////////////////////////
     fun execute(query: String): Boolean {
+
         this.MySQL = MySQLFunc(this.HOST!!, this.DB!!, this.USER!!, this.PASS!!, this.PORT!!)
         this.con = this.MySQL!!.open()
         if (this.con == null) {
@@ -160,6 +161,7 @@ class MySQLManager(private val plugin: JavaPlugin, private val conName: String) 
     //      クエリ
     ////////////////////////////////
     fun query(query: String): ResultSet? {
+
         this.MySQL = MySQLFunc(this.HOST!!, this.DB!!, this.USER!!, this.PASS!!, this.PORT!!)
         this.con = this.MySQL!!.open()
         var rs: ResultSet? = null
@@ -198,6 +200,7 @@ class MySQLManager(private val plugin: JavaPlugin, private val conName: String) 
 
     }
 
+
     companion object{
 
         val mysqlQueue = LinkedBlockingQueue<String>()
@@ -220,6 +223,20 @@ class MySQLManager(private val plugin: JavaPlugin, private val conName: String) 
             }.start()
 
         }
+
+
+        fun escapeStringForMySQL(s: String): String {
+            return s.replace("\\", "\\\\")
+                .replace("\b", "\\b")
+                .replace("\n", "\\n")
+                .replace("\r", "\\r")
+                .replace("\t", "\\t")
+                .replace("\\x1A", "\\Z")
+                .replace("\\x00", "\\0")
+                .replace("'", "\\'")
+                .replace("\"", "\\\"")
+        }
+
 
     }
 }

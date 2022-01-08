@@ -10,15 +10,18 @@ import org.bukkit.inventory.meta.Damageable
 import red.man10.man10bank.Man10Bank
 import red.man10.man10commerce.Man10Commerce
 import red.man10.man10commerce.Man10Commerce.Companion.bank
+import red.man10.man10commerce.Man10Commerce.Companion.getDisplayName
 import red.man10.man10commerce.Man10Commerce.Companion.debug
 import red.man10.man10commerce.Man10Commerce.Companion.plugin
 import red.man10.man10commerce.Utility
 import red.man10.man10commerce.Utility.sendMsg
+import red.man10.man10commerce.data.MySQLManager.Companion.escapeStringForMySQL
 import red.man10.man10commerce.menu.CommerceMenu
 import java.io.File
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.LinkedBlockingQueue
+import kotlin.collections.HashMap
 
 class Data {
 
@@ -85,11 +88,11 @@ object ItemData {
         Log.buyLog(p, data, item)
 
         if (!data.isOp){
-            sql.execute("DELETE FROM order_table where id=${data.id};")
-            loadOrderTable(sql)
+            sql.execute("DELETE FROM order_table where id=${orderID};")
         }else{
             loadOPOrderTable(sql)
         }
+        loadOrderTable(sql)
 
         return 1
     }
@@ -152,11 +155,11 @@ object ItemData {
 
         if (itemDictionary.containsValue(one)) return false
 
-        val name = Man10Commerce.getDisplayName(item)
+        val name = getDisplayName(item)
 
         mysql.execute(
             "INSERT INTO item_list " +
-                    "(item_name, item_type, base64) VALUES ('${name}', '${one.type}', '${Utility.itemToBase64(one)}');"
+                    "(item_name, item_type, base64) VALUES ('${escapeStringForMySQL(name)}', '${one.type}', '${Utility.itemToBase64(one)}');"
         )
 
         val rs = mysql.query("select id from item_list ORDER BY id DESC LIMIT 1;")!!
@@ -194,10 +197,11 @@ object ItemData {
 
     fun loadOrderTable(mysql: MySQLManager){
 
-        orderMap.clear()
 //        val rs = mysql.query("select * from order_table where (item_id,(price/amount)) in (select item_id,min(price/amount) from order_table group by `item_id`) order by price;")?:return
 
         val rs = mysql.query("select * from order_table order by price;")?:return
+
+        orderMap.clear()
 
         while (rs.next()) {
 
@@ -225,10 +229,10 @@ object ItemData {
 
     fun loadOPOrderTable(mysql: MySQLManager){
 
-        opOrderMap.clear()
-
         val rs = mysql.query("select * from order_table where (item_id,(price/amount)) in (select item_id,min(price/amount)" +
                 " from order_table where is_op=1 group by `item_id`) order by price;")?:return
+
+        opOrderMap.clear()
 
         while (rs.next()) {
 
@@ -266,6 +270,8 @@ object ItemData {
 
         Bukkit.getLogger().info("Start Loading Categories")
 
+        val maps = HashMap<String,Category>()
+
         for (file in files){
 
             if (!file.path.endsWith(".yml") || file.isDirectory)continue
@@ -299,12 +305,17 @@ object ItemData {
 
             Bukkit.getLogger().info("category:$name")
 
-            categories[name] = data
+            maps[name] = data
         }
+
+        val sortedKey = maps.keys.sorted()
+
+        for (key in sortedKey){ categories[key] = maps[key]!! }
 
         Bukkit.getLogger().info("Finish Loading Categories")
     }
 
+    @Synchronized
     fun sell(p: Player, item: ItemStack, price: Double): Boolean {
 
         if (Man10Commerce.maxItems< UserData.getSellAmount(p)){
@@ -333,7 +344,7 @@ object ItemData {
 
         registerItemIndex(item,mysql)
 
-        val name = Man10Commerce.getDisplayName(item)
+        val name = getDisplayName(item)
         var id = -1
 
         itemDictionary.forEach {
@@ -350,11 +361,12 @@ object ItemData {
         mysql.execute(
             "INSERT INTO order_table " +
                     "(player, uuid, item_id, item_name, date, amount, price) " +
-                    "VALUES ('${p.name}', '${p.uniqueId}', $id, '${name}', now(), ${item.amount}, $price);"
+                    "VALUES ('${p.name}', '${p.uniqueId}', $id, '${escapeStringForMySQL(name)}', now(), ${item.amount}, $price);"
         )
 
         Log.sellLog(p,item,price,id)
 
+        loadOrderTable(mysql)
         loadOrderTable(mysql)
 
 
@@ -370,7 +382,7 @@ object ItemData {
 
         registerItemIndex(item,mysql)
 
-        val name = Man10Commerce.getDisplayName(item)
+        val name = getDisplayName(item)
 
         var id = -1
 
@@ -388,7 +400,7 @@ object ItemData {
         mysql.execute(
             "INSERT INTO order_table " +
                     "(player, uuid, item_id, item_name, date, amount, price, is_op) " +
-                    "VALUES ('${p.name}', '${p.uniqueId}', $id, '${name}', now(), ${item.amount}, $price, 1);"
+                    "VALUES ('${p.name}', '${p.uniqueId}', $id, '${escapeStringForMySQL(name)}', now(), ${item.amount}, $price, 1);"
         )
 
         Log.sellLog(p,item,price,id)
@@ -455,45 +467,54 @@ object ItemData {
         return list
     }
 
-    fun getCategorized(categoryName: String): Map<Int, Data>? {
+    fun getCategorized(categoryName: String): Map<Int, Data> {
 
-        val category = categories[categoryName] ?: return null
+        if (categoryName=="not"){
+            return getNotCategorized()
+        }
 
-        val list = mutableListOf<Int>()
+        val category = categories[categoryName] ?: return Collections.emptyMap()
 
         val isEmptyMaterial = category.material.isEmpty()
         val isEmptyDisplay = category.displayName.isEmpty()
         val isEmptyCMD = category.customModelData.isEmpty()
 
-        for (data in itemDictionary) {
+        val filteredList = itemDictionary
+            .filter {
+                item ->
 
-            val item = data.value
-            val meta = item.itemMeta
+                val meta = item.value.itemMeta
+                val cmd = if (meta==null || !meta.hasCustomModelData()) 0 else meta.customModelData
+                val display = getDisplayName(item.value).replace("§[a-z0-9]".toRegex(), "")
 
-            var matchMaterial = false
-            var matchDisplay = false
-            var matchCMD = false
+                if (isEmptyMaterial) { true }else { category.material.contains(item.value.type) } &&
+                        if (isEmptyCMD) { true }else { category.customModelData.contains(cmd) } &&
+                        if (isEmptyDisplay) { true } else { (category.displayName.filter { (display).contains(it) }).isNotEmpty() }
+            }.keys
 
-            if (isEmptyMaterial) {
-                matchMaterial = true
-            } else if (category.material.contains(item.type)) matchMaterial = true
+        return orderMap.filterKeys { filteredList.contains(it) }
+    }
 
-            val display = (Man10Commerce.getDisplayName(item).replace("§[a-z0-9]".toRegex(), ""))
+    private fun getNotCategorized(): Map<Int,Data>{
 
-            if (isEmptyDisplay) {
-                matchDisplay = true
-            } else if ((category.displayName.filter { display.contains(it) }).isNotEmpty()) matchDisplay = true
+        val materials = mutableSetOf<Material>()
+        val displays = mutableSetOf<String>()
 
-            val cmd = if (meta.hasCustomModelData()) meta.customModelData else 0
-
-            if (isEmptyCMD) {
-                matchCMD = true
-            } else if (category.customModelData.contains(cmd)) matchCMD = true
-
-            if (matchCMD && matchDisplay && matchMaterial) list.add(data.key)
+        for (category in categories.values){
+            materials.addAll(category.material)
+            displays.addAll(category.displayName)
         }
 
-        return orderMap.filterKeys { list.contains(it) }
+        val filteredList = itemDictionary
+            .filter {
+                item ->
+                val display = getDisplayName(item.value).replace("§[a-z0-9]".toRegex(), "")
+
+                materials.contains(item.value.type) || (displays.filter { (display).contains(it) }).isNotEmpty()
+            }.keys
+
+        return orderMap.filterKeys { !filteredList.contains(it) }
+
     }
 
     fun getAllItem(itemID:Int):List<Data>{
