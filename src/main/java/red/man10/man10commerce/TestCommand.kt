@@ -17,6 +17,17 @@ class TestCommand :CommandExecutor{
 
         if (sender!is Player)return true
 
+        if (args.isEmpty()){
+
+            Utility.sendMsg(sender,"amzntest sell <amount> : 手持ちアイテムを指定個数売るテスト")
+            Utility.sendMsg(sender,"amzntest sell2 <amount> <multi> : 並列で手持ちアイテムを指定個数売るテスト")
+            Utility.sendMsg(sender,"amzntest buy id(primary keyの最終値) itemID  : 手持ちアイテムをidの値まで買うテスト")
+            Utility.sendMsg(sender,"amzntest buy2 id(primary keyの最終値) <multi> itemID  : 並列で手持ちアイテムをidの値まで買うテスト")
+            Utility.sendMsg(sender,"amzntest debugoff  : デバッグモードを終了")
+
+            return true
+        }
+
         when(args[0]){
 
             "sell" ->{
