@@ -12,20 +12,25 @@ import org.bukkit.event.Listener
 import org.bukkit.event.inventory.InventoryAction
 import org.bukkit.event.inventory.InventoryClickEvent
 import org.bukkit.event.inventory.InventoryCloseEvent
+import org.bukkit.event.player.PlayerCommandPreprocessEvent
+import org.bukkit.inventory.Inventory
 import org.bukkit.inventory.ItemStack
 import org.bukkit.inventory.meta.ItemMeta
 import org.bukkit.persistence.PersistentDataType
+import red.man10.man10commerce.Man10Commerce
 import red.man10.man10commerce.Man10Commerce.Companion.OP
 import red.man10.man10commerce.Man10Commerce.Companion.es
 import red.man10.man10commerce.Man10Commerce.Companion.plugin
 import red.man10.man10commerce.Man10Commerce.Companion.prefix
 import red.man10.man10commerce.Utility.format
 import red.man10.man10commerce.Utility.sendMsg
+import red.man10.man10commerce.data.Data
 import red.man10.man10commerce.data.ItemData
 import red.man10.man10commerce.data.ItemData.itemDictionary
 import red.man10.man10commerce.data.ItemData.opOrderMap
 import red.man10.man10commerce.data.ItemData.orderMap
 import red.man10.man10commerce.menu.CommerceMenu.Menu
+import red.man10.man10commerce.sort.Sort
 import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
@@ -35,10 +40,13 @@ object CommerceMenu : Listener{
 
     private val menuStack = ConcurrentHashMap<Player,Stack<MenuData>>()
 
+
     class MenuData{
         var name = ""
         var page = 0
         var category : String? = ""
+        var search : String? = null
+        var material : Material? = null
         lateinit var menu : Menu
     }
 
@@ -49,10 +57,12 @@ object CommerceMenu : Listener{
     private const val CATEGORY_ITEM = "${prefix}§lカテゴリーアイテム"
     private const val BASIC_MENU = "${prefix}§d§lAmanzonBasic"
     private const val ITEM_LIST_MENU = "${prefix}§l同じアイテムのリスト"
+    private const val QUERY_MENU = "${prefix}§l検索結果"
+    private const val MATERIAL_MENU = "${prefix}§l同じ種類のリスト"
 
     fun openMainMenu(p:Player){
 
-        val inv = Bukkit.createInventory(null,9, text(MAIN_MENU))
+        val inv = Bukkit.createInventory(null,27, text(MAIN_MENU))
 
         val showItem = ItemStack(Material.GRASS_BLOCK)
         val shouItemMeta = showItem.itemMeta
@@ -86,11 +96,26 @@ object CommerceMenu : Listener{
         setID(sellingMeta,"Selling")
         selling.itemMeta = sellingMeta
 
+        val nameSort = ItemStack(Material.OAK_SIGN)
+        val nameSortMeta = nameSort.itemMeta
+        nameSortMeta.displayName(text("§a§l出品されたアイテムを検索する"))
+        setID(nameSortMeta,"NameSort")
+        nameSort.itemMeta = nameSortMeta
+
+        val materialSort = ItemStack(Material.GLASS)
+        val materialSortMeta = materialSort.itemMeta
+        materialSortMeta.displayName(text("§a§l手に持っているアイテムを検索する"))
+        setID(materialSortMeta,"MaterialSort")
+        materialSort.itemMeta = materialSortMeta
+
         inv.setItem(1,showItem)
 //        inv.setItem(2,category)
         inv.setItem(3,basic)
         inv.setItem(5,sellItem)
         inv.setItem(7,selling)
+        inv.setItem(19,nameSort)
+        inv.setItem(21,materialSort)
+
 
         p.openInventory(inv)
 
@@ -604,6 +629,7 @@ object CommerceMenu : Listener{
         val action = e.action
         val id = getID(item)
         val page = menuData.page
+        menuData
 
         p.playSound(p.location,Sound.UI_BUTTON_CLICK,0.1F,1.0F)
 
@@ -775,6 +801,20 @@ object CommerceMenu : Listener{
                             text("${prefix}§a§n売るアイテムを手に持って、/amsell <金額> を入力してください")
                             .clickEvent(ClickEvent.suggestCommand("/amsell ")))
                     }
+
+                    "NameSort"->{
+                        p.closeInventory()
+                        p.sendMessage(
+                            text("${prefix}§a§n/amsearch <アイテム名> を入力してください").clickEvent(ClickEvent.suggestCommand("/amsearch ")))
+                    }
+
+                    "MaterialSort"->{
+                        if (p.inventory.itemInMainHand.type == Material.AIR){
+                            p.sendMessage("${prefix}§c§l手にアイテムを持ってください！")
+                            return
+                        }
+                        openMaterialMenu(p,0,p.inventory.itemInMainHand.type)
+                    }
                 }
             }
 
@@ -811,9 +851,113 @@ object CommerceMenu : Listener{
                     }
                 }
             }
+
+            QUERY_MENU ->{
+
+                when(id){
+                    "prev" ->{ openSearchMenu(p,page-1,menuData.search!!) }
+
+                    "next" ->{ openSearchMenu(p,page+1,menuData.search!!) }
+
+                    "reload" ->{ openSearchMenu(p,page,menuData.search!!) }
+
+                    else ->{
+                        if (action != InventoryAction.MOVE_TO_OTHER_INVENTORY)return
+
+                        val meta = item.itemMeta!!
+
+                        val orderID = meta.persistentDataContainer[NamespacedKey(plugin,"order_id"), PersistentDataType.INTEGER]?:-1
+                        val itemID = meta.persistentDataContainer[NamespacedKey(plugin,"item_id"), PersistentDataType.INTEGER]?:-1
+
+                        if (orderID == -1)return
+
+                        if (action != InventoryAction.MOVE_TO_OTHER_INVENTORY){
+                            es.execute { showItemList(p,itemID) }
+                            return
+                        }
+
+                        ItemData.buy(p,itemID,orderID){
+                            Bukkit.getScheduler().runTask(plugin, Runnable { openSearchMenu(p,page,menuData.search?:return@Runnable) })
+                        }
+
+
+                        return
+                    }
+                }
+            }
+
+            MATERIAL_MENU ->{
+
+                when(id){
+                    "prev" ->{ openMaterialMenu(p,page-1,menuData.material!!) }
+
+                    "next" ->{ openMaterialMenu(p,page+1,menuData.material!!) }
+
+                    "reload" ->{ openMaterialMenu(p,page,menuData.material!!) }
+
+                    else ->{
+                        if (action != InventoryAction.MOVE_TO_OTHER_INVENTORY)return
+
+                        val meta = item.itemMeta!!
+
+                        val orderID = meta.persistentDataContainer[NamespacedKey(plugin,"order_id"), PersistentDataType.INTEGER]?:-1
+                        val itemID = meta.persistentDataContainer[NamespacedKey(plugin,"item_id"), PersistentDataType.INTEGER]?:-1
+
+                        if (orderID == -1)return
+
+                        if (action != InventoryAction.MOVE_TO_OTHER_INVENTORY){
+                            es.execute { showItemList(p,itemID) }
+                            return
+                        }
+
+                        ItemData.buy(p,itemID,orderID){
+                            Bukkit.getScheduler().runTask(plugin, Runnable { openMaterialMenu(p,page,menuData.material!!) })
+                        }
+                        return
+                    }
+                }
+            }
         }
 
     }
+
+    fun openSearchMenu(p: Player, page : Int, query : String){
+        val keys = Sort.nameSort(query,orderMap.keys().toList())
+
+        val inv = generateSortInventory(Bukkit.createInventory(null,54, QUERY_MENU),page,keys)
+
+        p.openInventory(inv)
+
+        val oldData = peekStack(p)
+        if (oldData!=null && oldData.name == QUERY_MENU){ popStack(p) }
+
+        val data = MenuData()
+        data.name = QUERY_MENU
+        data.page = page
+        data.menu= Menu { openSearchMenu(p,page, query) }
+
+        pushStack(p,data)
+    }
+
+    fun openMaterialMenu(p: Player, page : Int, material: Material){
+
+        val keys = Sort.materialSort(material,orderMap.keys().toList())
+
+        val inv = generateSortInventory(Bukkit.createInventory(null,54, MATERIAL_MENU),page,keys)
+
+        p.openInventory(inv)
+
+        val oldData = peekStack(p)
+        if (oldData!=null && oldData.name == MATERIAL_MENU){ popStack(p) }
+
+        val data = MenuData()
+        data.name = MATERIAL_MENU
+        data.page = page
+        data.menu= Menu { openMaterialMenu(p,page,material) }
+
+        pushStack(p,data)
+    }
+
 
     private fun pushStack(p:Player, data:MenuData){
         val stack = menuStack[p]?: Stack()
@@ -850,4 +994,94 @@ object CommerceMenu : Listener{
     }
 
     fun interface Menu{ fun menuFunc() }
+
+    fun reloadItem(): ItemStack {
+        val reloadItem = ItemStack(Material.COMPASS)
+        val reloadMeta = reloadItem.itemMeta
+        reloadMeta.displayName(text("§6§lリロード"))
+        setID(reloadMeta,"reload")
+        reloadItem.itemMeta = reloadMeta
+        return reloadItem
+    }
+
+    fun prevItem(): ItemStack {
+        val prevItem = ItemStack(Material.PAPER)
+        val prevMeta = prevItem.itemMeta
+        prevMeta.displayName(text("§6§l前ページへ"))
+        setID(prevMeta,"prev")
+        prevItem.itemMeta = prevMeta
+        return prevItem
+    }
+
+    fun nextItem(): ItemStack {
+        val nextItem = ItemStack(Material.PAPER)
+        val nextMeta = nextItem.itemMeta
+        nextMeta.displayName(text("§6§l次ページへ"))
+        setID(nextMeta,"next")
+        nextItem.itemMeta = nextMeta
+        return nextItem
+    }
+
+    fun addedInfoItem(item: ItemStack, data : Data?): ItemStack {
+        val lore = item.lore?: mutableListOf()
+
+        if (data==null){
+
+            lore.add("§c§l売り切れ")
+
+            item.lore = lore
+
+            return item
+        }
+
+        lore.add("§e§l値段:${format(floor(data.price))}")
+        lore.add("§e§l単価:${format(floor(data.price/data.amount))}")
+        lore.add("§e§l出品者${Bukkit.getOfflinePlayer(data.seller!!).name}")
+        lore.add("§e§l個数:${data.amount}")
+        lore.add("§e§l${SimpleDateFormat("yyyy-MM/dd").format(data.date)}")
+        if (data.isOp) lore.add("§d§l公式出品アイテム")
+        lore.add("§cシフトクリックで1-Click購入")
+
+        val meta = item.itemMeta
+        meta.persistentDataContainer.set(NamespacedKey(plugin,"order_id"), PersistentDataType.INTEGER,data.id)
+        meta.persistentDataContainer.set(NamespacedKey(plugin,"item_id"), PersistentDataType.INTEGER,data.itemID)
+        item.itemMeta = meta
+
+        item.lore = lore
+        return item
+    }
+
+    fun generateSortInventory(inv : Inventory, page: Int , keys : List<Int>): Inventory {
+
+
+        var inc = 0
+
+        while (inv.getItem(44) ==null){
+
+            if (keys.size <= inc+page*45)break
+
+            val itemID = keys[inc+page*45]
+
+            inc ++
+
+            val data = orderMap[itemID]
+            val item = itemDictionary[itemID]?.clone()?:continue
+
+            inv.addItem(addedInfoItem(item,data))
+
+        }
+
+        inv.setItem(49,reloadItem())
+
+
+        if (page!=0){
+            inv.setItem(45,prevItem())
+        }
+
+        if (inc >=44){
+            inv.setItem(53,nextItem())
+        }
+
+        return inv
+    }
 }

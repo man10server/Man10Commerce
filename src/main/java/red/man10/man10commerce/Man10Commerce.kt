@@ -1,5 +1,7 @@
 package red.man10.man10commerce
 
+import com.google.gson.Gson
+import com.google.gson.JsonObject
 import net.kyori.adventure.text.Component.text
 import org.bukkit.Bukkit
 import org.bukkit.Material
@@ -8,22 +10,35 @@ import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
 import org.bukkit.plugin.java.JavaPlugin
+import org.json.simple.JSONObject
+import org.json.simple.parser.JSONParser
 import red.man10.man10bank.BankAPI
 import red.man10.man10commerce.Utility.format
 import red.man10.man10commerce.Utility.sendMsg
 import red.man10.man10commerce.data.ItemData
 import red.man10.man10commerce.data.MySQLManager
 import red.man10.man10commerce.menu.CommerceMenu
+import red.man10.man10commerce.sort.Sort
+import java.io.File
+import java.io.InputStream
+import java.net.URI
+import java.nio.file.Files
+import java.nio.file.Path
+import java.nio.file.Paths
 import java.util.*
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
 class Man10Commerce : JavaPlugin() {
 
+
+
+
     companion object{
         lateinit var plugin: JavaPlugin
         lateinit var bank : BankAPI
         lateinit var es : ExecutorService
+
 
         const val prefix = "§l[§a§lA§d§lma§f§ln§a§lzon§f§l]§f"
 
@@ -38,10 +53,31 @@ class Man10Commerce : JavaPlugin() {
         const val OP = "commerce.op"
         const val USER = "commerce.user"
 
+        lateinit var lang : JsonObject
+
         fun getDisplayName(item: ItemStack): String {
 
-            return if (item.hasItemMeta() && item.itemMeta.hasDisplayName()) item.itemMeta?.displayName
-                ?: item.itemMeta.localizedName else item.i18NDisplayName?:""
+            val name: String
+            if (item.hasItemMeta() && item.itemMeta.hasDisplayName()){
+                name = item.itemMeta.displayName
+
+            }else{
+                val separator =
+                    if (item.type.isBlock) {
+                        "block.minecraft."
+                    } else {
+                        "item.minecraft."
+                    }
+
+                val japanese = lang[separator + item.type.name.toLowerCase()]
+                name = if (japanese == null){
+                    item.i18NDisplayName?:""
+                }else{
+                    japanese.asString
+                }
+
+            }
+            return name
         }
 
     }
@@ -64,6 +100,8 @@ class Man10Commerce : JavaPlugin() {
         loadConfig()
 
         server.pluginManager.registerEvents(CommerceMenu,this)
+
+        lang = Gson().fromJson(Files.readString(File(plugin.dataFolder.path+"/ja_jp.json").toPath()),JsonObject::class.java)
 
     }
 
@@ -88,6 +126,25 @@ class Man10Commerce : JavaPlugin() {
 
         if (sender !is Player)return false
 
+
+        if (label == "amsearch"){
+            if (!sender.hasPermission(USER))return true
+
+            if (!sender.hasPermission(OP) && !enable){
+                sendMsg(sender,"§f現在営業を停止しています")
+
+                return false
+            }
+
+            if (args.size != 1){
+                sendMsg(sender,"§a§l/amsearch <検索名>")
+                return true
+            }
+
+            CommerceMenu.openSearchMenu(sender,0,args[0])
+
+            return true
+        }
 
         if (label == "amsell"){
 
