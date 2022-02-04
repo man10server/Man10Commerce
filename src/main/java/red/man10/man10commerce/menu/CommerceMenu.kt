@@ -627,7 +627,6 @@ object CommerceMenu : Listener{
         val action = e.action
         val id = getID(item)
         val page = menuData.page
-        menuData
 
         p.playSound(p.location,Sound.UI_BUTTON_CLICK,0.1F,1.0F)
 
@@ -860,8 +859,6 @@ object CommerceMenu : Listener{
                     "reload" ->{ openSearchMenu(p,page,menuData.search!!) }
 
                     else ->{
-                        if (action != InventoryAction.MOVE_TO_OTHER_INVENTORY)return
-
                         val meta = item.itemMeta!!
 
                         val orderID = meta.persistentDataContainer[NamespacedKey(plugin,"order_id"), PersistentDataType.INTEGER]?:-1
@@ -894,8 +891,6 @@ object CommerceMenu : Listener{
                     "reload" ->{ openMaterialMenu(p,page,menuData.material!!) }
 
                     else ->{
-                        if (action != InventoryAction.MOVE_TO_OTHER_INVENTORY)return
-
                         val meta = item.itemMeta!!
 
                         val orderID = meta.persistentDataContainer[NamespacedKey(plugin,"order_id"), PersistentDataType.INTEGER]?:-1
