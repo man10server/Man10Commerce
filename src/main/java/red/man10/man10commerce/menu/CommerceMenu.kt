@@ -12,12 +12,10 @@ import org.bukkit.event.Listener
 import org.bukkit.event.inventory.InventoryAction
 import org.bukkit.event.inventory.InventoryClickEvent
 import org.bukkit.event.inventory.InventoryCloseEvent
-import org.bukkit.event.player.PlayerCommandPreprocessEvent
 import org.bukkit.inventory.Inventory
 import org.bukkit.inventory.ItemStack
 import org.bukkit.inventory.meta.ItemMeta
 import org.bukkit.persistence.PersistentDataType
-import red.man10.man10commerce.Man10Commerce
 import red.man10.man10commerce.Man10Commerce.Companion.OP
 import red.man10.man10commerce.Man10Commerce.Companion.es
 import red.man10.man10commerce.Man10Commerce.Companion.plugin

@@ -10,21 +10,14 @@ import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
 import org.bukkit.plugin.java.JavaPlugin
-import org.json.simple.JSONObject
-import org.json.simple.parser.JSONParser
 import red.man10.man10bank.BankAPI
 import red.man10.man10commerce.Utility.format
 import red.man10.man10commerce.Utility.sendMsg
 import red.man10.man10commerce.data.ItemData
 import red.man10.man10commerce.data.MySQLManager
 import red.man10.man10commerce.menu.CommerceMenu
-import red.man10.man10commerce.sort.Sort
 import java.io.File
-import java.io.InputStream
-import java.net.URI
 import java.nio.file.Files
-import java.nio.file.Path
-import java.nio.file.Paths
 import java.util.*
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
@@ -137,7 +130,7 @@ class Man10Commerce : JavaPlugin() {
             }
 
             if (args.size != 1){
-                sendMsg(sender,"§a§l/amsearch <検索名>")
+                sendMsg(sender,"§a§l/amsearch <検索するアイテムの名前>")
                 return true
             }
 
