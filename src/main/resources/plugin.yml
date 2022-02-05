@@ -2,7 +2,6 @@ name: Man10Commerce
 version: 1.0
 main: red.man10.man10commerce.Man10Commerce
 depend:
-  - Man10CommonLibs
   - Man10Bank
 api-version: 1.17
 commands:
@@ -11,4 +10,6 @@ commands:
   amsell:
     default: op
   amsellop:
+    default: op
+  amsearch:
     default: op

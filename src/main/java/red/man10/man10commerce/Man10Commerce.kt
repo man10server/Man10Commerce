@@ -129,12 +129,12 @@ class Man10Commerce : JavaPlugin() {
                 return false
             }
 
-            if (args.size != 1){
+            if (args.isEmpty()){
                 sendMsg(sender,"§a§l/amsearch <検索するアイテムの名前>")
                 return true
             }
 
-            CommerceMenu.openSearchMenu(sender,0,args[0])
+            CommerceMenu.openSearchMenu(sender,0,args.joinToString(" "))
 
             return true
         }
