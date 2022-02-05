@@ -3,6 +3,8 @@ version: 1.0
 main: red.man10.man10commerce.Man10Commerce
 depend:
   - Man10Bank
+softdepend:
+  - Man10CommonLibs
 api-version: 1.17
 commands:
   amzn:
