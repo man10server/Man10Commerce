@@ -927,6 +927,7 @@ object CommerceMenu : Listener{
         val data = MenuData()
         data.name = QUERY_MENU
         data.page = page
+        data.search = query
         data.menu= Menu { openSearchMenu(p,page, query) }
 
         pushStack(p,data)
@@ -946,6 +947,7 @@ object CommerceMenu : Listener{
         val data = MenuData()
         data.name = MATERIAL_MENU
         data.page = page
+        data.material = material
         data.menu= Menu { openMaterialMenu(p,page,material) }
 
         pushStack(p,data)
