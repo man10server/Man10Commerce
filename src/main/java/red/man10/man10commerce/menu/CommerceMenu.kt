@@ -6,6 +6,7 @@ import org.bukkit.Bukkit
 import org.bukkit.Material
 import org.bukkit.NamespacedKey
 import org.bukkit.Sound
+import org.bukkit.enchantments.Enchantment
 import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
@@ -14,6 +15,7 @@ import org.bukkit.event.inventory.InventoryClickEvent
 import org.bukkit.event.inventory.InventoryCloseEvent
 import org.bukkit.inventory.Inventory
 import org.bukkit.inventory.ItemStack
+import org.bukkit.inventory.meta.EnchantmentStorageMeta
 import org.bukkit.inventory.meta.ItemMeta
 import org.bukkit.persistence.PersistentDataType
 import red.man10.man10commerce.Man10Commerce.Companion.OP
@@ -45,6 +47,8 @@ object CommerceMenu : Listener{
         var category : String? = ""
         var search : String? = null
         var material : Material? = null
+        var seller : String? = null
+        var enchantment : Pair<Enchantment,Int>? = null
         lateinit var menu : Menu
     }
 
@@ -57,6 +61,10 @@ object CommerceMenu : Listener{
     private const val ITEM_LIST_MENU = "${prefix}§l同じアイテムのリスト"
     private const val QUERY_MENU = "${prefix}§l検索結果"
     private const val MATERIAL_MENU = "${prefix}§l同じ種類のリスト"
+    private const val SELLER_MENU = "${prefix}§l出品者名の検索結果"
+    private const val ENCHANT_MAIN_MENU = "${prefix}§lエンチャントで検索"
+    private const val ENCHANT_LEVEL_SELECTOR_MENU = "${prefix}§lレベルを選択"
+    private const val ENCHANT_SELECTED_MENU = "${prefix}§lエンチャントの検索結果"
 
     fun openMainMenu(p:Player){
 
@@ -106,6 +114,13 @@ object CommerceMenu : Listener{
         setID(materialSortMeta,"MaterialSort")
         materialSort.itemMeta = materialSortMeta
 
+        val enchantSort = ItemStack(Material.ENCHANTED_BOOK)
+        val enchantSortMeta = enchantSort.itemMeta
+        enchantSortMeta.displayName(text("§a§lエンチャントで検索する"))
+        setID(enchantSortMeta,"EnchantSort")
+        enchantSort.itemMeta = enchantSortMeta
+
+
         inv.setItem(1,showItem)
 //        inv.setItem(2,category)
         inv.setItem(3,basic)
@@ -113,6 +128,7 @@ object CommerceMenu : Listener{
         inv.setItem(7,selling)
         inv.setItem(19,nameSort)
         inv.setItem(21,materialSort)
+        inv.setItem(23,enchantSort)
 
 
         p.openInventory(inv)
@@ -812,6 +828,9 @@ object CommerceMenu : Listener{
                         }
                         openMaterialMenu(p,0,p.inventory.itemInMainHand.type)
                     }
+                    "EnchantSort"->{
+                        openEnchantSortMainMenu(p)
+                    }
                 }
             }
 
@@ -910,6 +929,74 @@ object CommerceMenu : Listener{
                     }
                 }
             }
+
+            SELLER_MENU->{
+                when(id){
+                    "prev" ->{ openSellerMenu(p,page-1,menuData.seller!!) }
+
+                    "next" ->{ openSellerMenu(p,page+1,menuData.seller!!) }
+
+                    "reload" ->{ openSellerMenu(p,page,menuData.seller!!) }
+
+                    else ->{
+                        val meta = item.itemMeta!!
+
+                        val orderID = meta.persistentDataContainer[NamespacedKey(plugin,"order_id"), PersistentDataType.INTEGER]?:-1
+                        val itemID = meta.persistentDataContainer[NamespacedKey(plugin,"item_id"), PersistentDataType.INTEGER]?:-1
+
+                        if (orderID == -1)return
+
+                        if (action != InventoryAction.MOVE_TO_OTHER_INVENTORY){
+                            es.execute { showItemList(p,itemID) }
+                            return
+                        }
+
+                        ItemData.buy(p,itemID,orderID){
+                            Bukkit.getScheduler().runTask(plugin, Runnable { openSellerMenu(p,page,menuData.seller!!) })
+                        }
+                        return
+                    }
+                }
+            }
+
+            ENCHANT_MAIN_MENU->{
+                val meta = item.itemMeta as EnchantmentStorageMeta
+                openEnchantLevelSelectorMenu(p,meta.storedEnchants.entries.first().key)
+            }
+
+            ENCHANT_LEVEL_SELECTOR_MENU->{
+                val enchant = (item.itemMeta as EnchantmentStorageMeta).storedEnchants.entries.first()
+                openEnchantSelectedMenu(p,0,enchant.key,enchant.value)
+            }
+
+            ENCHANT_SELECTED_MENU->{
+                when(id){
+                    "prev" ->{ openEnchantSelectedMenu(p,page-1,menuData.enchantment!!.first,menuData.enchantment!!.second) }
+
+                    "next" ->{ openEnchantSelectedMenu(p,page+1,menuData.enchantment!!.first,menuData.enchantment!!.second) }
+
+                    "reload" ->{ openEnchantSelectedMenu(p,page,menuData.enchantment!!.first,menuData.enchantment!!.second) }
+
+                    else ->{
+                        val meta = item.itemMeta!!
+
+                        val orderID = meta.persistentDataContainer[NamespacedKey(plugin,"order_id"), PersistentDataType.INTEGER]?:-1
+                        val itemID = meta.persistentDataContainer[NamespacedKey(plugin,"item_id"), PersistentDataType.INTEGER]?:-1
+
+                        if (orderID == -1)return
+
+                        if (action != InventoryAction.MOVE_TO_OTHER_INVENTORY){
+                            es.execute { showItemList(p,itemID) }
+                            return
+                        }
+
+                        ItemData.buy(p,itemID,orderID){
+                            Bukkit.getScheduler().runTask(plugin, Runnable { openEnchantSelectedMenu(p,page,menuData.enchantment!!.first,menuData.enchantment!!.second) })
+                        }
+                        return
+                    }
+                }
+            }
         }
 
     }
@@ -949,6 +1036,87 @@ object CommerceMenu : Listener{
         data.page = page
         data.material = material
         data.menu= Menu { openMaterialMenu(p,page,material) }
+
+        pushStack(p,data)
+    }
+
+    fun openSellerMenu(p: Player, page : Int, seller : String){
+
+        val keys = Sort.sellerSort(seller, orderMap.keys().toList())
+
+        val inv = generateSortInventory(Bukkit.createInventory(null,54, SELLER_MENU),page,keys)
+
+        p.openInventory(inv)
+
+        val oldData = peekStack(p)
+        if (oldData!=null && oldData.name == SELLER_MENU){ popStack(p) }
+
+        val data = MenuData()
+        data.name = SELLER_MENU
+        data.page = page
+        data.seller = seller
+        data.menu= Menu { openSellerMenu(p, page, seller) }
+
+        pushStack(p,data)
+    }
+
+    fun openEnchantSortMainMenu(p: Player){
+        val inv = Bukkit.createInventory(null,54, ENCHANT_MAIN_MENU)
+        for (enchant in Enchantment.values()){
+            val item = ItemStack(Material.ENCHANTED_BOOK)
+            val meta = item.itemMeta as EnchantmentStorageMeta
+            meta.addStoredEnchant(enchant,1,true)
+            item.itemMeta = meta
+            inv.addItem(item)
+        }
+
+        p.openInventory(inv)
+
+        val oldData = peekStack(p)
+        if (oldData!=null && oldData.name == ENCHANT_MAIN_MENU){ popStack(p) }
+
+        val data = MenuData()
+        data.name = ENCHANT_MAIN_MENU
+        data.menu= Menu { openEnchantSortMainMenu(p) }
+
+        pushStack(p,data)
+    }
+
+    fun openEnchantLevelSelectorMenu(p: Player, enchantment: Enchantment){
+        val inv = Bukkit.createInventory(null,9, ENCHANT_LEVEL_SELECTOR_MENU)
+        for (level in 1..enchantment.maxLevel){
+            val item = ItemStack(Material.ENCHANTED_BOOK)
+            val meta = item.itemMeta as EnchantmentStorageMeta
+            meta.addStoredEnchant(enchantment,level,true)
+            item.itemMeta = meta
+            inv.addItem(item)
+        }
+
+        p.openInventory(inv)
+
+        val oldData = peekStack(p)
+        if (oldData!=null && oldData.name == ENCHANT_LEVEL_SELECTOR_MENU){ popStack(p) }
+
+        val data = MenuData()
+        data.name = ENCHANT_LEVEL_SELECTOR_MENU
+        data.menu= Menu { openEnchantLevelSelectorMenu(p,enchantment) }
+
+        pushStack(p,data)
+    }
+
+    fun openEnchantSelectedMenu(p: Player, page: Int, enchantment: Enchantment, level: Int){
+        val keys = Sort.enchantSort(enchantment,level, orderMap.keys().toList())
+        val inv = generateSortInventory(Bukkit.createInventory(null,54, ENCHANT_SELECTED_MENU),page,keys)
+
+        p.openInventory(inv)
+
+        val oldData = peekStack(p)
+        if (oldData!=null && oldData.name == ENCHANT_SELECTED_MENU){ popStack(p) }
+
+        val data = MenuData()
+        data.name = ENCHANT_SELECTED_MENU
+        data.enchantment = Pair(enchantment,level)
+        data.menu= Menu { openEnchantSelectedMenu(p,page,enchantment,level) }
 
         pushStack(p,data)
     }

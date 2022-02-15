@@ -120,6 +120,25 @@ class Man10Commerce : JavaPlugin() {
         if (sender !is Player)return false
 
 
+        if (label == "amauthor"){
+            if (!sender.hasPermission(USER))return true
+
+            if (!sender.hasPermission(OP) && !enable){
+                sendMsg(sender,"§f現在営業を停止しています")
+
+                return false
+            }
+
+            if (args.size != 1){
+                sendMsg(sender,"§a§l/amauthor <出品者名>")
+                return true
+            }
+
+            CommerceMenu.openSellerMenu(sender,0,args[0])
+
+            return true
+        }
+
         if (label == "amsearch"){
             if (!sender.hasPermission(USER))return true
 
