@@ -114,6 +114,12 @@ object CommerceMenu : Listener{
         setID(materialSortMeta,"MaterialSort")
         materialSort.itemMeta = materialSortMeta
 
+        val authorSort = ItemStack(Material.PLAYER_HEAD)
+        val authorSortMeta = authorSort.itemMeta
+        authorSortMeta.displayName(text("§a§l出品者名で検索する"))
+        setID(authorSortMeta,"AuthorSort")
+        authorSort.itemMeta = authorSortMeta
+
         val enchantSort = ItemStack(Material.ENCHANTED_BOOK)
         val enchantSortMeta = enchantSort.itemMeta
         enchantSortMeta.displayName(text("§a§lエンチャントで検索する"))
@@ -128,7 +134,8 @@ object CommerceMenu : Listener{
         inv.setItem(7,selling)
         inv.setItem(19,nameSort)
         inv.setItem(21,materialSort)
-        inv.setItem(23,enchantSort)
+        inv.setItem(23,authorSort)
+        inv.setItem(25,enchantSort)
 
 
         p.openInventory(inv)
@@ -818,7 +825,7 @@ object CommerceMenu : Listener{
                     "NameSort"->{
                         p.closeInventory()
                         p.sendMessage(
-                            text("${prefix}§a§n/amsearch <アイテム名> を入力してください").clickEvent(ClickEvent.suggestCommand("/amsearch ")))
+                            text("${prefix}§a§n/amsearch <検索するアイテムの名前> を入力してください").clickEvent(ClickEvent.suggestCommand("/amsearch ")))
                     }
 
                     "MaterialSort"->{
@@ -827,6 +834,11 @@ object CommerceMenu : Listener{
                             return
                         }
                         openMaterialMenu(p,0,p.inventory.itemInMainHand.type)
+                    }
+                    "AuthorSort"->{
+                        p.closeInventory()
+                        p.sendMessage(
+                            text("${prefix}§a§n/amauthor <出品者名> を入力してください").clickEvent(ClickEvent.suggestCommand("/amauthor ")))
                     }
                     "EnchantSort"->{
                         openEnchantSortMainMenu(p)

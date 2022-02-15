@@ -3,6 +3,7 @@ version: 1.0
 main: red.man10.man10commerce.Man10Commerce
 depend:
   - Man10Bank
+  - Man10CommonLibs
 api-version: 1.17
 commands:
   amzn:
@@ -12,4 +13,6 @@ commands:
   amsellop:
     default: op
   amsearch:
+    default: op
+  amauthor:
     default: op
