@@ -20,26 +20,26 @@ import java.util.concurrent.ConcurrentHashMap
 /**
  * メニューの抽象クラス。新規メニューを作る際はこのクラスを継承すること。
  */
-abstract class Menu(title: String,size:Int,val p:Player){
+abstract class Menu(title: String,private val size:Int,val p:Player){
 
     val name = prefix+title
-    val menu = Bukkit.createInventory(null,size, Component.text(name))
+    var menu = Bukkit.createInventory(null,size, Component.text(name))
 
     companion object{
         private val menuStack = ConcurrentHashMap<Player, Stack<Menu>>()
 
-
-        //外部クラスからスタックを扱う場合
-        fun pushStack(p:Player,menu: Menu){
-            val stack = menuStack[p]?: Stack()
-
-            //ページ切り替えだけの場合は、スタックを削除して入れ替える
-            if (stack.isNotEmpty() && menu.name == stack.peek().name){
-                popStack(p)
-            }
-            stack.push(menu)
-            menuStack[p] = stack
-        }
+//
+//        //外部クラスからスタックを扱う場合
+//        fun pushStack(p:Player,menu: Menu){
+//            val stack = menuStack[p]?: Stack()
+//
+//            //ページ切り替えだけの場合は、スタックを削除して入れ替える
+//            if (stack.isNotEmpty() && menu.name == stack.peek().name){
+//                popStack(p)
+//            }
+//            stack.push(menu)
+//            menuStack[p] = stack
+//        }
 
         fun peekStack(p:Player): Menu? {
             val stack = menuStack[p] ?: return null
@@ -82,6 +82,8 @@ abstract class Menu(title: String,size:Int,val p:Player){
         if (stack.isNotEmpty() && name == stack.peek().name){
             popStack()
         }
+        //プッシュする前に、invを初期化
+        menu = Bukkit.createInventory(null,size, Component.text(name))
         stack.push(this)
         menuStack[p] = stack
     }
