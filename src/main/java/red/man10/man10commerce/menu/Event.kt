@@ -16,8 +16,6 @@ object Event : Listener{
     @EventHandler
     fun clickEvent(e: InventoryClickEvent){
 
-        Bukkit.getLogger().info("Clicked")
-
         val p = e.whoClicked as Player
 
         val menu = Menu.peekStack(p) ?: return
@@ -27,8 +25,6 @@ object Event : Listener{
 
         val item = e.currentItem?:return
         val id = getID(item)
-
-        Bukkit.getLogger().info(id)
 
         if (menu is ListMenu){
             when(id){
@@ -47,8 +43,6 @@ object Event : Listener{
 
             }
         }
-
-        Bukkit.getLogger().info("3")
 
         menu.click(e,menu,id,item)
 
