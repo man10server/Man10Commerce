@@ -15,7 +15,7 @@ import red.man10.man10commerce.Utility.format
 import red.man10.man10commerce.Utility.sendMsg
 import red.man10.man10commerce.data.ItemData
 import red.man10.man10commerce.data.MySQLManager
-import red.man10.man10commerce.menu.CommerceMenu
+import red.man10.man10commerce.menu.*
 import java.io.File
 import java.nio.file.Files
 import java.util.*
@@ -92,7 +92,7 @@ class Man10Commerce : JavaPlugin() {
 
         loadConfig()
 
-        server.pluginManager.registerEvents(CommerceMenu,this)
+        server.pluginManager.registerEvents(Event,this)
 
         lang = Gson().fromJson(Files.readString(File(plugin.dataFolder.path+"/ja_jp.json").toPath()),JsonObject::class.java)
 
@@ -134,7 +134,7 @@ class Man10Commerce : JavaPlugin() {
                 return true
             }
 
-            CommerceMenu.openSellerMenu(sender,0,args[0])
+            SellerMenu(sender,args[0]).open()
 
             return true
         }
@@ -153,7 +153,7 @@ class Man10Commerce : JavaPlugin() {
                 return true
             }
 
-            CommerceMenu.openSearchMenu(sender,0,args.joinToString(" "))
+            SearchMenu(sender,args.joinToString(" ")).open()
 
             return true
         }
@@ -255,7 +255,7 @@ class Man10Commerce : JavaPlugin() {
             return true
         }
 
-        if (args.isEmpty()){
+        if (label=="amzn" && args.isEmpty()){
 
             if (!sender.hasPermission(USER))return false
 
@@ -264,7 +264,7 @@ class Man10Commerce : JavaPlugin() {
                 return false
             }
 
-            CommerceMenu.openMainMenu(sender)
+            MainMenu(sender).open()
 
             return true
         }
@@ -279,7 +279,7 @@ class Man10Commerce : JavaPlugin() {
                     return false
                 }
 
-                CommerceMenu.openCategoryMenu(sender)
+                CategoryMenu(sender).open()
 
             }
 

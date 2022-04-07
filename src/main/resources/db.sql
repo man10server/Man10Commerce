@@ -41,16 +41,3 @@ create table log
 		primary key (id)
 );
 
-create table prime_list
-(
-	id int auto_increment,
-	player varchar(16) null,
-	uuid varchar(16) null,
-	pay_date DATETIME null,
-	constraint prime_list_pk
-		primary key (id)
-);
-
-create index prime_list_uuid_pay_date_index
-	on prime_list (uuid, pay_date);
-

@@ -1,10 +1,10 @@
 package red.man10.man10commerce.menu
 
-import net.kyori.adventure.text.Component
 import org.bukkit.Bukkit
-import org.bukkit.Material
 import org.bukkit.NamespacedKey
 import org.bukkit.entity.Player
+import org.bukkit.event.inventory.InventoryAction
+import org.bukkit.event.inventory.InventoryClickEvent
 import org.bukkit.inventory.ItemStack
 import org.bukkit.persistence.PersistentDataType
 import red.man10.man10commerce.Man10Commerce
@@ -13,23 +13,12 @@ import red.man10.man10commerce.data.ItemData
 import java.text.SimpleDateFormat
 import java.util.*
 
-class MySellingItemMenu(p:Player):ListMenu("§l出品したアイテム",p) {
+class MySellingItemMenu(p:Player,private val seller: UUID):ListMenu("§l出品したアイテム",p) {
+
+    constructor(p:Player) : this(p,p.uniqueId)
 
     override fun open() {
-        openData(p.uniqueId)
-    }
 
-    fun next(seller: UUID){
-        page++
-        openData(seller)
-    }
-
-    fun previous(seller: UUID){
-        page--
-        openData(seller)
-    }
-
-    fun openData(seller: UUID){
         if (p.uniqueId!=seller &&!p.hasPermission("commerce.op")){ return }
 
         val list = ItemData.sellList(seller)
@@ -73,5 +62,22 @@ class MySellingItemMenu(p:Player):ListMenu("§l出品したアイテム",p) {
             pushStack()
         })
 
+
     }
+
+    override fun click(e: InventoryClickEvent, menu: Menu, id: String, item: ItemStack) {
+        if (e.action != InventoryAction.MOVE_TO_OTHER_INVENTORY){return}
+
+        val meta = item.itemMeta!!
+        val orderID = meta.persistentDataContainer[NamespacedKey(Man10Commerce.plugin,"order_id"), PersistentDataType.INTEGER]?:0
+
+        Man10Commerce.es.execute {
+            if (ItemData.close(orderID,p)){
+                Utility.sendMsg(p, "出品を取り下げました")
+                menu.open()
+            }
+        }
+
+    }
+
 }

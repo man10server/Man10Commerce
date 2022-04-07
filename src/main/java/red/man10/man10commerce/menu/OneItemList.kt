@@ -3,6 +3,9 @@ package red.man10.man10commerce.menu
 import org.bukkit.Bukkit
 import org.bukkit.NamespacedKey
 import org.bukkit.entity.Player
+import org.bukkit.event.inventory.InventoryAction
+import org.bukkit.event.inventory.InventoryClickEvent
+import org.bukkit.inventory.ItemStack
 import org.bukkit.persistence.PersistentDataType
 import red.man10.man10commerce.Man10Commerce
 import red.man10.man10commerce.Utility
@@ -51,6 +54,31 @@ class OneItemList(p:Player,val itemID:Int) : Menu("§l同じアイテムのリ�
 
         })
 
+
+    }
+
+    override fun click(e: InventoryClickEvent, menu: Menu, id: String, item: ItemStack) {
+
+        if (menu !is OneItemList)return
+
+        val meta = item.itemMeta?:return
+
+        val orderID = meta.persistentDataContainer[NamespacedKey(Man10Commerce.plugin,"order_id"), PersistentDataType.INTEGER]?:-1
+
+        if (orderID == -1)return
+
+        if (p.hasPermission(Man10Commerce.OP) && e.action == InventoryAction.CLONE_STACK){
+            ItemData.close(orderID,p)
+            Utility.sendMsg(p, "§c§l出品を取り下げました")
+            menu.open()
+            return
+        }
+
+        if (e.action != InventoryAction.MOVE_TO_OTHER_INVENTORY) { return }
+
+        ItemData.buy(p, menu.itemID, orderID) {
+            Bukkit.getScheduler().runTask(Man10Commerce.plugin, Runnable { menu.open() })
+        }
 
     }
 }

@@ -1,10 +1,13 @@
 package red.man10.man10commerce.menu
 
 import net.kyori.adventure.text.Component
+import net.kyori.adventure.text.event.ClickEvent
 import org.bukkit.Bukkit
 import org.bukkit.Material
 import org.bukkit.entity.Player
+import org.bukkit.event.inventory.InventoryClickEvent
 import org.bukkit.inventory.ItemStack
+import red.man10.man10commerce.Man10Commerce
 
 class MainMenu(p:Player) : Menu("§l出品中のアイテム一覧",27,p) {
 
@@ -72,8 +75,46 @@ class MainMenu(p:Player) : Menu("§l出品中のアイテム一覧",27,p) {
         p.openInventory(menu)
         pushStack()
 
-        Bukkit.getLogger().info(name)
-        Bukkit.getLogger().info(popStack()!!.name)
+    }
+
+    override fun click(e: InventoryClickEvent, menu: Menu, id: String, item: ItemStack) {
+
+        when(id){
+            "ItemMenu" -> CategoryMenu(p).open()
+
+            "Basic" -> OfficialItemMenu(p)
+            "SellMenu" -> Man10Commerce.es.execute { MySellingItemMenu(p) }
+            "Selling"    -> {
+                p.closeInventory()
+                p.sendMessage(
+                    Component.text("${Man10Commerce.prefix}§a§n売るアイテムを手に持って、/amsell <金額> を入力してください")
+                        .clickEvent(ClickEvent.suggestCommand("/amsell ")))
+            }
+
+            "NameSort"->{
+                p.closeInventory()
+                p.sendMessage(
+                    Component.text("${Man10Commerce.prefix}§a§n/amsearch <検索するアイテムの名前> を入力してください")
+                        .clickEvent(ClickEvent.suggestCommand("/amsearch ")))
+            }
+
+            "MaterialSort"->{
+                if (p.inventory.itemInMainHand.type == Material.AIR){
+                    p.sendMessage("${Man10Commerce.prefix}§c§l手にアイテムを持ってください！")
+                    return
+                }
+                MaterialMenu(p,p.inventory.itemInMainHand.type)
+            }
+            "AuthorSort"->{
+                p.closeInventory()
+                p.sendMessage(
+                    Component.text("${Man10Commerce.prefix}§a§n/amauthor <出品者名> を入力してください").clickEvent(ClickEvent.suggestCommand("/amauthor ")))
+            }
+            "EnchantSort"->{
+                EnchantMainMenu(p)
+            }
+        }
+
 
     }
 }
