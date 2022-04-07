@@ -14,7 +14,7 @@ class CategoryMenu(p:Player) : Menu("§lカテゴリーメニュー",27,p){
 
         val meta = allItemIcon.itemMeta
         meta.displayName(Component.text("§a§lすべてのアイテムをみる"))
-        CommerceMenu.setID(meta, "all")
+        setID(meta, "all")
         allItemIcon.itemMeta = meta
 
         menu.addItem(allItemIcon)
@@ -27,7 +27,7 @@ class CategoryMenu(p:Player) : Menu("§lカテゴリーメニュー",27,p){
 
         val meta2 = notCategorized.itemMeta
         meta2.displayName(Component.text("§a§lカテゴリーわけされてないアイテムを見る"))
-        CommerceMenu.setID(meta2, "not")
+        setID(meta2, "not")
         notCategorized.itemMeta = meta2
 
         menu.addItem(notCategorized)

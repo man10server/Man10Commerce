@@ -82,8 +82,8 @@ class MainMenu(p:Player) : Menu("§l出品中のアイテム一覧",27,p) {
         when(id){
             "ItemMenu" -> CategoryMenu(p).open()
 
-            "Basic" -> OfficialItemMenu(p)
-            "SellMenu" -> Man10Commerce.es.execute { MySellingItemMenu(p) }
+            "Basic" -> OfficialItemMenu(p).open()
+            "SellMenu" -> Man10Commerce.es.execute { MySellingItemMenu(p).open() }
             "Selling"    -> {
                 p.closeInventory()
                 p.sendMessage(
@@ -103,7 +103,7 @@ class MainMenu(p:Player) : Menu("§l出品中のアイテム一覧",27,p) {
                     p.sendMessage("${Man10Commerce.prefix}§c§l手にアイテムを持ってください！")
                     return
                 }
-                MaterialMenu(p,p.inventory.itemInMainHand.type)
+                MaterialMenu(p,p.inventory.itemInMainHand.type).open()
             }
             "AuthorSort"->{
                 p.closeInventory()
@@ -111,7 +111,7 @@ class MainMenu(p:Player) : Menu("§l出品中のアイテム一覧",27,p) {
                     Component.text("${Man10Commerce.prefix}§a§n/amauthor <出品者名> を入力してください").clickEvent(ClickEvent.suggestCommand("/amauthor ")))
             }
             "EnchantSort"->{
-                EnchantMainMenu(p)
+                EnchantMainMenu(p).open()
             }
         }
 

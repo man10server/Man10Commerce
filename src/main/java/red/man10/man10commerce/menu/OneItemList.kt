@@ -77,7 +77,7 @@ class OneItemList(p:Player,val itemID:Int) : Menu("§l同じアイテムのリ�
         if (e.action != InventoryAction.MOVE_TO_OTHER_INVENTORY) { return }
 
         ItemData.buy(p, menu.itemID, orderID) {
-            Bukkit.getScheduler().runTask(Man10Commerce.plugin, Runnable { menu.open() })
+            menu.open()
         }
 
     }

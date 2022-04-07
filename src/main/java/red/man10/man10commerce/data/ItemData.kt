@@ -15,7 +15,7 @@ import red.man10.man10commerce.Man10Commerce.Companion.plugin
 import red.man10.man10commerce.Utility
 import red.man10.man10commerce.Utility.sendMsg
 import red.man10.man10commerce.data.MySQLManager.Companion.escapeStringForMySQL
-import red.man10.man10commerce.menu.CommerceMenu
+import red.man10.man10commerce.menu.Menu.Companion.setID
 import java.io.File
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
@@ -297,7 +297,7 @@ object ItemData {
             val meta = icon.itemMeta
             meta.displayName(Component.text(yml.getString("CategoryIconTitle")?:"Title"))
             meta.setCustomModelData(yml.getInt("CategoryIconCMD"))
-            CommerceMenu.setID(meta,name)
+            setID(meta,name)
             icon.itemMeta = meta
 
             data.categoryIcon = icon

@@ -93,7 +93,7 @@ abstract class ListMenu(title:String,p:Player) : Menu(title,54,p) {
         val reloadItem = ItemStack(Material.COMPASS)
         val reloadMeta = reloadItem.itemMeta
         reloadMeta.displayName(Component.text("§6§lリロード"))
-        CommerceMenu.setID(reloadMeta, "reload")
+        setID(reloadMeta, "reload")
         reloadItem.itemMeta = reloadMeta
         menu.setItem(49,reloadItem)
     }
