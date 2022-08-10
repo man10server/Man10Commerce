@@ -20,8 +20,7 @@ object Sort {
     }
 
     fun sellerSort(seller : String, items: List<Int>): List<Int> {
-        val uuid = Bukkit.getOfflinePlayer(seller).uniqueId
-        return items.filter { uuid  == ItemData.orderMap[it]!!.seller }
+        return items.filter { Bukkit.getOfflinePlayer(seller).uniqueId == ItemData.orderMap[it]!!.seller }
     }
 
     fun enchantSort(enchantment: Enchantment, level: Int, items: List<Int>): List<Int> {
