@@ -7,6 +7,7 @@ import org.bukkit.Bukkit
 import org.bukkit.Material
 import org.bukkit.command.Command
 import org.bukkit.command.CommandSender
+import org.bukkit.configuration.file.YamlConfiguration
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
 import org.bukkit.plugin.java.JavaPlugin
@@ -21,6 +22,7 @@ import java.nio.file.Files
 import java.util.*
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
+import kotlin.collections.ArrayList
 
 class Man10Commerce : JavaPlugin() {
 
@@ -39,6 +41,7 @@ class Man10Commerce : JavaPlugin() {
 
         var minPrice : Double =  1.0
         var maxPrice : Double = 10000000.0 //一般会員の出品額上限
+        var maxPriceMultiply : Double = 10.0
 
         var maxItems : Int = 54 // 一般会員の出品数上限
 //        var fee = 0.0
@@ -47,6 +50,8 @@ class Man10Commerce : JavaPlugin() {
         const val USER = "commerce.user"
 
         lateinit var lang : JsonObject
+
+        val disableItems = ArrayList<String>()
 
         fun getDisplayName(item: ItemStack): String {
 
@@ -110,6 +115,13 @@ class Man10Commerce : JavaPlugin() {
         maxPrice = config.getDouble("maxPrice")
         maxItems = config.getInt("maxItems")
         enable = config.getBoolean("enable")
+
+        disableItems.clear()
+        val confFile = File(dataFolder.path + "/disableItems.yml")
+        if (confFile.exists()){
+            val conf = YamlConfiguration.loadConfiguration(confFile)
+            disableItems.addAll(conf.getStringList("disables"))
+        }
 
         ItemData.loadCategoryData()
 
