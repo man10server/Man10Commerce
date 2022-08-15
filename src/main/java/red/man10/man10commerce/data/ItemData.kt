@@ -2,6 +2,7 @@ package red.man10.man10commerce.data
 
 import net.kyori.adventure.text.Component
 import org.bukkit.Bukkit
+import org.bukkit.ChatColor
 import org.bukkit.Material
 import org.bukkit.configuration.file.YamlConfiguration
 import org.bukkit.entity.Player
@@ -13,6 +14,7 @@ import red.man10.man10commerce.Man10Commerce.Companion.bank
 import red.man10.man10commerce.Man10Commerce.Companion.getDisplayName
 import red.man10.man10commerce.Man10Commerce.Companion.plugin
 import red.man10.man10commerce.Utility
+import red.man10.man10commerce.Utility.format
 import red.man10.man10commerce.Utility.sendMsg
 import red.man10.man10commerce.data.MySQLManager.Companion.escapeStringForMySQL
 import red.man10.man10commerce.menu.Menu.Companion.setID
@@ -332,6 +334,7 @@ object ItemData {
             return false
         }
 
+
         val meta = item.itemMeta
 
         if (item.type!= Material.DIAMOND && meta is Damageable && meta.hasDamage()){
@@ -355,6 +358,23 @@ object ItemData {
         if (id == -1){
             sendMsg(p,"§c出品失敗！サーバー管理者にレポートしてください！sell error 1")
             return false
+        }
+        if (item.hasItemMeta()){
+            if (Man10Commerce.disableItems.contains(ChatColor.stripColor(item.itemMeta.displayName))){
+                sendMsg(p,"§cこのアイテムは販売できません")
+                return false
+            }
+        }
+
+        val priceRs = mysql.query("select price from order_table where item_id = $id order by price asc limit 1")
+
+        if (priceRs != null){
+            priceRs.next()
+            val minPrice = priceRs.getInt("price")
+            if (minPrice * Man10Commerce.maxPriceMultiply < price){
+                sendMsg(p,"§cこのアイテムは${format(minPrice * Man10Commerce.maxPriceMultiply)}円より高く売ることはできません")
+                return false
+            }
         }
 
         mysql.execute(
