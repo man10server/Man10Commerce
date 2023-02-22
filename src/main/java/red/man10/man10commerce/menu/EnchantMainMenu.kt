@@ -55,7 +55,7 @@ class EnchantLevelMenu(p:Player,private val enchant:Enchantment) : Menu("§lレ�
 
     override fun click(e: InventoryClickEvent, menu: Menu, id: String, item: ItemStack) {
         val enchant = (item.itemMeta as EnchantmentStorageMeta).storedEnchants.entries.first()
-        EnchantSelectMenu(p,enchant.key,enchant.value)
+        EnchantSelectMenu(p,enchant.key,enchant.value).open()
 
     }
 }
