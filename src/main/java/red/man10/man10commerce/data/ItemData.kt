@@ -368,8 +368,8 @@ object ItemData {
 
         val priceRs = mysql.query("select price from order_table where item_id = $id order by price asc limit 1")
 
-        if (priceRs != null){
-            priceRs.next()
+        if (priceRs != null && priceRs.next()){
+
             val minPrice = priceRs.getInt("price")
             if (minPrice * Man10Commerce.maxPriceMultiply < price){
                 sendMsg(p,"§cこのアイテムは${format(minPrice * Man10Commerce.maxPriceMultiply)}円より高く売ることはできません")
