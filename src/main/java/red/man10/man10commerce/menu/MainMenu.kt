@@ -28,7 +28,7 @@ class MainMenu(p:Player) : Menu("§l出品中のアイテム一覧",27,p) {
 
         val sellItem = ItemStack(Material.CHEST)
         val sellItemMeta = sellItem.itemMeta
-        sellItemMeta.displayName(Component.text("§a§l出品したアイテムを確かめる"))
+        sellItemMeta.displayName(Component.text("§a§l出品したアイテムを確かめる(現在利用不可能)"))
         setID(sellItemMeta, "SellMenu")
         sellItem.itemMeta = sellItemMeta
 
@@ -83,7 +83,9 @@ class MainMenu(p:Player) : Menu("§l出品中のアイテム一覧",27,p) {
             "ItemMenu" -> CategoryMenu(p).open()
 
             "Basic" -> OfficialItemMenu(p).open()
-            "SellMenu" -> Man10Commerce.es.execute { MySellingItemMenu(p).open() }
+            "SellMenu" -> Man10Commerce.es.execute {
+//                MySellingItemMenu(p).open()
+            }
             "Selling"    -> {
                 p.closeInventory()
                 p.sendMessage(
