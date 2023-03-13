@@ -66,12 +66,13 @@ object Transaction {
     ////////////////////////////////
     //      アイテムを買う
     ///////////////////////////////
-    fun buy(p:Player,itemID: Int,orderID:Int){
+    fun buy(p:Player,itemID: Int,orderID:Int,callback: (Boolean) -> Unit){
 
         blockingQueue.add { sql->
 
             if (p.inventory.firstEmpty() == -1){
                 sendMsg(p,"§cインベントリに空きがありません")
+                callback(false)
                 return@add
             }
 
@@ -79,6 +80,7 @@ object Transaction {
 
             if (rs == null ||  !rs.next()){
                 sendMsg(p,"§cすでに売り切れです！")
+                callback(false)
                 return@add
             }
 
@@ -107,6 +109,7 @@ object Transaction {
 
             if (item == null){
                 sendMsg(p,"§cすでに売り切れです")
+                callback(false)
                 return@add
             }
 
@@ -115,7 +118,8 @@ object Transaction {
             if (!isOp){
                 val ret = sql.execute("DELETE FROM order_table where id=${orderID};")
                 if (!ret){
-                    sendMsg(p,"${Man10Commerce.prefix}§c倉庫にアクセスができませんでした。もう一度購入し直してください")
+                    sendMsg(p,"${Man10Commerce.prefix}§cセンターにアクセスができませんでした。もう一度購入し直してください")
+                    callback(false)
                     return@add
                 }
             }
@@ -123,6 +127,7 @@ object Transaction {
             //お金関連の処理
             if (!Man10Bank.vault.withdraw(p.uniqueId,totalPrice)){
                 sendMsg(p,"§c電子マネーのお金が足りません")
+                callback(false)
                 return@add
             }
 
@@ -133,6 +138,7 @@ object Transaction {
             p.inventory.addItem(item)
 
             sendMsg(p,"§a購入しました")
+            callback(true)
         }
     }
 
@@ -245,6 +251,7 @@ object Transaction {
             sql.execute("DELETE FROM order_table where id=${id};")
 
             Log.closeLog(p,itemID,item)
+            sendMsg(p, "§c§l出品を取り下げました")
         }
     }
 

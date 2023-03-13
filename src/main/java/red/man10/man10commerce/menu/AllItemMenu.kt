@@ -10,6 +10,7 @@ import org.bukkit.persistence.PersistentDataType
 import red.man10.man10commerce.Man10Commerce
 import red.man10.man10commerce.Utility
 import red.man10.man10commerce.data.ItemDataOld
+import red.man10.man10commerce.data.Transaction
 
 class AllItemMenu(p:Player) :ListMenu("§l出品中のアイテム一覧",p){
 
@@ -38,9 +39,9 @@ class AllItemMenu(p:Player) :ListMenu("§l出品中のアイテム一覧",p){
 
         if (orderID == -1)return
 
+        //マウスホイールクリックで取り下げ
         if (p.hasPermission(Man10Commerce.OP) && e.action == InventoryAction.CLONE_STACK){
-            ItemDataOld.close(orderID,p)
-            Utility.sendMsg(p, "§c§l出品を取り下げました")
+            Transaction.close(p,orderID)
             Bukkit.getScheduler().runTask(Man10Commerce.plugin, Runnable { menu.open() })
             return
         }
@@ -50,10 +51,9 @@ class AllItemMenu(p:Player) :ListMenu("§l出品中のアイテム一覧",p){
             return
         }
 
-        ItemDataOld.buy(p,itemID,orderID){
+        Transaction.buy(p,itemID, orderID) {
             Bukkit.getScheduler().runTask(Man10Commerce.plugin, Runnable { menu.open() })
         }
-
 
         return
 
