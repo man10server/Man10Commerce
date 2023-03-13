@@ -562,13 +562,11 @@ object ItemDataOld {
     }
 }
 
-class Category{
-
-    lateinit var categoryIcon : ItemStack
-
-    var material = mutableListOf<Material>()
-    var displayName = mutableListOf<String>()
-    var customModelData = mutableListOf<Int>()
-
-
-}
+//class Category{
+//
+//    lateinit var categoryIcon : ItemStack
+//
+//    var material = mutableListOf<Material>()
+//    var displayName = mutableListOf<String>()
+//    var customModelData = mutableListOf<Int>()
+//}

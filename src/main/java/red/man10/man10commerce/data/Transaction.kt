@@ -1,20 +1,22 @@
 package red.man10.man10commerce.data
 
+import net.kyori.adventure.text.Component
 import org.bukkit.Bukkit
 import org.bukkit.ChatColor
+import org.bukkit.Material
+import org.bukkit.configuration.file.YamlConfiguration
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
-import org.bukkit.inventory.meta.ItemMeta
 import red.man10.man10bank.Man10Bank
 import red.man10.man10commerce.Man10Commerce
 import red.man10.man10commerce.Utility
 import red.man10.man10commerce.Utility.format
 import red.man10.man10commerce.Utility.sendMsg
-import java.util.Date
-import java.util.UUID
+import red.man10.man10commerce.menu.Menu
+import java.io.File
+import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.LinkedBlockingQueue
-import kotlin.math.sqrt
 
 data class ItemData(
     var id : Int,
@@ -26,6 +28,19 @@ data class ItemData(
     var isOP : Boolean
 )
 
+class Category{
+
+    companion object{
+        const val NOT_CATEGORIZED = "not"
+    }
+
+    lateinit var categoryIcon : ItemStack
+
+    var material = mutableListOf<Material>()
+    var displayName = mutableListOf<String>()
+    var customModelData = mutableListOf<Int>()
+}
+
 object Transaction {
 
     private val blockingQueue = LinkedBlockingQueue<(MySQLManager)->Unit>()
@@ -33,7 +48,11 @@ object Transaction {
 
     private val itemDictionary = ConcurrentHashMap<Int,ItemStack>()//アイテムIDとItemStackの辞書
 
+    private val categories = ConcurrentHashMap<String,Category>()
+
     fun setup(){
+        loadCategoryData()
+
         if (queueThread.isAlive){
             queueThread.interrupt()
             queueThread = Thread{ runBlockingQueue() }
@@ -300,6 +319,109 @@ object Transaction {
         sql.close()
 
         return list
+    }
+
+    fun getCategorizedDictionary(categoryName:String):Map<Int,ItemStack>{
+
+        if (categoryName == Category.NOT_CATEGORIZED){
+            return emptyMap()
+        }
+
+        val category = categories[categoryName]?:return emptyMap()
+
+        val isEmptyMaterial = category.material.isEmpty()
+        val isEmptyDisplay = category.displayName.isEmpty()
+        val isEmptyCMD = category.customModelData.isEmpty()
+
+        return itemDictionary
+            .filter {
+                    item ->
+
+                val meta = item.value.itemMeta
+                val cmd = if (meta==null || !meta.hasCustomModelData()) 0 else meta.customModelData
+                val display = Man10Commerce.getDisplayName(item.value).replace("§[a-z0-9]".toRegex(), "")
+
+                if (isEmptyMaterial) { true }else { category.material.contains(item.value.type) } &&
+                        if (isEmptyCMD) { true }else { category.customModelData.contains(cmd) } &&
+                        if (isEmptyDisplay) { true } else { (category.displayName.filter { (display).contains(it) }).isNotEmpty() }
+            }
+    }
+
+    //カテゴリー分けされてないアイテムを取得
+    fun getNotCategorizedDictionary():Map<Int,ItemStack>{
+
+        val materials = mutableSetOf<Material>()
+        val displays = mutableSetOf<String>()
+
+        for (category in ItemDataOld.categories.values){
+            materials.addAll(category.material)
+            displays.addAll(category.displayName)
+        }
+
+        return itemDictionary
+            .filter {
+                    item ->
+                val display = Man10Commerce.getDisplayName(item.value).replace("§[a-z0-9]".toRegex(), "")
+
+                materials.contains(item.value.type) || (displays.filter { (display).contains(it) }).isNotEmpty()
+            }
+    }
+
+    //  カテゴリーデータをよむ
+    private fun loadCategoryData(){
+
+        Bukkit.getLogger().info("カテゴリーデータの読み込み")
+
+        categories.clear()
+
+        val categoryFolder = File(Man10Commerce.plugin.dataFolder,File.separator+"categories")
+
+        if (!categoryFolder.exists())categoryFolder.mkdir()
+
+        val files = categoryFolder.listFiles()?.toMutableList()
+
+        if (files == null){
+            Bukkit.getLogger().info("カテゴリーファイルがありませんでした")
+            return
+        }
+
+        for (file in files){
+
+            if (!file.path.endsWith(".yml") || file.isDirectory)continue
+
+            val yml = YamlConfiguration.loadConfiguration(file)
+            val data = Category()
+
+            val name = yml.getString("CategoryName")?:"none"
+
+            data.customModelData = yml.getIntegerList("CustomModelData")
+            data.displayName = yml.getStringList("DisplayName")
+
+            val materialList = mutableListOf<Material>()
+
+            for (m in yml.getStringList("Material")){
+                try {
+                    materialList.add(Material.valueOf(m))
+                }catch (e:Exception){ }
+            }
+
+            data.material = materialList
+
+            val icon = ItemStack(Material.valueOf(yml.getString("CategoryIconMaterial")?:"STONE"))
+            val meta = icon.itemMeta
+            meta.displayName(Component.text(yml.getString("CategoryIconTitle")?:"Title"))
+            meta.setCustomModelData(yml.getInt("CategoryIconCMD"))
+            Menu.setID(meta, name)
+            icon.itemMeta = meta
+
+            data.categoryIcon = icon
+
+            Bukkit.getLogger().info("category:$name")
+
+            categories[name] = data
+        }
+
+        Bukkit.getLogger().info("カテゴリーデータの読み込み完了")
     }
 
     private fun runBlockingQueue(){
