@@ -2,8 +2,6 @@ package red.man10.man10commerce
 
 import com.google.gson.Gson
 import com.google.gson.JsonObject
-import net.kyori.adventure.text.Component.text
-import org.bukkit.Bukkit
 import org.bukkit.Material
 import org.bukkit.command.Command
 import org.bukkit.command.CommandSender
@@ -12,22 +10,16 @@ import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
 import org.bukkit.plugin.java.JavaPlugin
 import red.man10.man10bank.BankAPI
-import red.man10.man10commerce.Utility.format
 import red.man10.man10commerce.Utility.sendMsg
-import red.man10.man10commerce.data.ItemDataOld
-import red.man10.man10commerce.data.MySQLManager
+import red.man10.man10commerce.data.Transaction
 import red.man10.man10commerce.menu.*
 import java.io.File
 import java.nio.file.Files
 import java.util.*
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
-import kotlin.collections.ArrayList
 
 class Man10Commerce : JavaPlugin() {
-
-
-
 
     companion object{
         lateinit var plugin: JavaPlugin
@@ -41,10 +33,9 @@ class Man10Commerce : JavaPlugin() {
 
         var minPrice : Double =  1.0
         var maxPrice : Double = 10000000.0 //一般会員の出品額上限
-        var maxPriceMultiply : Double = 10.0
+//        var maxPriceMultiply : Double = 10.0
 
         var maxItems : Int = 54 // 一般会員の出品数上限
-//        var fee = 0.0
 
         const val OP = "commerce.op"
         const val USER = "commerce.user"
@@ -73,7 +64,6 @@ class Man10Commerce : JavaPlugin() {
                 }else{
                     japanese.asString
                 }
-
             }
             return name
         }
@@ -88,19 +78,14 @@ class Man10Commerce : JavaPlugin() {
 
         plugin = this
         bank = BankAPI(plugin)
-        ItemDataOld.loadItemIndex()
 
-        val mysql = MySQLManager(this,"onEnable")
-
-        ItemDataOld.loadOrderTable(mysql)
-        ItemDataOld.loadOPOrderTable(mysql)
+        Transaction.setup()
 
         loadConfig()
 
         server.pluginManager.registerEvents(Event,this)
 
         lang = Gson().fromJson(Files.readString(File(plugin.dataFolder.path+"/ja_jp.json").toPath()),JsonObject::class.java)
-
     }
 
     override fun onDisable() {
@@ -122,9 +107,6 @@ class Man10Commerce : JavaPlugin() {
             val conf = YamlConfiguration.loadConfiguration(confFile)
             disableItems.addAll(conf.getStringList("disables"))
         }
-
-        ItemDataOld.loadCategoryData()
-
     }
 
     override fun onCommand(sender: CommandSender, command: Command, label: String, args: Array<out String>): Boolean {
@@ -176,7 +158,6 @@ class Man10Commerce : JavaPlugin() {
 
             if (!sender.hasPermission(OP) && !enable){
                 sendMsg(sender,"§f現在営業を停止しています")
-
                 return false
             }
 
@@ -205,19 +186,12 @@ class Man10Commerce : JavaPlugin() {
                 return true
             }
 
-            es.execute {
-                if (!ItemDataOld.sell(sender,clone,price)){
+            //TODO:要検証
+            Transaction.sell(sender,clone,price,{result->
+                if (!result){
                     sender.inventory.addItem(clone)
-                    return@execute
                 }
-
-                sendMsg(sender,"§e§l出品成功しました！")
-
-                val name = getDisplayName(clone)
-                Bukkit.getScheduler().runTask(this, Runnable {
-                    Bukkit.broadcast(text("${prefix}§f${name}§f(${clone.amount}個)が§e§l単価${format(price)}§f円で出品されました！"))
-                })
-            }
+            })
 
             return true
         }
@@ -234,16 +208,16 @@ class Man10Commerce : JavaPlugin() {
             }
 
             val item = sender.inventory.itemInMainHand
-            val display = item.clone()
+            val clone = item.clone()
+
+            item.amount = 0
 
             if (item.type == Material.AIR){ return true }
 
             val price = args[0].toDoubleOrNull()
 
             if (price == null){
-
                 sendMsg(sender,"§c§l金額は数字を使ってください！")
-
                 return true
             }
 
@@ -252,17 +226,11 @@ class Man10Commerce : JavaPlugin() {
                 return true
             }
 
-            es.execute {
-                if (!ItemDataOld.sellOP(sender,item,price))return@execute
-
-                sendMsg(sender,"§e§l出品成功しました！")
-
-                val name = getDisplayName(display)
-
-                Bukkit.getScheduler().runTask(this, Runnable {
-                    Bukkit.broadcast(text("${prefix}§f§l${name}§f§l(${display.amount}個)が§e§l単価${format(price)}§f§l円で§d§l公式出品されました！"))
-                })
-            }
+            Transaction.sell(sender,clone,price,{
+                if (!it){
+                    sender.inventory.addItem(clone)
+                }
+            },true)
 
             return true
         }
@@ -319,16 +287,9 @@ class Man10Commerce : JavaPlugin() {
 
                 es.execute {
                     loadConfig()
-                    sender.sendMessage("§a§lReloaded Config")
-                    ItemDataOld.loadItemIndex()
-
-                    val mysql = MySQLManager(this,"onEnable")
-
-                    ItemDataOld.loadOrderTable(mysql)
-                    ItemDataOld.loadOPOrderTable(mysql)
-
-
-                    sendMsg(sender,"Reload Table")
+                    sender.sendMessage("§a§lコンフィグのリロード完了")
+                    Transaction.setup()
+                    sendMsg(sender,"取引システムのリロード完了")
                 }
             }
         }

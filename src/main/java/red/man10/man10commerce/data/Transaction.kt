@@ -9,6 +9,7 @@ import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
 import red.man10.man10bank.Man10Bank
 import red.man10.man10commerce.Man10Commerce
+import red.man10.man10commerce.Man10Commerce.Companion.plugin
 import red.man10.man10commerce.Utility
 import red.man10.man10commerce.Utility.format
 import red.man10.man10commerce.Utility.sendMsg
@@ -18,7 +19,7 @@ import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.LinkedBlockingQueue
 
-data class ItemData(
+data class OrderData(
     var id : Int,
     var itemID: Int,
     var price : Double,
@@ -47,6 +48,7 @@ object Transaction {
     private var queueThread = Thread{ runBlockingQueue() }
 
     private val itemDictionary = ConcurrentHashMap<Int,ItemStack>()//アイテムIDとItemStackの辞書
+    private var minPriceItems = mutableListOf<OrderData>()
 
     private val categories = ConcurrentHashMap<String,Category>()
 
@@ -86,7 +88,7 @@ object Transaction {
             val seller = UUID.fromString(rs.getString("uuid"))
             val isOp = rs.getBoolean("is_op")
 
-            val data = ItemData(
+            val data = OrderData(
                 orderID,
                 itemID,
                 price,
@@ -126,7 +128,7 @@ object Transaction {
 
             Man10Commerce.bank.deposit(seller!!,totalPrice,"SellItemOnMan10Commerce","Amanzonの売り上げ")
 
-//            Log.buyLog(p,data,item)
+            Log.buyLog(p,data,item)
 
             p.inventory.addItem(item)
 
@@ -137,17 +139,19 @@ object Transaction {
     /////////////////////////////
     //      販売する
     /////////////////////////////
-    fun sell(p:Player,item:ItemStack,price:Double,isOP: Boolean = false){
+    fun sell(p:Player,item:ItemStack,price:Double,callback:(Boolean)->Unit,isOP: Boolean = false){
 
         blockingQueue.add {sql ->
 
             if (UserData.getSellCount(p.uniqueId)>Man10Commerce.maxItems){
                 sendMsg(p,"§c出品数上限に達しています")
+                callback(false)
                 return@add
             }
 
             if (price>Man10Commerce.maxPrice){
                 sendMsg(p,"§c単価は${format(Man10Commerce.maxPrice)}円金額にしてください。")
+                callback(false)
                 return@add
             }
 
@@ -155,6 +159,7 @@ object Transaction {
 
             if (meta != null && meta is org.bukkit.inventory.meta.Damageable && meta.hasDamage()){
                 sendMsg(p,"§c§l耐久値が削れているので出品できません！")
+                callback(false)
                 return@add
             }
 
@@ -163,11 +168,12 @@ object Transaction {
             if (item.hasItemMeta()){
                 if (Man10Commerce.disableItems.contains(ChatColor.stripColor(name))){
                     sendMsg(p,"　§cこのアイテムは販売できません")
+                    callback(false)
                     return@add
                 }
             }
 
-            syncRegisterItemIndex(item,sql)
+            syncRegisterItemDictionary(item,sql)
 
             var id : Int? = null
              itemDictionary.forEach{
@@ -178,6 +184,7 @@ object Transaction {
 
             if (id == null){
                 sendMsg(p,"§c出品失敗！もう一度出品し直してみてください")
+                callback(false)
                 return@add
             }
 
@@ -191,6 +198,23 @@ object Transaction {
             if (ret){
                 sendMsg(p,"§a§l出品成功！")
                 Log.sellLog(p,item,price, id!!)
+
+                Bukkit.getScheduler().runTask(plugin, Runnable {
+                    Bukkit.broadcast(
+                        Component.text(
+                            "${Man10Commerce.prefix}§f${name}§f(${item.amount}個)が§e§lひとつ${
+                                format(price)
+                            }§f円で出品されました！"
+                        )) })
+
+                //最安値のデータを読み直す
+                loadMinPriceItems()
+
+                callback(true)
+
+            }else{
+                sendMsg(p,"§c出品失敗！センターにアクセスできませんでした")
+                callback(false)
             }
         }
     }
@@ -208,7 +232,13 @@ object Transaction {
             val itemID = rs.getInt("item_id")
             val amount = rs.getInt("amount")
 
-            val item = ItemDataOld.itemDictionary[itemID]!!.clone()
+            val item = itemDictionary[itemID]?.clone()
+
+            if (item == null){
+                sendMsg(p,"§c取り消し失敗！注文が存在しない可能性があります")
+                return@add
+            }
+
             item.amount = amount
             p.inventory.addItem(item)
 
@@ -218,7 +248,7 @@ object Transaction {
         }
     }
 
-    private fun syncRegisterItemIndex(item:ItemStack, sql:MySQLManager){
+    private fun syncRegisterItemDictionary(item:ItemStack, sql:MySQLManager){
         val one = item.asOne()
 
         if (itemDictionary.values.any{it.isSimilar(one)})return
@@ -238,7 +268,7 @@ object Transaction {
             return
         }
 
-        ItemDataOld.itemDictionary[rs.getInt("id")] = one
+        itemDictionary[rs.getInt("id")] = one
 
         rs.close()
         sql.close()
@@ -253,7 +283,7 @@ object Transaction {
             if (rs != null) {
 
                 while (rs.next()) {
-                    ItemDataOld.itemDictionary[rs.getInt("id")] = Utility.itemFromBase64(rs.getString("base64"))?:continue
+                    itemDictionary[rs.getInt("id")] = Utility.itemFromBase64(rs.getString("base64"))?:continue
                 }
 
                 rs.close()
@@ -263,19 +293,26 @@ object Transaction {
         }
     }
 
+    //非同期で最安値のリストを読む
+    private fun loadMinPriceItems(){
+        blockingQueue.add { sql ->
+            syncGetMinPriceItems(sql)
+        }
+    }
+
     //最安値のアイテムのリストを引く
-    private fun syncGetMinPriceItems(sql:MySQLManager):List<ItemData>{
+    private fun syncGetMinPriceItems(sql:MySQLManager):List<OrderData>{
 
         val rs = sql.query("select * from order_table order by price;")?:return emptyList()
 
-        val list = mutableListOf<ItemData>()
+        val list = mutableListOf<OrderData>()
 
         while (rs.next()){
             val itemID = rs.getInt("item_id")
 
             if (list.any { it.itemID == itemID })continue
 
-            val data = ItemData(
+            val data = OrderData(
                 rs.getInt("id"),
                 itemID,
                 rs.getDouble("price"),
@@ -291,18 +328,20 @@ object Transaction {
         rs.close()
         sql.close()
 
+        minPriceItems = list
+
         return list
     }
 
     //同じアイテムの全注文を取得
-    private fun syncGetAllOrderByItem(itemID:Int,sql: MySQLManager):List<ItemData>{
+    private fun syncGetAllOrderByItem(itemID:Int,sql: MySQLManager):List<OrderData>{
 
         val rs = sql.query("select * from order_table where item_id=${itemID}")?:return emptyList()
 
-        val list = mutableListOf<ItemData>()
+        val list = mutableListOf<OrderData>()
 
         while (rs.next()){
-            val data = ItemData(
+            val data = OrderData(
                 rs.getInt("id"),
                 itemID,
                 rs.getDouble("price"),
@@ -353,7 +392,7 @@ object Transaction {
         val materials = mutableSetOf<Material>()
         val displays = mutableSetOf<String>()
 
-        for (category in ItemDataOld.categories.values){
+        for (category in categories.values){
             materials.addAll(category.material)
             displays.addAll(category.displayName)
         }
@@ -374,7 +413,7 @@ object Transaction {
 
         categories.clear()
 
-        val categoryFolder = File(Man10Commerce.plugin.dataFolder,File.separator+"categories")
+        val categoryFolder = File(plugin.dataFolder,File.separator+"categories")
 
         if (!categoryFolder.exists())categoryFolder.mkdir()
 
@@ -402,7 +441,9 @@ object Transaction {
             for (m in yml.getStringList("Material")){
                 try {
                     materialList.add(Material.valueOf(m))
-                }catch (e:Exception){ }
+                }catch (e:Exception){
+                    Bukkit.getLogger().warning(e.message)
+                }
             }
 
             data.material = materialList
@@ -425,13 +466,11 @@ object Transaction {
     }
 
     private fun runBlockingQueue(){
-
-        val mysql = MySQLManager(Man10Commerce.plugin,"BlockingQueue")
+        val mysql = MySQLManager(plugin,"BlockingQueue")
 
         while (true){
 
             try {
-
                 val job = blockingQueue.take()
                 job.invoke(mysql)
 
@@ -440,7 +479,6 @@ object Transaction {
             }catch (e:Exception){
                 continue
             }
-
         }
     }
 }

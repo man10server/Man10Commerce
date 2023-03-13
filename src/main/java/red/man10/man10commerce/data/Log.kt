@@ -14,6 +14,7 @@ object Log {
         es.execute { mysqlQueue(plugin,"LogQueue") }
     }
 
+    //      販売ログを追加
     fun sellLog(p:Player,item: ItemStack,price:Double,itemID:Int){
 
         val name = if (item.hasItemMeta()) item.itemMeta!!.displayName else item.i18NDisplayName
@@ -23,9 +24,10 @@ object Log {
                 "VALUES ('${p.name}', '','SellItem' , $itemID, '${escapeStringForMySQL(name?:"")}', ${item.amount}, ${price}, now())")
     }
 
-    fun buyLog(p:Player,data: Data,item:ItemStack){
+    //      購入ログを追加
+    fun buyLog(p:Player,data: OrderData,item:ItemStack){
 
-        val order = Bukkit.getOfflinePlayer(data.seller!!)
+        val order = Bukkit.getOfflinePlayer(data.seller)
 
         val name = if (item.hasItemMeta()) item.itemMeta!!.displayName else item.i18NDisplayName
         mysqlQueue.add("INSERT INTO log " +
@@ -33,6 +35,7 @@ object Log {
                 "VALUES ('${order.name}', '${p.name}','BuyItem' , ${data.itemID}, '${escapeStringForMySQL(name?:"")}', ${item.amount}, ${data.price}, now())")
     }
 
+    //      取り消しログを追加
     fun closeLog(p:Player,itemID:Int,item: ItemStack){
 
         val name = if (item.hasItemMeta()) item.itemMeta!!.displayName else item.i18NDisplayName
