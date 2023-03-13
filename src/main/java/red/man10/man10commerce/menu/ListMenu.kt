@@ -11,7 +11,7 @@ import org.bukkit.persistence.PersistentDataType
 import red.man10.man10commerce.Man10Commerce
 import red.man10.man10commerce.Utility
 import red.man10.man10commerce.data.Data
-import red.man10.man10commerce.data.ItemData
+import red.man10.man10commerce.data.ItemDataOld
 import java.text.SimpleDateFormat
 import kotlin.math.floor
 
@@ -48,8 +48,8 @@ abstract class ListMenu(title:String,p:Player) : Menu(title,54,p) {
 
             inc ++
 
-            val data = ItemData.orderMap[itemID]
-            val item = ItemData.itemDictionary[itemID]?.clone()?:continue
+            val data = ItemDataOld.orderMap[itemID]
+            val item = ItemDataOld.itemDictionary[itemID]?.clone()?:continue
 
             menu.addItem(addItemInformation(item, data))
 

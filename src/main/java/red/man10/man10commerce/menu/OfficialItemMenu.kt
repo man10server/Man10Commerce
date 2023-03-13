@@ -8,12 +8,12 @@ import org.bukkit.event.inventory.InventoryClickEvent
 import org.bukkit.inventory.ItemStack
 import org.bukkit.persistence.PersistentDataType
 import red.man10.man10commerce.Man10Commerce
-import red.man10.man10commerce.data.ItemData
+import red.man10.man10commerce.data.ItemDataOld
 
 class OfficialItemMenu(p:Player) : ListMenu("§d§lAmanzonBasic",p){
     override fun open() {
 
-        val keys = ItemData.opOrderMap.keys().toList()
+        val keys = ItemDataOld.opOrderMap.keys().toList()
 
         listInventory(keys)
 
@@ -38,7 +38,7 @@ class OfficialItemMenu(p:Player) : ListMenu("§d§lAmanzonBasic",p){
             return
         }
 
-        ItemData.buy(p,itemID,orderID){
+        ItemDataOld.buy(p,itemID,orderID){
             Bukkit.getScheduler().runTask(Man10Commerce.plugin, Runnable { menu.open() })
         }
 

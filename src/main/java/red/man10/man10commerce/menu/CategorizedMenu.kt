@@ -9,13 +9,13 @@ import org.bukkit.inventory.ItemStack
 import org.bukkit.persistence.PersistentDataType
 import red.man10.man10commerce.Man10Commerce
 import red.man10.man10commerce.Utility
-import red.man10.man10commerce.data.ItemData
+import red.man10.man10commerce.data.ItemDataOld
 
 class CategorizedMenu(p:Player, private val category:String) : ListMenu("§lカテゴリーアイテム",p){
 
     override fun open() {
 
-        val keys = ItemData.getCategorized(category).keys.toList()
+        val keys = ItemDataOld.getCategorized(category).keys.toList()
 
         listInventory(keys)
 
@@ -35,7 +35,7 @@ class CategorizedMenu(p:Player, private val category:String) : ListMenu("§lカ�
         if (orderID == -1)return
 
         if (p.hasPermission(Man10Commerce.OP) && e.action == InventoryAction.CLONE_STACK){
-            ItemData.close(orderID,p)
+            ItemDataOld.close(orderID,p)
             Utility.sendMsg(p, "§c§l出品を取り下げました")
             Bukkit.getScheduler().runTask(Man10Commerce.plugin, Runnable {menu.open()})
             return
@@ -46,7 +46,7 @@ class CategorizedMenu(p:Player, private val category:String) : ListMenu("§lカ�
             return
         }
 
-        ItemData.buy(p,itemID,orderID){
+        ItemDataOld.buy(p,itemID,orderID){
             Bukkit.getScheduler().runTask(Man10Commerce.plugin, Runnable {menu.open()})
         }
 

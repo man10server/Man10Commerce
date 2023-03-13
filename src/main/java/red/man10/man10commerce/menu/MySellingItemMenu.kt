@@ -9,7 +9,7 @@ import org.bukkit.inventory.ItemStack
 import org.bukkit.persistence.PersistentDataType
 import red.man10.man10commerce.Man10Commerce
 import red.man10.man10commerce.Utility
-import red.man10.man10commerce.data.ItemData
+import red.man10.man10commerce.data.ItemDataOld
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -21,7 +21,7 @@ class MySellingItemMenu(p:Player,private val seller: UUID):ListMenu("§l出品�
 
         if (p.uniqueId!=seller &&!p.hasPermission("commerce.op")){ return }
 
-        val list = ItemData.sellList(seller)
+        val list = ItemDataOld.sellList(seller)
 
         var inc = 0
 
@@ -33,7 +33,7 @@ class MySellingItemMenu(p:Player,private val seller: UUID):ListMenu("§l出品�
 
             inc ++
 
-            val item = ItemData.itemDictionary[data.itemID]?.clone()?:continue
+            val item = ItemDataOld.itemDictionary[data.itemID]?.clone()?:continue
 
             val lore = item.lore?: mutableListOf()
 
@@ -72,7 +72,7 @@ class MySellingItemMenu(p:Player,private val seller: UUID):ListMenu("§l出品�
         val orderID = meta.persistentDataContainer[NamespacedKey(Man10Commerce.plugin,"order_id"), PersistentDataType.INTEGER]?:0
 
         Man10Commerce.es.execute {
-            if (ItemData.close(orderID,p)){
+            if (ItemDataOld.close(orderID,p)){
                 Utility.sendMsg(p, "出品を取り下げました")
                 menu.open()
             }

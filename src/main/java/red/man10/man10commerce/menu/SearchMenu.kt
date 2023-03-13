@@ -8,14 +8,14 @@ import org.bukkit.event.inventory.InventoryClickEvent
 import org.bukkit.inventory.ItemStack
 import org.bukkit.persistence.PersistentDataType
 import red.man10.man10commerce.Man10Commerce
-import red.man10.man10commerce.data.ItemData
+import red.man10.man10commerce.data.ItemDataOld
 import red.man10.man10commerce.sort.Sort
 
 class SearchMenu(p:Player, private val query:String) : ListMenu("§l検索結果",p){
 
     override fun open() {
 
-        val keys = Sort.nameSort(query, ItemData.orderMap.keys().toList())
+        val keys = Sort.nameSort(query, ItemDataOld.orderMap.keys().toList())
 
         listInventory(keys)
 
@@ -37,7 +37,7 @@ class SearchMenu(p:Player, private val query:String) : ListMenu("§l検索結果
             return
         }
 
-        ItemData.buy(p,itemID,orderID){
+        ItemDataOld.buy(p,itemID,orderID){
             Bukkit.getScheduler().runTask(Man10Commerce.plugin, Runnable {menu.open()})
         }
 

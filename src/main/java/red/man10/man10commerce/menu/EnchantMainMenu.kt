@@ -11,7 +11,7 @@ import org.bukkit.inventory.ItemStack
 import org.bukkit.inventory.meta.EnchantmentStorageMeta
 import org.bukkit.persistence.PersistentDataType
 import red.man10.man10commerce.Man10Commerce
-import red.man10.man10commerce.data.ItemData
+import red.man10.man10commerce.data.ItemDataOld
 import red.man10.man10commerce.sort.Sort
 
 class EnchantMainMenu(p:Player) : Menu("§lエンチャントで検索",54,p){
@@ -64,7 +64,7 @@ class EnchantSelectMenu(p:Player,
                         private val enchant: Enchantment,
                         private val level:Int):ListMenu("§lエンチャントの検索結果",p) {
     override fun open() {
-        val keys = Sort.enchantSort(enchant,level, ItemData.orderMap.keys().toList())
+        val keys = Sort.enchantSort(enchant,level, ItemDataOld.orderMap.keys().toList())
 
         listInventory(keys)
 
@@ -86,7 +86,7 @@ class EnchantSelectMenu(p:Player,
             return
         }
 
-        ItemData.buy(p,itemID,orderID){
+        ItemDataOld.buy(p,itemID,orderID){
             Bukkit.getScheduler().runTask(Man10Commerce.plugin, Runnable { menu.open() })
         }
 

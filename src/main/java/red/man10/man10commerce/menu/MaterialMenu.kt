@@ -9,12 +9,12 @@ import org.bukkit.event.inventory.InventoryClickEvent
 import org.bukkit.inventory.ItemStack
 import org.bukkit.persistence.PersistentDataType
 import red.man10.man10commerce.Man10Commerce
-import red.man10.man10commerce.data.ItemData
+import red.man10.man10commerce.data.ItemDataOld
 import red.man10.man10commerce.sort.Sort
 
 class MaterialMenu(p:Player,private val material: Material) : ListMenu("§l同じ種類のリスト",p) {
     override fun open() {
-        val keys = Sort.materialSort(material, ItemData.orderMap.keys().toList())
+        val keys = Sort.materialSort(material, ItemDataOld.orderMap.keys().toList())
 
         listInventory(keys)
 
@@ -36,7 +36,7 @@ class MaterialMenu(p:Player,private val material: Material) : ListMenu("§l同�
             return
         }
 
-        ItemData.buy(p,itemID,orderID){
+        ItemDataOld.buy(p,itemID,orderID){
             Bukkit.getScheduler().runTask(Man10Commerce.plugin, Runnable {menu.open()})
         }
 

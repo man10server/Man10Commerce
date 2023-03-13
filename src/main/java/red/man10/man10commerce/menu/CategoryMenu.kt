@@ -5,7 +5,7 @@ import org.bukkit.Material
 import org.bukkit.entity.Player
 import org.bukkit.event.inventory.InventoryClickEvent
 import org.bukkit.inventory.ItemStack
-import red.man10.man10commerce.data.ItemData
+import red.man10.man10commerce.data.ItemDataOld
 
 class CategoryMenu(p:Player) : Menu("§lカテゴリーメニュー",27,p){
 
@@ -19,7 +19,7 @@ class CategoryMenu(p:Player) : Menu("§lカテゴリーメニュー",27,p){
 
         menu.addItem(allItemIcon)
 
-        for (data in ItemData.categories.values){
+        for (data in ItemDataOld.categories.values){
             menu.addItem(data.categoryIcon)
         }
 

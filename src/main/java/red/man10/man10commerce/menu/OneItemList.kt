@@ -9,21 +9,21 @@ import org.bukkit.inventory.ItemStack
 import org.bukkit.persistence.PersistentDataType
 import red.man10.man10commerce.Man10Commerce
 import red.man10.man10commerce.Utility
-import red.man10.man10commerce.data.ItemData
+import red.man10.man10commerce.data.ItemDataOld
 import java.text.SimpleDateFormat
 import kotlin.math.floor
 
 class OneItemList(p:Player,val itemID:Int) : Menu("§l同じアイテムのリスト",54,p){
     override fun open() {
 
-        val list = ItemData.getAllItem(itemID)
+        val list = ItemDataOld.getAllItem(itemID)
 
         Bukkit.getScheduler().runTask(Man10Commerce.plugin, Runnable {
 
             for (data in list){
                 if (menu.last()!=null)break
 
-                val item = ItemData.itemDictionary[itemID]?.clone()?:return@Runnable
+                val item = ItemDataOld.itemDictionary[itemID]?.clone()?:return@Runnable
 
                 item.amount = data.amount
 
@@ -68,7 +68,7 @@ class OneItemList(p:Player,val itemID:Int) : Menu("§l同じアイテムのリ�
         if (orderID == -1)return
 
         if (p.hasPermission(Man10Commerce.OP) && e.action == InventoryAction.CLONE_STACK){
-            ItemData.close(orderID,p)
+            ItemDataOld.close(orderID,p)
             Utility.sendMsg(p, "§c§l出品を取り下げました")
             menu.open()
             return
@@ -76,7 +76,7 @@ class OneItemList(p:Player,val itemID:Int) : Menu("§l同じアイテムのリ�
 
         if (e.action != InventoryAction.MOVE_TO_OTHER_INVENTORY) { return }
 
-        ItemData.buy(p, menu.itemID, orderID) {
+        ItemDataOld.buy(p, menu.itemID, orderID) {
             menu.open()
         }
 

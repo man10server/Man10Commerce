@@ -14,7 +14,7 @@ import org.bukkit.plugin.java.JavaPlugin
 import red.man10.man10bank.BankAPI
 import red.man10.man10commerce.Utility.format
 import red.man10.man10commerce.Utility.sendMsg
-import red.man10.man10commerce.data.ItemData
+import red.man10.man10commerce.data.ItemDataOld
 import red.man10.man10commerce.data.MySQLManager
 import red.man10.man10commerce.menu.*
 import java.io.File
@@ -88,12 +88,12 @@ class Man10Commerce : JavaPlugin() {
 
         plugin = this
         bank = BankAPI(plugin)
-        ItemData.loadItemIndex()
+        ItemDataOld.loadItemIndex()
 
         val mysql = MySQLManager(this,"onEnable")
 
-        ItemData.loadOrderTable(mysql)
-        ItemData.loadOPOrderTable(mysql)
+        ItemDataOld.loadOrderTable(mysql)
+        ItemDataOld.loadOPOrderTable(mysql)
 
         loadConfig()
 
@@ -123,7 +123,7 @@ class Man10Commerce : JavaPlugin() {
             disableItems.addAll(conf.getStringList("disables"))
         }
 
-        ItemData.loadCategoryData()
+        ItemDataOld.loadCategoryData()
 
     }
 
@@ -206,7 +206,7 @@ class Man10Commerce : JavaPlugin() {
             }
 
             es.execute {
-                if (!ItemData.sell(sender,clone,price)){
+                if (!ItemDataOld.sell(sender,clone,price)){
                     sender.inventory.addItem(clone)
                     return@execute
                 }
@@ -253,7 +253,7 @@ class Man10Commerce : JavaPlugin() {
             }
 
             es.execute {
-                if (!ItemData.sellOP(sender,item,price))return@execute
+                if (!ItemDataOld.sellOP(sender,item,price))return@execute
 
                 sendMsg(sender,"§e§l出品成功しました！")
 
@@ -320,12 +320,12 @@ class Man10Commerce : JavaPlugin() {
                 es.execute {
                     loadConfig()
                     sender.sendMessage("§a§lReloaded Config")
-                    ItemData.loadItemIndex()
+                    ItemDataOld.loadItemIndex()
 
                     val mysql = MySQLManager(this,"onEnable")
 
-                    ItemData.loadOrderTable(mysql)
-                    ItemData.loadOPOrderTable(mysql)
+                    ItemDataOld.loadOrderTable(mysql)
+                    ItemDataOld.loadOPOrderTable(mysql)
 
 
                     sendMsg(sender,"Reload Table")

@@ -36,7 +36,7 @@ class Data {
 
 }
 
-object ItemData {
+object ItemDataOld {
 
     val itemDictionary = ConcurrentHashMap<Int, ItemStack>()//item_idとitemStackの辞書
     val orderMap = ConcurrentHashMap<Int, Data>()//order_idと注文情報のマップ
@@ -319,7 +319,7 @@ object ItemData {
     @Synchronized
     fun sell(p: Player, item: ItemStack, price: Double): Boolean {
 
-        if (Man10Commerce.maxItems< UserData.getSellAmount(p)){
+        if (Man10Commerce.maxItems< UserData.getSellCount(p)){
             sendMsg(p,"§c§l出品数の上限に達しています！")
             return false
         }
