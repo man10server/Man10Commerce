@@ -2,9 +2,9 @@ package red.man10.man10commerce.data
 
 import org.bukkit.Bukkit
 import org.bukkit.ChatColor
-import org.bukkit.entity.Damageable
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
+import org.bukkit.inventory.meta.ItemMeta
 import red.man10.man10bank.Man10Bank
 import red.man10.man10commerce.Man10Commerce
 import red.man10.man10commerce.Utility
@@ -14,11 +14,13 @@ import java.util.Date
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.LinkedBlockingQueue
+import kotlin.math.sqrt
 
 data class ItemData(
     var id : Int,
     var itemID: Int,
     var price : Double,
+    var amount : Int,
     var date : Date?,
     var seller : UUID,
     var isOP : Boolean
@@ -31,12 +33,12 @@ object Transaction {
 
     private val itemDictionary = ConcurrentHashMap<Int,ItemStack>()//アイテムIDとItemStackの辞書
 
-
-    fun runQueueThread(){
+    fun setup(){
         if (queueThread.isAlive){
             queueThread.interrupt()
             queueThread = Thread{ runBlockingQueue() }
         }
+        loadItemDictionary()
         queueThread.start()
     }
 
@@ -69,6 +71,7 @@ object Transaction {
                 orderID,
                 itemID,
                 price,
+                amount,
                 date,
                 seller,
                 isOp
@@ -115,7 +118,7 @@ object Transaction {
     /////////////////////////////
     //      販売する
     /////////////////////////////
-    fun sell(p:Player,item:ItemStack,price:Double){
+    fun sell(p:Player,item:ItemStack,price:Double,isOP: Boolean = false){
 
         blockingQueue.add {sql ->
 
@@ -161,17 +164,16 @@ object Transaction {
 
             val ret = sql.execute(
                 "INSERT INTO order_table " +
-                        "(player, uuid, item_id, item_name, date, amount, price) " +
-                        "VALUES ('${p.name}', '${p.uniqueId}', $id, '${MySQLManager.escapeStringForMySQL(name)}', now(), ${item.amount}, $price);"
+                        "(player, uuid, item_id, item_name, date, amount, price,is_op) " +
+                        "VALUES ('${p.name}', '${p.uniqueId}', $id, '${MySQLManager.escapeStringForMySQL(name)}'," +
+                        " now(), ${item.amount}, $price,${if (isOP) 1 else 0});"
             )
 
             if (ret){
                 sendMsg(p,"§a§l出品成功！")
                 Log.sellLog(p,item,price, id!!)
             }
-
         }
-
     }
 
     /////////////////////////////
@@ -180,7 +182,7 @@ object Transaction {
     fun close(p:Player,id:Int){
         blockingQueue.add {sql->
 
-            val rs = sql.query("select item_id,amount,is_op from order_table where id=${id};")?:return false
+            val rs = sql.query("select item_id,amount,is_op from order_table where id=${id};")?:return@add
 
             if (!rs.next()) return@add
 
@@ -221,6 +223,83 @@ object Transaction {
 
         rs.close()
         sql.close()
+    }
+
+    private fun loadItemDictionary(){
+        blockingQueue.add { sql ->
+            itemDictionary.clear()
+
+            val rs = sql.query("select id,base64 from item_list;")
+
+            if (rs != null) {
+
+                while (rs.next()) {
+                    ItemDataOld.itemDictionary[rs.getInt("id")] = Utility.itemFromBase64(rs.getString("base64"))?:continue
+                }
+
+                rs.close()
+                sql.close()
+            }
+            Bukkit.getLogger().info("アイテム辞書を読み込みました")
+        }
+    }
+
+    //最安値のアイテムのリストを引く
+    private fun syncGetMinPriceItems(sql:MySQLManager):List<ItemData>{
+
+        val rs = sql.query("select * from order_table order by price;")?:return emptyList()
+
+        val list = mutableListOf<ItemData>()
+
+        while (rs.next()){
+            val itemID = rs.getInt("item_id")
+
+            if (list.any { it.itemID == itemID })continue
+
+            val data = ItemData(
+                rs.getInt("id"),
+                itemID,
+                rs.getDouble("price"),
+                rs.getInt("amount"),
+                rs.getDate("date"),
+                UUID.fromString(rs.getString("uuid")),
+                rs.getBoolean("is_op")
+            )
+
+            list.add(data)
+        }
+
+        rs.close()
+        sql.close()
+
+        return list
+    }
+
+    //同じアイテムの全注文を取得
+    private fun syncGetAllOrderByItem(itemID:Int,sql: MySQLManager):List<ItemData>{
+
+        val rs = sql.query("select * from order_table where item_id=${itemID}")?:return emptyList()
+
+        val list = mutableListOf<ItemData>()
+
+        while (rs.next()){
+            val data = ItemData(
+                rs.getInt("id"),
+                itemID,
+                rs.getDouble("price"),
+                rs.getInt("amount"),
+                rs.getDate("date"),
+                UUID.fromString(rs.getString("uuid")),
+                rs.getBoolean("is_op")
+            )
+
+            list.add(data)
+        }
+
+        rs.close()
+        sql.close()
+
+        return list
     }
 
     private fun runBlockingQueue(){
