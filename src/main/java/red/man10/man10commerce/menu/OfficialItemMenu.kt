@@ -10,7 +10,7 @@ import org.bukkit.persistence.PersistentDataType
 import red.man10.man10commerce.Man10Commerce
 import red.man10.man10commerce.data.ItemDataOld
 
-class OfficialItemMenu(p:Player) : ListMenu("§d§lAmanzonBasic",p){
+class OfficialItemMenu(p:Player) : ListMenuOld("§d§lAmanzonBasic",p){
     override fun open() {
 
         val keys = ItemDataOld.opOrderMap.keys().toList()
@@ -23,7 +23,7 @@ class OfficialItemMenu(p:Player) : ListMenu("§d§lAmanzonBasic",p){
 
     }
 
-    override fun click(e: InventoryClickEvent, menu: Menu, id: String, item: ItemStack) {
+    override fun click(e: InventoryClickEvent, menu: MenuOld, id: String, item: ItemStack) {
         if (e.action != InventoryAction.MOVE_TO_OTHER_INVENTORY)return
 
         val meta = item.itemMeta!!

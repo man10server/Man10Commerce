@@ -61,6 +61,11 @@ open class MenuFramework(val p:Player,menuSize: Int, title: String) {
         menu.setItem(slot,button.icon())
     }
 
+    //
+    fun addButton(button:Button){
+        menu.addItem(button.icon())
+    }
+
     //背景として全埋めする
     fun fill(button: Button){
         for (i in 0 until menu.size){
@@ -68,11 +73,11 @@ open class MenuFramework(val p:Player,menuSize: Int, title: String) {
         }
     }
 
-    fun setCloseListener(action: OnCloseListener){
+    fun setCloseAction(action: OnCloseListener){
         closeAction = action
     }
 
-    fun setClickListener(action: Button.OnClickListener){
+    fun setClickAction(action: Button.OnClickListener){
         clickAction = action
     }
 
@@ -99,6 +104,13 @@ open class MenuFramework(val p:Player,menuSize: Int, title: String) {
         val menu = stack.pop()
         menuStack[p.uniqueId] = stack
         return menu
+    }
+
+    //      スタックの最新を確かめる
+    fun peek(): MenuFramework? {
+        val stack = menuStack[p.uniqueId]
+        if (stack.isNullOrEmpty()) return null
+        return stack.peek()
     }
 
     class Button(icon:Material):Cloneable{
@@ -240,6 +252,8 @@ open class MenuFramework(val p:Player,menuSize: Int, title: String) {
             if (e.player !is Player)return
             val menu = get(e.player as Player) ?:return
             menu.close(e)
+            //TODO:動作確認する
+            menu.pop()?.open()
         }
 
     }

@@ -11,7 +11,7 @@ import red.man10.man10commerce.Man10Commerce
 import red.man10.man10commerce.data.ItemDataOld
 import red.man10.man10commerce.sort.Sort
 
-class SearchMenu(p:Player, private val query:String) : ListMenu("§l検索結果",p){
+class SearchMenu(p:Player, private val query:String) : ListMenuOld("§l検索結果",p){
 
     override fun open() {
 
@@ -24,7 +24,7 @@ class SearchMenu(p:Player, private val query:String) : ListMenu("§l検索結果
         pushStack()
     }
 
-    override fun click(e: InventoryClickEvent, menu: Menu, id: String, item: ItemStack) {
+    override fun click(e: InventoryClickEvent, menu: MenuOld, id: String, item: ItemStack) {
         val meta = item.itemMeta!!
 
         val orderID = meta.persistentDataContainer[NamespacedKey(Man10Commerce.plugin,"order_id"), PersistentDataType.INTEGER]?:-1

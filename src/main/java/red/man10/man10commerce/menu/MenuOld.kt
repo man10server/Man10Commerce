@@ -17,13 +17,13 @@ import java.util.concurrent.ConcurrentHashMap
 /**
  * メニューの抽象クラス。新規メニューを作る際はこのクラスを継承すること。
  */
-abstract class Menu(title: String,private val size:Int,val p:Player){
+abstract class MenuOld(title: String, private val size:Int, val p:Player){
 
     val name = prefix+title
     var menu = Bukkit.createInventory(null,size, Component.text(name))
 
     companion object{
-        private val menuStack = ConcurrentHashMap<Player, Stack<Menu>>()
+        private val menuStack = ConcurrentHashMap<Player, Stack<MenuOld>>()
 
 //
 //        //外部クラスからスタックを扱う場合
@@ -38,13 +38,13 @@ abstract class Menu(title: String,private val size:Int,val p:Player){
 //            menuStack[p] = stack
 //        }
 
-        fun peekStack(p:Player): Menu? {
+        fun peekStack(p:Player): MenuOld? {
             val stack = menuStack[p] ?: return null
             if (stack.isEmpty()) return null
             return stack.peek()
         }
 
-        fun popStack(p:Player): Menu?{
+        fun popStack(p:Player): MenuOld?{
             val stack = menuStack[p]?:return null
             if (stack.isEmpty())return null
             val id = stack.pop()
@@ -88,7 +88,7 @@ abstract class Menu(title: String,private val size:Int,val p:Player){
     /**
      * Stackの先頭から取り出し、取り出したものはStackから削除
      */
-    protected fun popStack(): Menu?{
+    protected fun popStack(): MenuOld?{
         val stack = menuStack[p]?:return null
         if (stack.isEmpty())return null
         val id = stack.pop()
@@ -99,7 +99,7 @@ abstract class Menu(title: String,private val size:Int,val p:Player){
     /**
      * Stackの先頭を取り出すが、中身は残す
      */
-    protected fun peekStack(): Menu? {
+    protected fun peekStack(): MenuOld? {
         val stack = menuStack[p] ?: return null
         if (stack.isEmpty()) return null
         return stack.peek()
@@ -113,6 +113,6 @@ abstract class Menu(title: String,private val size:Int,val p:Player){
     /**
      * クリックされた時の処理
      */
-    abstract fun click(e:InventoryClickEvent,menu: Menu,id:String,item:ItemStack)
+    abstract fun click(e:InventoryClickEvent, menu: MenuOld, id:String, item:ItemStack)
 
 }

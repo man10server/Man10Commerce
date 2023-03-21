@@ -12,7 +12,7 @@ import red.man10.man10commerce.Man10Commerce
 import red.man10.man10commerce.data.ItemDataOld
 import red.man10.man10commerce.sort.Sort
 
-class MaterialMenu(p:Player,private val material: Material) : ListMenu("§l同じ種類のリスト",p) {
+class MaterialMenu(p:Player,private val material: Material) : ListMenuOld("§l同じ種類のリスト",p) {
     override fun open() {
         val keys = Sort.materialSort(material, ItemDataOld.orderMap.keys().toList())
 
@@ -23,7 +23,7 @@ class MaterialMenu(p:Player,private val material: Material) : ListMenu("§l同�
         pushStack()
     }
 
-    override fun click(e: InventoryClickEvent, menu: Menu, id: String, item: ItemStack) {
+    override fun click(e: InventoryClickEvent, menu: MenuOld, id: String, item: ItemStack) {
         val meta = item.itemMeta!!
 
         val orderID = meta.persistentDataContainer[NamespacedKey(Man10Commerce.plugin,"order_id"), PersistentDataType.INTEGER]?:-1

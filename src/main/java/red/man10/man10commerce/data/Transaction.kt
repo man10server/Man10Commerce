@@ -13,7 +13,7 @@ import red.man10.man10commerce.Man10Commerce.Companion.plugin
 import red.man10.man10commerce.Utility
 import red.man10.man10commerce.Utility.format
 import red.man10.man10commerce.Utility.sendMsg
-import red.man10.man10commerce.menu.Menu
+import red.man10.man10commerce.menu.MenuOld
 import java.io.File
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
@@ -26,7 +26,8 @@ data class OrderData(
     var amount : Int,
     var date : Date?,
     var seller : UUID,
-    var isOP : Boolean
+    var isOP : Boolean,
+    var item: ItemStack
 )
 
 class Category{
@@ -50,7 +51,7 @@ object Transaction {
     private val itemDictionary = ConcurrentHashMap<Int,ItemStack>()//アイテムIDとItemStackの辞書
     private var minPriceItems = mutableListOf<OrderData>()
 
-    private val categories = ConcurrentHashMap<String,Category>()
+    val categories = ConcurrentHashMap<String,Category>()
 
     fun setup(){
         loadCategoryData()
@@ -59,14 +60,14 @@ object Transaction {
             queueThread.interrupt()
             queueThread = Thread{ runBlockingQueue() }
         }
-        loadItemDictionary()
+        asyncLoadItemDictionary()
         queueThread.start()
     }
 
     ////////////////////////////////
     //      アイテムを買う
     ///////////////////////////////
-    fun buy(p:Player,itemID: Int,orderID:Int,callback: (Boolean) -> Unit){
+    fun asyncBuy(p:Player, itemID: Int, orderID:Int, callback: (Boolean) -> Unit){
 
         blockingQueue.add { sql->
 
@@ -97,7 +98,8 @@ object Transaction {
                 amount,
                 date,
                 seller,
-                isOp
+                isOp,
+                itemDictionary[itemID]!!
             )
 
             val totalPrice = price*amount
@@ -145,7 +147,7 @@ object Transaction {
     /////////////////////////////
     //      販売する
     /////////////////////////////
-    fun sell(p:Player,item:ItemStack,price:Double,callback:(Boolean)->Unit,isOP: Boolean = false){
+    fun asyncSell(p:Player, item:ItemStack, price:Double, callback:(Boolean)->Unit, isOP: Boolean = false){
 
         blockingQueue.add {sql ->
 
@@ -214,7 +216,7 @@ object Transaction {
                         )) })
 
                 //最安値のデータを読み直す
-                loadMinPriceItems()
+                asyncLoadMinPriceItems()
 
                 callback(true)
 
@@ -228,7 +230,7 @@ object Transaction {
     /////////////////////////////
     //      注文を取り消す
     ////////////////////////////
-    fun close(p:Player,id:Int){
+    fun asyncClose(p:Player, id:Int){
         blockingQueue.add {sql->
 
             val rs = sql.query("select item_id,amount,is_op from order_table where id=${id};")?:return@add
@@ -281,7 +283,7 @@ object Transaction {
         sql.close()
     }
 
-    private fun loadItemDictionary(){
+    private fun asyncLoadItemDictionary(){
         blockingQueue.add { sql ->
             itemDictionary.clear()
 
@@ -301,14 +303,14 @@ object Transaction {
     }
 
     //非同期で最安値のリストを読む
-    private fun loadMinPriceItems(){
+    private fun asyncLoadMinPriceItems(){
         blockingQueue.add { sql ->
             syncGetMinPriceItems(sql)
         }
     }
 
-    //最安値のアイテムのリストを引く
-    private fun syncGetMinPriceItems(sql:MySQLManager):List<OrderData>{
+    //最安値のアイテムのリストを引く(スレッドで呼ぶ)
+    fun syncGetMinPriceItems(sql:MySQLManager):List<OrderData>{
 
         val rs = sql.query("select * from order_table order by price;")?:return emptyList()
 
@@ -326,7 +328,8 @@ object Transaction {
                 rs.getInt("amount"),
                 rs.getDate("date"),
                 UUID.fromString(rs.getString("uuid")),
-                rs.getBoolean("is_op")
+                rs.getBoolean("is_op"),
+                itemDictionary[itemID]!!
             )
 
             list.add(data)
@@ -340,8 +343,8 @@ object Transaction {
         return list
     }
 
-    //同じアイテムの全注文を取得
-    private fun syncGetAllOrderByItem(itemID:Int,sql: MySQLManager):List<OrderData>{
+    //同じアイテムの全注文を取得(スレッドで呼ぶ)
+    fun syncGetOneItemList(itemID:Int, sql: MySQLManager):List<OrderData>{
 
         val rs = sql.query("select * from order_table where item_id=${itemID}")?:return emptyList()
 
@@ -355,7 +358,8 @@ object Transaction {
                 rs.getInt("amount"),
                 rs.getDate("date"),
                 UUID.fromString(rs.getString("uuid")),
-                rs.getBoolean("is_op")
+                rs.getBoolean("is_op"),
+                itemDictionary[itemID]!!
             )
 
             list.add(data)
@@ -367,10 +371,18 @@ object Transaction {
         return list
     }
 
-    fun getCategorizedDictionary(categoryName:String):Map<Int,ItemStack>{
+    fun syncGetCategorizedList(categoryName: String,sql:MySQLManager):List<OrderData>{
+
+        val list = syncGetMinPriceItems(sql)
+        val dic = getCategorizedDictionary(categoryName)
+
+        return list.filter { dic.containsKey(it.itemID) }
+    }
+
+    private fun getCategorizedDictionary(categoryName:String):Map<Int,ItemStack>{
 
         if (categoryName == Category.NOT_CATEGORIZED){
-            return emptyMap()
+            return getNotCategorizedDictionary()
         }
 
         val category = categories[categoryName]?:return emptyMap()
@@ -394,7 +406,7 @@ object Transaction {
     }
 
     //カテゴリー分けされてないアイテムを取得
-    fun getNotCategorizedDictionary():Map<Int,ItemStack>{
+    private fun getNotCategorizedDictionary():Map<Int,ItemStack>{
 
         val materials = mutableSetOf<Material>()
         val displays = mutableSetOf<String>()
@@ -459,7 +471,7 @@ object Transaction {
             val meta = icon.itemMeta
             meta.displayName(Component.text(yml.getString("CategoryIconTitle")?:"Title"))
             meta.setCustomModelData(yml.getInt("CategoryIconCMD"))
-            Menu.setID(meta, name)
+            MenuOld.setID(meta, name)
             icon.itemMeta = meta
 
             data.categoryIcon = icon
@@ -470,6 +482,11 @@ object Transaction {
         }
 
         Bukkit.getLogger().info("カテゴリーデータの読み込み完了")
+    }
+
+    //軽量化のためのキューをクラス外で使うための関数
+    fun async(process:(MySQLManager)->Unit){
+        blockingQueue.add(process)
     }
 
     private fun runBlockingQueue(){

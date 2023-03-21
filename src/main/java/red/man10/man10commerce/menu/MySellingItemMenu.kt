@@ -13,7 +13,7 @@ import red.man10.man10commerce.data.ItemDataOld
 import java.text.SimpleDateFormat
 import java.util.*
 
-class MySellingItemMenu(p:Player,private val seller: UUID):ListMenu("§l出品したアイテム",p) {
+class MySellingItemMenu(p:Player,private val seller: UUID):ListMenuOld("§l出品したアイテム",p) {
 
     constructor(p:Player) : this(p,p.uniqueId)
 
@@ -65,7 +65,7 @@ class MySellingItemMenu(p:Player,private val seller: UUID):ListMenu("§l出品�
 
     }
 
-    override fun click(e: InventoryClickEvent, menu: Menu, id: String, item: ItemStack) {
+    override fun click(e: InventoryClickEvent, menu: MenuOld, id: String, item: ItemStack) {
         if (e.action != InventoryAction.MOVE_TO_OTHER_INVENTORY){return}
 
         val meta = item.itemMeta!!

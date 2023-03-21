@@ -1,54 +1,93 @@
 package red.man10.man10commerce.menu
 
 import org.bukkit.Bukkit
-import org.bukkit.NamespacedKey
+import org.bukkit.Material
 import org.bukkit.entity.Player
 import org.bukkit.event.inventory.InventoryAction
-import org.bukkit.event.inventory.InventoryClickEvent
-import org.bukkit.inventory.ItemStack
-import org.bukkit.persistence.PersistentDataType
 import red.man10.man10commerce.Man10Commerce
 import red.man10.man10commerce.Utility
-import red.man10.man10commerce.data.ItemDataOld
+import red.man10.man10commerce.data.Transaction
+import red.man10.man10commerce.menu.MenuFramework.Button
+import java.text.SimpleDateFormat
+import kotlin.math.floor
 
-class CategorizedMenu(p:Player, private val category:String) : ListMenu("§lカテゴリーアイテム",p){
+class CategorizedMenu(p:Player,page:Int, private val category:String) : MenuFramework(p, LARGE_CHEST_SIZE,"§a§lカテゴリーメニュ"){
 
-    override fun open() {
+    init {
+        if (peek() !is CategorizedMenu)push()
 
-        val keys = ItemDataOld.getCategorized(category).keys.toList()
+        Transaction.async { sql->
 
-        listInventory(keys)
+            val list = Transaction.syncGetCategorizedList(category,sql)
 
-        p.openInventory(menu)
+            var inc = 0
 
-        pushStack()
+            while (menu.getItem(44) == null){
 
+                val index = inc+page*45
+                inc++
+                if (list.size<=index) break
+
+                val data = list[index]
+                val sampleItem = data.item.clone()
+
+                val itemButton = Button(sampleItem.type)
+                itemButton.cmd(data.item.itemMeta?.customModelData?:0)
+                itemButton.title(Man10Commerce.getDisplayName(sampleItem))
+
+                val lore = mutableListOf<String>()
+
+                //TODO:値段の表示を要チェック
+                lore.add("§e§l値段:${Utility.format(floor(data.price*data.amount))}")
+                lore.add("§e§l単価:${Utility.format(floor(data.price))}")
+                lore.add("§e§l出品者${Bukkit.getOfflinePlayer(data.seller).name}")
+                lore.add("§e§l個数:${data.amount}")
+                lore.add("§e§l出品日:${SimpleDateFormat("yyyy-MM-dd").format(data.date)}")
+                if (data.isOP) lore.add("§d§l公式出品アイテム")
+                lore.add("§cシフトクリックで1-Click購入")
+
+                itemButton.lore(lore)
+
+                itemButton.setClickAction{
+                    //シフト左クリック
+                    if (it.action == InventoryAction.MOVE_TO_OTHER_INVENTORY){
+                        Utility.sendMsg(p,"§a§l購入処理中・・・・§a§k§lXX")
+                        Transaction.asyncBuy(p,data.itemID,data.id){}
+                        return@setClickAction
+                    }
+
+                    //右クリック(出品取り消し)
+                    if (it.action == InventoryAction.PICKUP_HALF && p.hasPermission(Man10Commerce.OP)){
+                        Transaction.asyncClose(p,data.id)
+                        return@setClickAction
+                    }
+                }
+
+                Bukkit.getScheduler().runTask(Man10Commerce.plugin, Runnable { addButton(itemButton) })
+            }
+
+            //Back
+            val back = Button(Material.LIGHT_BLUE_STAINED_GLASS_PANE)
+            back.title("")
+            arrayOf(45,46,47,48,49,50,51,52,53).forEach { setButton(back,it) }
+
+            //previous
+            if (page!=0){
+                val previous = Button(Material.RED_STAINED_GLASS_PANE)
+                previous.title("前のページへ")
+                previous.setClickAction{ CategorizedMenu(p,page-1,category) }
+                arrayOf(45,46,47).forEach { setButton(previous,it) }
+
+            }
+
+            //next
+            if (inc>=44){
+                val next = Button(Material.RED_STAINED_GLASS_PANE)
+                next.title("次のページへ")
+                next.setClickAction{ CategorizedMenu(p,page+1,category) }
+                arrayOf(51,52,53).forEach { setButton(next,it) }
+            }
+        }
     }
 
-    override fun click(e: InventoryClickEvent, menu: Menu, id: String, item: ItemStack) {
-
-        val meta = item.itemMeta?:return
-
-        val orderID = meta.persistentDataContainer[NamespacedKey(Man10Commerce.plugin,"order_id"), PersistentDataType.INTEGER]?:-1
-        val itemID = meta.persistentDataContainer[NamespacedKey(Man10Commerce.plugin,"item_id"), PersistentDataType.INTEGER]?:-1
-
-        if (orderID == -1)return
-
-        if (p.hasPermission(Man10Commerce.OP) && e.action == InventoryAction.CLONE_STACK){
-            ItemDataOld.close(orderID,p)
-            Utility.sendMsg(p, "§c§l出品を取り下げました")
-            Bukkit.getScheduler().runTask(Man10Commerce.plugin, Runnable {menu.open()})
-            return
-        }
-
-        if (e.action != InventoryAction.MOVE_TO_OTHER_INVENTORY){
-            Man10Commerce.es.execute { OneItemList(p,itemID).open() }
-            return
-        }
-
-        ItemDataOld.buy(p,itemID,orderID){
-            Bukkit.getScheduler().runTask(Man10Commerce.plugin, Runnable {menu.open()})
-        }
-
-    }
 }

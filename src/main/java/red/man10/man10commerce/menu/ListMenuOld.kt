@@ -19,7 +19,7 @@ import kotlin.math.floor
 /**
  * ページ切り替えをするメニュー用の抽象クラス
  */
-abstract class ListMenu(title:String,p:Player) : Menu(title,54,p) {
+abstract class ListMenuOld(title:String, p:Player) : MenuOld(title,54,p) {
 
     var page = 0
 

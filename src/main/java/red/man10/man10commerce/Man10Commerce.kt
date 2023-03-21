@@ -83,7 +83,8 @@ class Man10Commerce : JavaPlugin() {
 
         loadConfig()
 
-        server.pluginManager.registerEvents(Event,this)
+//        server.pluginManager.registerEvents(Event,this)
+        server.pluginManager.registerEvents(MenuFramework.MenuListener,this)
 
         lang = Gson().fromJson(Files.readString(File(plugin.dataFolder.path+"/ja_jp.json").toPath()),JsonObject::class.java)
     }
@@ -187,7 +188,7 @@ class Man10Commerce : JavaPlugin() {
             }
 
             //TODO:要検証
-            Transaction.sell(sender,clone,price,{result->
+            Transaction.asyncSell(sender,clone,price,{ result->
                 if (!result){
                     sender.inventory.addItem(clone)
                 }
@@ -226,7 +227,7 @@ class Man10Commerce : JavaPlugin() {
                 return true
             }
 
-            Transaction.sell(sender,clone,price,{
+            Transaction.asyncSell(sender,clone,price,{
                 if (!it){
                     sender.inventory.addItem(clone)
                 }
