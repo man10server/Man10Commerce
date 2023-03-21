@@ -152,7 +152,4 @@ class EnchantSelectMenu(p:Player, page:Int,private val enchant: Enchantment, pri
 
     }
 
-
-
-
 }

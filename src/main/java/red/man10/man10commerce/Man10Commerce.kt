@@ -129,7 +129,7 @@ class Man10Commerce : JavaPlugin() {
                 return true
             }
 
-            SellerMenu(sender,args[0]).open()
+            SellerMenu(sender,0,args[0]).open()
 
             return true
         }
@@ -148,7 +148,7 @@ class Man10Commerce : JavaPlugin() {
                 return true
             }
 
-            SearchMenu(sender,args.joinToString(" ")).open()
+            SearchMenu(sender,0,args.joinToString(" ")).open()
 
             return true
         }

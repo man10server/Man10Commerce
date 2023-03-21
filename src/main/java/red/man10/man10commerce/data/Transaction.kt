@@ -13,7 +13,6 @@ import red.man10.man10commerce.Man10Commerce.Companion.plugin
 import red.man10.man10commerce.Utility
 import red.man10.man10commerce.Utility.format
 import red.man10.man10commerce.Utility.sendMsg
-import red.man10.man10commerce.menu.MenuOld
 import java.io.File
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
@@ -379,6 +378,12 @@ object Transaction {
         return list.filter { dic.containsKey(it.itemID) }
     }
 
+    fun syncGetSellerList(seller: UUID):List<OrderData>{
+
+
+        return emptyList()
+    }
+
     private fun getCategorizedDictionary(categoryName:String):Map<Int,ItemStack>{
 
         if (categoryName == Category.NOT_CATEGORIZED){
@@ -471,7 +476,7 @@ object Transaction {
             val meta = icon.itemMeta
             meta.displayName(Component.text(yml.getString("CategoryIconTitle")?:"Title"))
             meta.setCustomModelData(yml.getInt("CategoryIconCMD"))
-            MenuOld.setID(meta, name)
+//            MenuOld.setID(meta, name)
             icon.itemMeta = meta
 
             data.categoryIcon = icon
