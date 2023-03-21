@@ -24,21 +24,24 @@ class MainMenu(p:Player) : MenuFramework(p, CHEST_SIZE,"§l出品中のアイテ
         buttonBasic.title("§a§lAmanzonBasic")
         buttonBasic.lore(mutableListOf("§f公式が販売している","§fアイテムを買うことができます"))
         buttonBasic.setClickAction{
-
+            OfficialItemMenu(p).open()
         }
         setButton(buttonBasic,3)
 
         val buttonMySellItem = Button(Material.CHEST)
         buttonMySellItem.title("§a§l自分が出品したアイテムを確かめる")
         buttonMySellItem.setClickAction{
-
+            MySellingItemMenu(p).open()
         }
         setButton(buttonMySellItem,5)
 
         val buttonToSell = Button(Material.COBBLESTONE)
         buttonToSell.title("§a§lアイテムを出品する")
         buttonToSell.setClickAction{
-
+            p.closeInventory()
+            p.sendMessage(
+                Component.text("${Man10Commerce.prefix}§a§n売るアイテムを手に持って、/amsell <金額> を入力してください")
+                    .clickEvent(ClickEvent.suggestCommand("/amsell ")))
         }
         setButton(buttonToSell,7)
 
@@ -59,7 +62,7 @@ class MainMenu(p:Player) : MenuFramework(p, CHEST_SIZE,"§l出品中のアイテ
                 p.sendMessage("${Man10Commerce.prefix}§c§l手にアイテムを持ってください！")
                 return@setClickAction
             }
-            MaterialMenu(p,p.inventory.itemInMainHand.type).open()
+            MaterialMenu(p,0,p.inventory.itemInMainHand.type).open()
         }
         setButton(buttonSearchByMaterial,21)
 
