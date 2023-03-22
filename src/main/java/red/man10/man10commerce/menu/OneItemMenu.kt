@@ -10,11 +10,11 @@ import red.man10.man10commerce.data.Transaction
 import java.text.SimpleDateFormat
 import kotlin.math.floor
 
-class OneItemList(p:Player,val itemID:Int,page:Int) : MenuFramework(p, LARGE_CHEST_SIZE,"§l同じアイテムのリスト"){
+class OneItemMenu(p:Player, val itemID:Int, page:Int) : MenuFramework(p, LARGE_CHEST_SIZE,"§l同じアイテムのリスト"){
 
     init {
 
-        if (peek() !is OneItemList)push()
+        if (peek() !is OneItemMenu)push()
 
 
         Transaction.async {sql->
@@ -76,7 +76,7 @@ class OneItemList(p:Player,val itemID:Int,page:Int) : MenuFramework(p, LARGE_CHE
             if (page!=0){
                 val previous = Button(Material.RED_STAINED_GLASS_PANE)
                 previous.title("前のページへ")
-                previous.setClickAction{ OneItemList(p,itemID,page-1).open() }
+                previous.setClickAction{ OneItemMenu(p,itemID,page-1).open() }
                 arrayOf(45,46,47).forEach { setButton(previous,it) }
 
             }
@@ -85,7 +85,7 @@ class OneItemList(p:Player,val itemID:Int,page:Int) : MenuFramework(p, LARGE_CHE
             if (inc>=44){
                 val next = Button(Material.RED_STAINED_GLASS_PANE)
                 next.title("次のページへ")
-                next.setClickAction{ OneItemList(p,itemID,page+1).open() }
+                next.setClickAction{ OneItemMenu(p,itemID,page+1).open() }
                 arrayOf(51,52,53).forEach { setButton(next,it) }
             }
         }

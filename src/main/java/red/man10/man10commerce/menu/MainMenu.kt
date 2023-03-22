@@ -24,7 +24,7 @@ class MainMenu(p:Player) : MenuFramework(p, CHEST_SIZE,"§l出品中のアイテ
         buttonBasic.title("§a§lAmanzonBasic")
         buttonBasic.lore(mutableListOf("§f公式が販売している","§fアイテムを買うことができます"))
         buttonBasic.setClickAction{
-            OfficialItemMenu(p).open()
+            OfficialItemMenu(p,0).open()
         }
         setButton(buttonBasic,3)
 

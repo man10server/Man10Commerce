@@ -2,6 +2,7 @@ package red.man10.man10commerce
 
 import com.google.gson.Gson
 import com.google.gson.JsonObject
+import org.bukkit.Bukkit
 import org.bukkit.Material
 import org.bukkit.command.Command
 import org.bukkit.command.CommandSender
@@ -86,20 +87,26 @@ class Man10Commerce : JavaPlugin() {
 //        server.pluginManager.registerEvents(Event,this)
         server.pluginManager.registerEvents(MenuFramework.MenuListener,this)
 
-        lang = Gson().fromJson(Files.readString(File(plugin.dataFolder.path+"/ja_jp.json").toPath()),JsonObject::class.java)
+        try {
+            lang = Gson().fromJson(Files.readString(File(plugin.dataFolder.path+"/ja_jp.json").toPath()),JsonObject::class.java)
+        }catch (e:Exception){
+            Bukkit.getLogger().warning("言語ファイルがありません")
+        }
+
     }
 
     override fun onDisable() {
         // Plugin shutdown logic
+        Transaction.stop()
     }
 
     private fun loadConfig(){
 
         reloadConfig()
 
-        minPrice = config.getDouble("minPrice")
-        maxPrice = config.getDouble("maxPrice")
-        maxItems = config.getInt("maxItems")
+        minPrice = config.getDouble("minPrice",10.0)
+        maxPrice = config.getDouble("maxPrice",100000000.0)
+        maxItems = config.getInt("maxItems",54)
         enable = config.getBoolean("enable")
 
         disableItems.clear()

@@ -63,6 +63,10 @@ object Transaction {
         queueThread.start()
     }
 
+    fun stop(){
+        queueThread.interrupt()
+    }
+
     ////////////////////////////////
     //      アイテムを買う
     ///////////////////////////////
@@ -156,8 +160,14 @@ object Transaction {
                 return@add
             }
 
+            if (price<Man10Commerce.minPrice){
+                sendMsg(p,"§c単価は${format(Man10Commerce.maxPrice)}円以上にしてください。")
+                callback(false)
+                return@add
+            }
+
             if (price>Man10Commerce.maxPrice){
-                sendMsg(p,"§c単価は${format(Man10Commerce.maxPrice)}円金額にしてください。")
+                sendMsg(p,"§c単価は${format(Man10Commerce.maxPrice)}円未満にしてください。")
                 callback(false)
                 return@add
             }
@@ -209,9 +219,9 @@ object Transaction {
                 Bukkit.getScheduler().runTask(plugin, Runnable {
                     Bukkit.broadcast(
                         Component.text(
-                            "${Man10Commerce.prefix}§f${name}§f(${item.amount}個)が§e§lひとつ${
+                            "${Man10Commerce.prefix}§f${name}§f(${item.amount}個)が§e§l単価${
                                 format(price)
-                            }§f円で出品されました！"
+                            }円§fで出品されました！"
                         )) })
 
                 //最安値のデータを読み直す
