@@ -12,7 +12,6 @@ import java.text.SimpleDateFormat
 class MySellingItemMenu(p:Player):MenuFramework(p, LARGE_CHEST_SIZE,"§l出品したアイテム") {
 
     init {
-
         push()
 
         Transaction.async { sql ->
@@ -32,7 +31,9 @@ class MySellingItemMenu(p:Player):MenuFramework(p, LARGE_CHEST_SIZE,"§l出品�
                     val sampleItem = data.item.clone()
 
                     val itemButton = Button(sampleItem.type)
-                    itemButton.cmd(data.item.itemMeta?.customModelData?:0)
+                    if (data.item.itemMeta?.hasCustomModelData() == true){
+                        itemButton.cmd(data.item.itemMeta?.customModelData?:0)
+                    }
                     itemButton.title(Man10Commerce.getDisplayName(sampleItem))
 
                     val lore = mutableListOf<String>()

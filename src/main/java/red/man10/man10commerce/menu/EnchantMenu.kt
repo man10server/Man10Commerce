@@ -89,7 +89,9 @@ class EnchantSelectMenu(p:Player, page:Int,private val enchant: Enchantment, pri
                     val sampleItem = data.item.clone()
 
                     val itemButton = Button(sampleItem.type)
-                    itemButton.cmd(data.item.itemMeta?.customModelData?:0)
+                    if (data.item.itemMeta?.hasCustomModelData() == true){
+                        itemButton.cmd(data.item.itemMeta?.customModelData?:0)
+                    }
                     itemButton.title(Man10Commerce.getDisplayName(sampleItem))
 
                     val lore = mutableListOf<String>()

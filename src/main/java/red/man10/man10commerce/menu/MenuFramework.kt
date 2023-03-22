@@ -84,6 +84,7 @@ open class MenuFramework(val p:Player,menuSize: Int, title: String) {
     fun close(e:InventoryCloseEvent){
         delete(e.player as Player)
         closeAction?.closeAction(e)
+        pop()?.open()
     }
 
     fun interface OnCloseListener{
@@ -252,8 +253,6 @@ open class MenuFramework(val p:Player,menuSize: Int, title: String) {
             if (e.player !is Player)return
             val menu = get(e.player as Player) ?:return
             menu.close(e)
-            //TODO:動作確認する
-            menu.pop()?.open()
         }
 
     }

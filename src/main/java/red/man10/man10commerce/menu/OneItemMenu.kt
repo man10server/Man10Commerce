@@ -16,7 +16,6 @@ class OneItemMenu(p:Player, val itemID:Int, page:Int) : MenuFramework(p, LARGE_C
 
         if (peek() !is OneItemMenu)push()
 
-
         Transaction.async {sql->
 
             val list = Transaction.syncGetOneItemList(itemID, sql)
@@ -34,7 +33,9 @@ class OneItemMenu(p:Player, val itemID:Int, page:Int) : MenuFramework(p, LARGE_C
                     val sampleItem = data.item.clone()
 
                     val itemButton = Button(sampleItem.type)
-                    itemButton.cmd(data.item.itemMeta?.customModelData?:0)
+                    if (data.item.itemMeta?.hasCustomModelData() == true){
+                        itemButton.cmd(data.item.itemMeta?.customModelData?:0)
+                    }
                     itemButton.title(Man10Commerce.getDisplayName(sampleItem))
 
                     val lore = mutableListOf<String>()
