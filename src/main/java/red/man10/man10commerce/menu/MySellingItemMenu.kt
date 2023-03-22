@@ -54,7 +54,7 @@ class MySellingItemMenu(p:Player):MenuFramework(p, LARGE_CHEST_SIZE,"§l出品�
                     }
 
                     Bukkit.getScheduler().runTask(plugin, Runnable { addButton(itemButton) })
-                }s
+                }
             })
         }
     }
