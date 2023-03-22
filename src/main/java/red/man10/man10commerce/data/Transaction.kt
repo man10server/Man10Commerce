@@ -388,7 +388,7 @@ object Transaction {
         return list.filter { dic.containsKey(it.itemID) }
     }
 
-    fun syncGetSellerList(seller: UUID):List<OrderData>{
+    fun syncGetSellerList(seller: UUID,sql: MySQLManager):List<OrderData>{
 
 
         return emptyList()
