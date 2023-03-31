@@ -21,7 +21,7 @@ class MySellingItemMenu(p:Player):MenuFramework(p, LARGE_CHEST_SIZE,"§l出品�
             var inc = 0
 
             Bukkit.getScheduler().runTask(plugin, Runnable {
-                while (menu.getItem(54) == null){
+                while (menu.getItem(53) == null){
 
                     val index = inc
                     inc++
@@ -38,7 +38,6 @@ class MySellingItemMenu(p:Player):MenuFramework(p, LARGE_CHEST_SIZE,"§l出品�
 
                     val lore = mutableListOf<String>()
 
-                    //TODO:値段の表示を要チェック
                     lore.add("§e§l値段:${Utility.format(data.price)}")
                     lore.add("§e§l個数:${data.amount}")
                     lore.add("§e§l${SimpleDateFormat("yyyy-MM-dd").format(data.date)}")

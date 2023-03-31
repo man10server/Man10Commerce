@@ -18,6 +18,8 @@ import org.bukkit.inventory.ItemStack
 import org.bukkit.persistence.PersistentDataType
 import java.util.*
 import kotlin.collections.HashMap
+import kotlin.reflect.KMutableProperty
+import kotlin.reflect.jvm.isAccessible
 
 open class MenuFramework(val p:Player,menuSize: Int, title: String) {
 
@@ -84,7 +86,7 @@ open class MenuFramework(val p:Player,menuSize: Int, title: String) {
     fun close(e:InventoryCloseEvent){
         delete(e.player as Player)
         closeAction?.closeAction(e)
-        pop()?.open()
+        popAndOpen()
     }
 
     fun interface OnCloseListener{
@@ -99,12 +101,11 @@ open class MenuFramework(val p:Player,menuSize: Int, title: String) {
     }
 
     //      スタックの取り出し
-    fun pop():MenuFramework?{
+    fun popAndOpen(){
         val stack = menuStack[p.uniqueId]
-        if (stack.isNullOrEmpty())return null
+        if (stack.isNullOrEmpty())return
         val menu = stack.pop()
         menuStack[p.uniqueId] = stack
-        return menu
     }
 
     //      スタックの最新を確かめる

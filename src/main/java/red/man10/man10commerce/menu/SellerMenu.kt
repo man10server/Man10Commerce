@@ -42,7 +42,6 @@ class SellerMenu(p:Player,page:Int,seller:String) : MenuFramework(p, LARGE_CHEST
 
                     val lore = mutableListOf<String>()
 
-                    //TODO:値段の表示を要チェック
                     lore.add("§e§l値段:${Utility.format(floor(data.price*data.amount))}")
                     lore.add("§e§l単価:${Utility.format(floor(data.price))}")
                     lore.add("§e§l出品者${Bukkit.getOfflinePlayer(data.seller).name}")
