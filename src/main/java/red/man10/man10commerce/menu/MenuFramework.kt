@@ -236,15 +236,11 @@ open class MenuFramework(val p:Player,private val menuSize: Int, private val tit
         @EventHandler(priority = EventPriority.HIGHEST)
         fun clickEvent(e:InventoryClickEvent){
 
-            Bukkit.getLogger().info("0${e.isAsynchronous}")
-
             val p = e.whoClicked
 
             if (p !is Player)return
 
             val menu = peek(p) ?:return
-
-            Bukkit.getLogger().info("1")
 
             menu.clickAction?.action(e)
 
@@ -252,11 +248,7 @@ open class MenuFramework(val p:Player,private val menuSize: Int, private val tit
             val data = Button.get(item) ?:return
             e.isCancelled = true
 
-            Bukkit.getLogger().info("2")
-
             data.click(e)
-
-            Bukkit.getLogger().info("3")
         }
 
         @EventHandler(priority = EventPriority.LOW)
