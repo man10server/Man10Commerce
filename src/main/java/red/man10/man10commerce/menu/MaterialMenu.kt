@@ -11,9 +11,9 @@ import red.man10.man10commerce.menu.MenuFramework.Button
 import java.text.SimpleDateFormat
 import kotlin.math.floor
 
-class MaterialMenu(p:Player,page:Int,material: Material) : MenuFramework(p, LARGE_CHEST_SIZE,"§l同じ種類のリスト") {
-    init {
-        if (peek() !is MaterialMenu)push()
+class MaterialMenu(p:Player,private val page:Int,private val material: Material) : MenuFramework(p, LARGE_CHEST_SIZE,"§l同じ種類のリスト") {
+    override fun init () {
+        if (peek(p) is MaterialMenu) pop(p)
 
         Transaction.async { sql->
 
@@ -96,8 +96,7 @@ class MaterialMenu(p:Player,page:Int,material: Material) : MenuFramework(p, LARG
                     next.setClickAction{ MaterialMenu(p,page+1,material).open() }
                     arrayOf(51,52,53).forEach { setButton(next,it) }
                 }
-
-                open()
+                p.openInventory(menu)
             })
         }
     }

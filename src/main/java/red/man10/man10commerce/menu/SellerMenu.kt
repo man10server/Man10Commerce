@@ -11,10 +11,10 @@ import red.man10.man10commerce.data.Transaction
 import java.text.SimpleDateFormat
 import kotlin.math.floor
 
-class SellerMenu(p:Player,page:Int,seller:String) : MenuFramework(p, LARGE_CHEST_SIZE,"§l出品者名の検索結果"){
+class SellerMenu(p:Player,private val page:Int,private val seller:String) : MenuFramework(p, LARGE_CHEST_SIZE,"§l出品者名の検索結果"){
 
-    init {
-        if (peek() !is SellerMenu)push()
+    override fun init () {
+        if (peek(p) is SellerMenu) pop(p)
 
         Transaction.async { sql->
 
@@ -97,8 +97,7 @@ class SellerMenu(p:Player,page:Int,seller:String) : MenuFramework(p, LARGE_CHEST
                     next.setClickAction{ SellerMenu(p,page+1, seller).open() }
                     arrayOf(51,52,53).forEach { setButton(next,it) }
                 }
-
-                open()
+                p.openInventory(menu)
             })
 
         }

@@ -8,10 +8,7 @@ import red.man10.man10commerce.Man10Commerce
 
 class MainMenu(p:Player) : MenuFramework(p, CHEST_SIZE,"§l出品中のアイテム一覧"){
 
-    init {
-
-        //スタックに追加
-        push()
+    override fun init () {
 
         val buttonShowItem = Button(Material.GRASS_BLOCK)
         buttonShowItem.title("§a§l出品されているアイテムをみる")

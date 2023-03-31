@@ -10,11 +10,11 @@ import red.man10.man10commerce.data.Transaction
 import java.text.SimpleDateFormat
 import kotlin.math.floor
 
-class OneItemMenu(p:Player, val itemID:Int, page:Int) : MenuFramework(p, LARGE_CHEST_SIZE,"§l同じアイテムのリスト"){
+class OneItemMenu(p:Player, private val itemID:Int, private val page:Int) : MenuFramework(p, LARGE_CHEST_SIZE,"§l同じアイテムのリスト"){
 
-    init {
+    override fun init () {
 
-        if (peek() !is OneItemMenu)push()
+        if (peek(p) is OneItemMenu) pop(p)
 
         Transaction.async {sql->
 
@@ -89,8 +89,8 @@ class OneItemMenu(p:Player, val itemID:Int, page:Int) : MenuFramework(p, LARGE_C
                     next.setClickAction{ OneItemMenu(p,itemID,page+1).open() }
                     arrayOf(51,52,53).forEach { setButton(next,it) }
                 }
+                p.openInventory(menu)
 
-                open()
             })
         }
     }

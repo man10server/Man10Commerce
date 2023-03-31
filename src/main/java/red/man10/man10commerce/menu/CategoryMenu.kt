@@ -7,9 +7,7 @@ import red.man10.man10commerce.data.Transaction
 
 class CategoryMenu(p:Player) : MenuFramework(p, CHEST_SIZE,"§lカテゴリーメニュー"){
 
-    init {
-
-        push()
+    override fun init () {
 
         val buttonAllItem = Button(Material.COBBLESTONE)
         buttonAllItem.title("§a§lすべてのアイテムをみる")

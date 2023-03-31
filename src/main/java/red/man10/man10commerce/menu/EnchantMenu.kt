@@ -16,8 +16,7 @@ import kotlin.math.floor
 
 class EnchantMainMenu(p:Player) : MenuFramework(p, LARGE_CHEST_SIZE,"§lエンチャントで検索"){
 
-    init {
-        push()
+    override fun init () {
 
         for (enchant in Enchantment.values()){
             val item = ItemStack(Material.ENCHANTED_BOOK)
@@ -38,10 +37,9 @@ class EnchantMainMenu(p:Player) : MenuFramework(p, LARGE_CHEST_SIZE,"§lエン�
 
 }
 
-class EnchantLevelMenu(p:Player,enchant:Enchantment) : MenuFramework(p,9,"§lレベルを選択") {
+class EnchantLevelMenu(p:Player,private val enchant:Enchantment) : MenuFramework(p,9,"§lレベルを選択") {
 
-    init {
-        push()
+    override fun init () {
 
         for (level in 1..enchant.maxLevel){
             val item = ItemStack(Material.ENCHANTED_BOOK)
@@ -63,11 +61,11 @@ class EnchantLevelMenu(p:Player,enchant:Enchantment) : MenuFramework(p,9,"§lレ
     }
 }
 
-class EnchantSelectMenu(p:Player, page:Int,private val enchant: Enchantment, private val level:Int)
+class EnchantSelectMenu(p:Player, private val page:Int,private val enchant: Enchantment, private val level:Int)
     :MenuFramework(p, LARGE_CHEST_SIZE,"§lエンチャントの検索結果") {
 
-    init {
-        if (peek() !is EnchantSelectMenu)push()
+    override fun init () {
+        if (peek(p) is EnchantSelectMenu) pop(p)
 
         Transaction.async { sql->
 
@@ -152,7 +150,7 @@ class EnchantSelectMenu(p:Player, page:Int,private val enchant: Enchantment, pri
                     arrayOf(51,52,53).forEach { setButton(next,it) }
                 }
 
-                open()
+                p.openInventory(menu)
             })
 
         }

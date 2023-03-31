@@ -12,10 +12,10 @@ import red.man10.man10commerce.menu.MenuFramework.Button
 import java.text.SimpleDateFormat
 import kotlin.math.floor
 
-class CategorizedMenu(p:Player,page:Int, private val category:String) : MenuFramework(p, LARGE_CHEST_SIZE,"§a§lカテゴリーメニュ"){
+class CategorizedMenu(p:Player,private val page:Int, private val category:String) : MenuFramework(p, LARGE_CHEST_SIZE,"§a§lカテゴリーメニュ"){
 
-    init {
-        if (peek() !is CategorizedMenu)push()
+    override fun init () {
+        if (peek(p) is CategorizedMenu) pop(p)
 
         Transaction.async { sql->
 
@@ -91,7 +91,7 @@ class CategorizedMenu(p:Player,page:Int, private val category:String) : MenuFram
                     arrayOf(51,52,53).forEach { setButton(next,it) }
                 }
 
-                open()
+                p.openInventory(menu)
             })
 
         }

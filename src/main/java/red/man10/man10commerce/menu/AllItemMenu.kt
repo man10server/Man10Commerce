@@ -11,11 +11,11 @@ import red.man10.man10commerce.data.Transaction
 import java.text.SimpleDateFormat
 import kotlin.math.floor
 
-class AllItemMenu(p:Player,page:Int) :MenuFramework(p, LARGE_CHEST_SIZE,"§l出品中のアイテム一覧"){
+class AllItemMenu(p:Player,private val page:Int) :MenuFramework(p, LARGE_CHEST_SIZE,"§l出品中のアイテム一覧"){
 
-    init {
+    override fun init () {
 
-        if (peek() !is AllItemMenu)push()
+        if (peek(p) is AllItemMenu) pop(p)
 
         Transaction.async {sql->
 
@@ -100,7 +100,7 @@ class AllItemMenu(p:Player,page:Int) :MenuFramework(p, LARGE_CHEST_SIZE,"§l出�
                     arrayOf(51,52,53).forEach { setButton(next,it) }
                 }
 
-                open()
+                p.openInventory(menu)
             })
 
         }

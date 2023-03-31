@@ -11,8 +11,7 @@ import java.text.SimpleDateFormat
 
 class MySellingItemMenu(p:Player):MenuFramework(p, LARGE_CHEST_SIZE,"§l出品したアイテム") {
 
-    init {
-        push()
+    override fun init () {
 
         Transaction.async { sql ->
 
