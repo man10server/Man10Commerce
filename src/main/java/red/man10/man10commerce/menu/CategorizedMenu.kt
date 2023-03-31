@@ -55,7 +55,7 @@ class CategorizedMenu(p:Player,private val page:Int, private val category:String
                         //シフト左クリック
                         if (it.action == InventoryAction.MOVE_TO_OTHER_INVENTORY){
                             Utility.sendMsg(p,"§a§l購入処理中・・・・§a§k§lXX")
-                            Transaction.asyncBuy(p,data.itemID,data.id){}
+                            Transaction.asyncBuy(p,data.itemID,data.id){ open() }
                             return@setClickAction
                         }
 

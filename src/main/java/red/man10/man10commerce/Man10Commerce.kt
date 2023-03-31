@@ -79,6 +79,7 @@ class Man10Commerce : JavaPlugin() {
 
         plugin = this
         bank = BankAPI(plugin)
+        MenuFramework.setup(this)
 
         Transaction.setup()
 

@@ -16,12 +16,14 @@ import org.bukkit.inventory.Inventory
 import org.bukkit.inventory.ItemFlag
 import org.bukkit.inventory.ItemStack
 import org.bukkit.persistence.PersistentDataType
+import org.bukkit.plugin.java.JavaPlugin
 import java.awt.Menu
 import java.util.*
 
 /**
  * マイクラプラグインでメニューを作るためのフレームワーク
  * このクラスを継承させて使用する。
+ * 起動時にsetup関数を呼んでPluginインスタンスを渡す
  *
  * (最終更新 2023/03/31) created by Jin Morikawa
  */
@@ -32,11 +34,16 @@ open class MenuFramework(val p:Player,private val menuSize: Int, private val tit
     private var clickAction : Button.OnClickListener? = null
 
     companion object{
-        private val menuMap = HashMap<UUID, MenuFramework>()
         private val menuStack = HashMap<UUID,Stack<MenuFramework>>()
+        private lateinit var instance : JavaPlugin
 
         const val CHEST_SIZE = 27
         const val LARGE_CHEST_SIZE= 54
+
+        //      起動時に読み込む
+        fun setup(plugin:JavaPlugin){
+            instance = plugin
+        }
 
         fun push(p:Player,menu:MenuFramework){
             val stack = menuStack[p.uniqueId]?: Stack()
@@ -69,7 +76,9 @@ open class MenuFramework(val p:Player,private val menuSize: Int, private val tit
         menu = Bukkit.createInventory(null,menuSize, text(title))
         init()
         push(p,this)
-        p.openInventory(menu)
+        Bukkit.getScheduler().runTask(instance,Runnable {
+            p.openInventory(menu)
+        })
     }
 
     //slotは0スタート
@@ -224,8 +233,10 @@ open class MenuFramework(val p:Player,private val menuSize: Int, private val tit
 
     object MenuListener:Listener{
 
-        @EventHandler
+        @EventHandler(priority = EventPriority.HIGHEST)
         fun clickEvent(e:InventoryClickEvent){
+
+            Bukkit.getLogger().info("0${e.isAsynchronous}")
 
             val p = e.whoClicked
 
@@ -233,13 +244,19 @@ open class MenuFramework(val p:Player,private val menuSize: Int, private val tit
 
             val menu = peek(p) ?:return
 
+            Bukkit.getLogger().info("1")
+
             menu.clickAction?.action(e)
 
             val item = e.currentItem?:return
             val data = Button.get(item) ?:return
             e.isCancelled = true
 
+            Bukkit.getLogger().info("2")
+
             data.click(e)
+
+            Bukkit.getLogger().info("3")
         }
 
         @EventHandler(priority = EventPriority.LOW)

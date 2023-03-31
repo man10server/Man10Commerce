@@ -244,7 +244,10 @@ object Transaction {
 
             val rs = sql.query("select item_id,amount,is_op from order_table where id=${id};")?:return@add
 
-            if (!rs.next()) return@add
+            if (!rs.next()){
+                sendMsg(p,"§c取り消し失敗！注文が存在しない可能性があります")
+                return@add
+            }
 
             val itemID = rs.getInt("item_id")
             val amount = rs.getInt("amount")
@@ -390,8 +393,29 @@ object Transaction {
 
     fun syncGetSellerList(seller: UUID,sql: MySQLManager):List<OrderData>{
 
+        val rs = sql.query("select * from order_table where uuid='${seller}'")?:return emptyList()
 
-        return emptyList()
+        val list = mutableListOf<OrderData>()
+
+        while (rs.next()){
+            val data = OrderData(
+                rs.getInt("id"),
+                rs.getInt("item_id"),
+                rs.getDouble("price"),
+                rs.getInt("amount"),
+                rs.getDate("date"),
+                UUID.fromString(rs.getString("uuid")),
+                rs.getBoolean("is_op"),
+                itemDictionary[rs.getInt("item_id")]!!
+            )
+
+            list.add(data)
+        }
+
+        rs.close()
+        sql.close()
+
+        return list
     }
 
     private fun getCategorizedDictionary(categoryName:String):Map<Int,ItemStack>{

@@ -108,13 +108,12 @@ class EnchantSelectMenu(p:Player, private val page:Int,private val enchant: Ench
                         //シフト左クリック
                         if (it.action == InventoryAction.MOVE_TO_OTHER_INVENTORY){
                             Utility.sendMsg(p,"§a§l購入処理中・・・・§a§k§lXX")
-                            Transaction.asyncBuy(p,data.itemID,data.id){}
+                            Transaction.asyncBuy(p,data.itemID,data.id){open()}
                             return@setClickAction
                         }
 
                         //通常クリック
                         if (it.action == InventoryAction.PICKUP_ALL){
-
                             return@setClickAction
                         }
 
