@@ -22,7 +22,6 @@ dependencies {
     compileOnly 'io.papermc.paper:paper-api:1.19.2-R0.1-SNAPSHOT'
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
     compileOnly fileTree(dir: 'libs', include: '*.jar')
-    implementation "org.jetbrains.kotlin:kotlin-reflect:1.7.10"
 }
 
 def targetJavaVersion = 17
