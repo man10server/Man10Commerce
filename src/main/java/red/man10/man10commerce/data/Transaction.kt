@@ -418,6 +418,32 @@ object Transaction {
         return list
     }
 
+    fun syncGetOfficialList(sql: MySQLManager):List<OrderData>{
+        val rs = sql.query("select * from order_table where is_op=1")?:return emptyList()
+
+        val list = mutableListOf<OrderData>()
+
+        while (rs.next()){
+            val data = OrderData(
+                rs.getInt("id"),
+                rs.getInt("item_id"),
+                rs.getDouble("price"),
+                rs.getInt("amount"),
+                rs.getDate("date"),
+                UUID.fromString(rs.getString("uuid")),
+                rs.getBoolean("is_op"),
+                itemDictionary[rs.getInt("item_id")]!!
+            )
+
+            list.add(data)
+        }
+
+        rs.close()
+        sql.close()
+
+        return list
+    }
+
     private fun getCategorizedDictionary(categoryName:String):Map<Int,ItemStack>{
 
         if (categoryName == Category.NOT_CATEGORIZED){

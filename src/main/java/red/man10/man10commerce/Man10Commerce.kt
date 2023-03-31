@@ -195,7 +195,6 @@ class Man10Commerce : JavaPlugin() {
                 return true
             }
 
-            //TODO:要検証
             Transaction.asyncSell(sender,clone,price,{ result->
                 if (!result){
                     sender.inventory.addItem(clone)
@@ -211,32 +210,31 @@ class Man10Commerce : JavaPlugin() {
 
             if (args.isEmpty()){
 
-                sendMsg(sender,"§a§l/amsellop <値段> (単価ではなく、合計の値段を入力してください)")
+                sendMsg(sender,"§a§l/amsellop <値段> (アイテム一つあたりの値段を入力してください)")
 
                 return false
             }
 
-            val item = sender.inventory.itemInMainHand
-            val clone = item.clone()
+            val itemInHand = sender.inventory.itemInMainHand
+            val clone = itemInHand.clone()
 
-            item.amount = 0
+            if (itemInHand.type == Material.AIR){
+                sendMsg(sender,"§cアイテムをメインの手に持ってください")
+                return true
+            }
 
-            if (item.type == Material.AIR){ return true }
+            itemInHand.amount = 0
 
             val price = args[0].toDoubleOrNull()
 
             if (price == null){
                 sendMsg(sender,"§c§l金額は数字を使ってください！")
+                sender.inventory.addItem(clone)
                 return true
             }
 
-            if (price< minPrice){
-                sendMsg(sender,"§c§l${minPrice}円以下での出品はできません！")
-                return true
-            }
-
-            Transaction.asyncSell(sender,clone,price,{
-                if (!it){
+            Transaction.asyncSell(sender,clone,price,{ result->
+                if (!result){
                     sender.inventory.addItem(clone)
                 }
             },true)
