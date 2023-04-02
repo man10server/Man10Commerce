@@ -35,10 +35,11 @@ class CategorizedMenu(p:Player,private val page:Int, private val category:String
                     val sampleItem = data.item.clone()
 
                     val itemButton = Button(sampleItem.type)
-                    if (data.item.itemMeta?.hasCustomModelData() == true){
-                        itemButton.cmd(data.item.itemMeta?.customModelData?:0)
-                    }
-                    itemButton.title(Man10Commerce.getDisplayName(sampleItem))
+                    itemButton.fromItemStack(sampleItem)
+                    //            if (data.item.itemMeta?.hasCustomModelData() == true){
+                    //                itemButton.cmd(data.item.itemMeta?.customModelData?:0)
+                    //            }
+                    //            itemButton.title(Man10Commerce.getDisplayName(sampleItem))
 
                     val lore = mutableListOf<String>()
 
@@ -61,6 +62,13 @@ class CategorizedMenu(p:Player,private val page:Int, private val category:String
                             Transaction.asyncBuy(p,data.itemID,data.id){ open() }
                             return@setClickAction
                         }
+
+                        //通常クリック
+                        if (it.action == InventoryAction.PICKUP_ALL){
+                            OneItemMenu(p,data.itemID,0).open()
+                            return@setClickAction
+                        }
+
 
                         //右クリック(出品取り消し)
                         if (it.action == InventoryAction.PICKUP_HALF && p.hasPermission(Man10Commerce.OP)){

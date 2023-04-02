@@ -28,8 +28,8 @@ class EnchantMainMenu(p:Player) : MenuFramework(p, LARGE_CHEST_SIZE,"§lエン�
 
             button.fromItemStack(item)
             button.setClickAction{
-//                EnchantLevelMenu(p,meta.storedEnchants.entries.first().key).open()
-                EnchantLevelMenu(p,item.enchantments.entries.first().key).open()
+                EnchantLevelMenu(p,meta.storedEnchants.entries.first().key).open()
+//                EnchantLevelMenu(p,item.enchantments.entries.first().key).open()
             }
             addButton(button)
         }
@@ -50,8 +50,8 @@ class EnchantLevelMenu(p:Player,private val enchant:Enchantment) : MenuFramework
             button.fromItemStack(item)
 
             button.setClickAction{
-                val e = item.enchantments.entries.first()
-//                val e = (item.itemMeta as EnchantmentStorageMeta).storedEnchants.entries.first()
+//                val e = item.enchantments.entries.first()
+                val e = (item.itemMeta as EnchantmentStorageMeta).storedEnchants.entries.first()
                 EnchantSelectMenu(p,0,e.key,e.value).open()
             }
 
@@ -72,7 +72,7 @@ class EnchantSelectMenu(p:Player, private val page:Int,private val enchant: Ench
 
             val list = Transaction.syncGetMinPriceItems(sql).filter { data->
                 val meta = data.item
-                meta.enchantments.containsKey(enchant) && meta.enchantments.containsValue(level)
+                meta.enchantments.containsKey(enchant) && meta.enchantments.containsValue(level) && data.item.type == Material.ENCHANTED_BOOK
             }
 
             var inc = 0
@@ -95,7 +95,7 @@ class EnchantSelectMenu(p:Player, private val page:Int,private val enchant: Ench
 
                     val lore = mutableListOf<String>()
 
-                    sampleItem.lore?.forEach { lore.add(it) }
+                    sampleItem. lore?.forEach { lore.add(it) }
 
                     lore.add("§e§l値段:${Utility.format(floor(data.price*data.amount))}")
                     lore.add("§e§l単価:${Utility.format(floor(data.price))}")
