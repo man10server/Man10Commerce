@@ -81,7 +81,7 @@ class CategorizedMenu(p:Player,private val page:Int, private val category:String
                 if (page!=0){
                     val previous = Button(Material.RED_STAINED_GLASS_PANE)
                     previous.title("前のページへ")
-                    previous.setClickAction{ CategorizedMenu(p,page-1,category) }
+                    previous.setClickAction{ CategorizedMenu(p,page-1,category).open() }
                     arrayOf(45,46,47).forEach { setButton(previous,it) }
 
                 }
@@ -90,7 +90,7 @@ class CategorizedMenu(p:Player,private val page:Int, private val category:String
                 if (inc>=44){
                     val next = Button(Material.RED_STAINED_GLASS_PANE)
                     next.title("次のページへ")
-                    next.setClickAction{ CategorizedMenu(p,page+1,category) }
+                    next.setClickAction{ CategorizedMenu(p,page+1,category).open() }
                     arrayOf(51,52,53).forEach { setButton(next,it) }
                 }
 

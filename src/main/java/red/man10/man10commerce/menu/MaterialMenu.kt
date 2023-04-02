@@ -63,7 +63,7 @@ class MaterialMenu(p:Player,private val page:Int,private val material: Material)
 
                         //通常クリック
                         if (it.action == InventoryAction.PICKUP_ALL){
-
+                            OneItemMenu(p,data.itemID,0).open()
                             return@setClickAction
                         }
 

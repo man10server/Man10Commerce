@@ -24,7 +24,7 @@ class CategoryMenu(p:Player) : MenuFramework(p, CHEST_SIZE,"§lカテゴリー�
             button.cmd(data.value.categoryIcon.itemMeta.customModelData)
             button.lore(data.value.categoryIcon.lore?: emptyList())
             button.setClickAction{
-                CategorizedMenu(p,0,data.key)
+                CategorizedMenu(p,0,data.key).open()
             }
             addButton(button)
         }
@@ -32,7 +32,7 @@ class CategoryMenu(p:Player) : MenuFramework(p, CHEST_SIZE,"§lカテゴリー�
         val buttonNotCategorized = Button(Material.BARRIER)
         buttonNotCategorized.title("§a§lその他のアイテム")
         buttonNotCategorized.setClickAction{
-            CategorizedMenu(p,0,Category.NOT_CATEGORIZED)
+            CategorizedMenu(p,0,Category.NOT_CATEGORIZED).open()
         }
         addButton(buttonNotCategorized)
     }

@@ -61,10 +61,9 @@ class OfficialItemMenu(p:Player,private val page:Int) : MenuFramework(p, LARGE_C
 
                         //通常クリック
                         if (it.action == InventoryAction.PICKUP_ALL){
-
+                            OneItemMenu(p,data.itemID,0).open()
                             return@setClickAction
                         }
-
                         //右クリック(出品取り消し)
                         if (it.action == InventoryAction.PICKUP_HALF && p.hasPermission(Man10Commerce.OP)){
                             Transaction.asyncClose(p,data.id)

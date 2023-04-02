@@ -64,7 +64,7 @@ class SellerMenu(p:Player,private val page:Int,private val seller:String) : Menu
 
                         //通常クリック
                         if (it.action == InventoryAction.PICKUP_ALL){
-
+                            OneItemMenu(p,data.itemID,0).open()
                             return@setClickAction
                         }
 

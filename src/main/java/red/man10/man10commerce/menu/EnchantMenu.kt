@@ -117,6 +117,7 @@ class EnchantSelectMenu(p:Player, private val page:Int,private val enchant: Ench
 
                         //通常クリック
                         if (it.action == InventoryAction.PICKUP_ALL){
+                            OneItemMenu(p,data.itemID,0).open()
                             return@setClickAction
                         }
 

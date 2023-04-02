@@ -334,7 +334,7 @@ object Transaction {
             calender.time = Date()
             calender.add(Calendar.DAY_OF_YEAR,-7)
 
-            sql.execute("update order_table set expired=1 where date<'${SimpleDateFormat("yyyy-MM-dd and is_op=0").format(calender.time)}';")
+            sql.execute("update order_table set expired=1 where date<'${SimpleDateFormat("yyyy-MM-dd").format(calender.time)}' and is_op=0;")
             Bukkit.getLogger().info("1週間以上経った出品を取り下げました")
         }
     }
