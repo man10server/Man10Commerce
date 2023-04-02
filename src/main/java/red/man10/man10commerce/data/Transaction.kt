@@ -14,6 +14,7 @@ import red.man10.man10commerce.Utility
 import red.man10.man10commerce.Utility.format
 import red.man10.man10commerce.Utility.sendMsg
 import java.io.File
+import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.LinkedBlockingQueue
@@ -61,6 +62,7 @@ object Transaction {
         }
         asyncLoadItemDictionary()
         asyncLoadMinPriceItems()
+        asyncCheckExpired()
         queueThread.start()
     }
 
@@ -324,10 +326,23 @@ object Transaction {
         }
     }
 
+    //1週間たったアイテムは期限切れとする
+    private fun asyncCheckExpired(){
+        blockingQueue.add { sql->
+
+            val calender = Calendar.getInstance()
+            calender.time = Date()
+            calender.add(Calendar.DAY_OF_YEAR,-7)
+
+            sql.execute("update order_table set expired=1 where date<'${SimpleDateFormat("yyyy-MM-dd and is_op=0").format(calender.time)}';")
+            Bukkit.getLogger().info("1週間以上経った出品を取り下げました")
+        }
+    }
+
     //最安値のアイテムのリストを引く(スレッドで呼ぶ)
     fun syncGetMinPriceItems(sql:MySQLManager):List<OrderData>{
 
-        val rs = sql.query("select * from order_table order by price;")?:return emptyList()
+        val rs = sql.query("select * from order_table where expired=0 order by price;")?:return emptyList()
 
         val list = mutableListOf<OrderData>()
 
@@ -361,7 +376,7 @@ object Transaction {
     //同じアイテムの全注文を取得(スレッドで呼ぶ)
     fun syncGetOneItemList(itemID:Int, sql: MySQLManager):List<OrderData>{
 
-        val rs = sql.query("select * from order_table where item_id=${itemID}")?:return emptyList()
+        val rs = sql.query("select * from order_table  where expired=0 and item_id=${itemID}")?:return emptyList()
 
         val list = mutableListOf<OrderData>()
 
