@@ -48,7 +48,7 @@ object Transaction {
     private var queueThread = Thread{ runBlockingQueue() }
 
     private val itemDictionary = ConcurrentHashMap<Int,ItemStack>()//アイテムIDとItemStackの辞書
-    private var minPriceItems = mutableListOf<OrderData>()
+    var minPriceItems = mutableListOf<OrderData>()
 
     val categories = ConcurrentHashMap<String,Category>()
 
@@ -60,6 +60,7 @@ object Transaction {
             queueThread = Thread{ runBlockingQueue() }
         }
         asyncLoadItemDictionary()
+        asyncLoadMinPriceItems()
         queueThread.start()
     }
 
