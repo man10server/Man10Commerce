@@ -15,7 +15,8 @@ import kotlin.math.floor
 class CategorizedMenu(p:Player,private val page:Int, private val category:String) : MenuFramework(p, LARGE_CHEST_SIZE,"§a§lカテゴリーメニュ"){
 
     override fun init () {
-        if (peek(p) is CategorizedMenu) pop(p)
+
+        loadingMenu()
 
         Transaction.async { sql->
 
@@ -40,6 +41,8 @@ class CategorizedMenu(p:Player,private val page:Int, private val category:String
                     itemButton.title(Man10Commerce.getDisplayName(sampleItem))
 
                     val lore = mutableListOf<String>()
+
+                    sampleItem.lore?.forEach { lore.add(it) }
 
                     lore.add("§e§l値段:${Utility.format(floor(data.price*data.amount))}")
                     lore.add("§e§l単価:${Utility.format(floor(data.price))}")

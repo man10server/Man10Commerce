@@ -15,12 +15,11 @@ class AllItemMenu(p:Player,private val page:Int) :MenuFramework(p, LARGE_CHEST_S
 
     override fun init () {
 
-        if (peek(p) is AllItemMenu) pop(p)
+        loadingMenu()
 
         Transaction.async {sql->
 
             val list = Transaction.syncGetMinPriceItems(sql)
-
 
             var inc = 0
 
@@ -42,6 +41,8 @@ class AllItemMenu(p:Player,private val page:Int) :MenuFramework(p, LARGE_CHEST_S
                     itemButton.title(Man10Commerce.getDisplayName(sampleItem))
 
                     val lore = mutableListOf<String>()
+
+                    sampleItem.lore?.forEach { lore.add(it) }
 
                     lore.add("§e§l値段:${Utility.format(floor(data.price*data.amount))}円")
                     lore.add("§e§l単価:${Utility.format(floor(data.price))}円")

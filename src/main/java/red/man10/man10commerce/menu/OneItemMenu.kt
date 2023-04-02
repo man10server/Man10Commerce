@@ -13,8 +13,7 @@ import kotlin.math.floor
 class OneItemMenu(p:Player, private val itemID:Int, private val page:Int) : MenuFramework(p, LARGE_CHEST_SIZE,"§l同じアイテムのリスト"){
 
     override fun init () {
-
-        if (peek(p) is OneItemMenu) pop(p)
+        loadingMenu()
 
         Transaction.async {sql->
 
@@ -39,6 +38,8 @@ class OneItemMenu(p:Player, private val itemID:Int, private val page:Int) : Menu
                     itemButton.title(Man10Commerce.getDisplayName(sampleItem))
 
                     val lore = mutableListOf<String>()
+
+                    sampleItem.lore?.forEach { lore.add(it) }
 
                     lore.add("§e§l値段:${Utility.format(floor(data.price*data.amount))}")
                     lore.add("§e§l単価:${Utility.format(floor(data.price))}")

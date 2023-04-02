@@ -14,7 +14,7 @@ import kotlin.math.floor
 class SellerMenu(p:Player,private val page:Int,private val seller:String) : MenuFramework(p, LARGE_CHEST_SIZE,"§l出品者名の検索結果"){
 
     override fun init () {
-        if (peek(p) is SellerMenu) pop(p)
+        loadingMenu()
 
         Transaction.async { sql->
 
@@ -51,6 +51,8 @@ class SellerMenu(p:Player,private val page:Int,private val seller:String) : Menu
                     lore.add("§cシフトクリックで1-Click購入")
 
                     itemButton.lore(lore)
+
+                    sampleItem.lore?.forEach { lore.add(it) }
 
                     itemButton.setClickAction{
                         //シフト左クリック

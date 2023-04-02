@@ -47,6 +47,9 @@ open class MenuFramework(val p:Player,private val menuSize: Int, private val tit
 
         fun push(p:Player,menu:MenuFramework){
             val stack = menuStack[p.uniqueId]?: Stack()
+            if (stack.isNotEmpty() && menu::class == stack.peek()::class){
+                return
+            }
             stack.push(menu)
             menuStack[p.uniqueId] = stack
         }
@@ -54,8 +57,7 @@ open class MenuFramework(val p:Player,private val menuSize: Int, private val tit
         //      スタックの取り出し
         fun pop(p:Player):MenuFramework?{
             val stack = menuStack[p.uniqueId]?:return null
-
-            if (stack.size<2)return null
+            if (stack.isEmpty())return null
             val menu = stack.pop()
             menuStack[p.uniqueId] = stack
             return menu
@@ -96,6 +98,12 @@ open class MenuFramework(val p:Player,private val menuSize: Int, private val tit
         for (i in 0 until menu.size){
             setButton(button,i)
         }
+    }
+
+    fun loadingMenu(){
+//        val loadButton = Button(Material.CLOCK)
+//        loadButton.title("§6§l§kXX §6§l読み込み中 §6§l§kXX")
+//        setButton(loadButton,4)
     }
 
     fun setCloseAction(action: OnCloseListener){

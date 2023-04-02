@@ -13,7 +13,7 @@ import kotlin.math.floor
 
 class MaterialMenu(p:Player,private val page:Int,private val material: Material) : MenuFramework(p, LARGE_CHEST_SIZE,"§l同じ種類のリスト") {
     override fun init () {
-        if (peek(p) is MaterialMenu) pop(p)
+        loadingMenu()
 
         Transaction.async { sql->
 
@@ -40,6 +40,8 @@ class MaterialMenu(p:Player,private val page:Int,private val material: Material)
                     itemButton.title(Man10Commerce.getDisplayName(sampleItem))
 
                     val lore = mutableListOf<String>()
+
+                    sampleItem.lore?.forEach { lore.add(it) }
 
                     lore.add("§e§l値段:${Utility.format(floor(data.price*data.amount))}")
                     lore.add("§e§l単価:${Utility.format(floor(data.price))}")

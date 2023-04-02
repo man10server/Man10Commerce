@@ -15,8 +15,7 @@ import kotlin.math.floor
 class SearchMenu(p:Player, private val page:Int,private val query:String) : MenuFramework(p, LARGE_CHEST_SIZE,"§l検索結果"){
 
     override fun init () {
-
-        if (peek(p) is SearchMenu) pop(p)
+        loadingMenu()
 
         Transaction.async { sql->
 
@@ -53,6 +52,8 @@ class SearchMenu(p:Player, private val page:Int,private val query:String) : Menu
                     lore.add("§cシフトクリックで1-Click購入")
 
                     itemButton.lore(lore)
+
+                    sampleItem.lore?.forEach { lore.add(it) }
 
                     itemButton.setClickAction{
                         //シフト左クリック

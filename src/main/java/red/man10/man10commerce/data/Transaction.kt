@@ -19,13 +19,13 @@ import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.LinkedBlockingQueue
 
 data class OrderData(
-    var id : Int,
+    var id: Int,
     var itemID: Int,
-    var price : Double,
-    var amount : Int,
-    var date : Date?,
-    var seller : UUID,
-    var isOP : Boolean,
+    var price: Double,
+    var amount: Int,
+    var date: Date?,
+    var seller: UUID,
+    var isOP: Boolean,
     var item: ItemStack
 )
 
@@ -299,6 +299,8 @@ object Transaction {
         blockingQueue.add { sql ->
             itemDictionary.clear()
 
+            Bukkit.getLogger().info("アイテム辞書を読み込み開始")
+
             val rs = sql.query("select id,base64 from item_list;")
 
             if (rs != null) {
@@ -341,7 +343,7 @@ object Transaction {
                 rs.getDate("date"),
                 UUID.fromString(rs.getString("uuid")),
                 rs.getBoolean("is_op"),
-                itemDictionary[itemID]!!
+                itemDictionary[itemID]?:continue
             )
 
             list.add(data)
@@ -566,6 +568,8 @@ object Transaction {
             }catch (e:InterruptedException){
                 return
             }catch (e:Exception){
+                Bukkit.getLogger().info(e.message)
+                Bukkit.getLogger().warning(e.stackTraceToString())
                 continue
             }
         }
