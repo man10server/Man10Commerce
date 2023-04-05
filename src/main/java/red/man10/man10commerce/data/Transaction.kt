@@ -134,7 +134,7 @@ object Transaction {
 
             //お金関連の処理
             if (!Man10Bank.vault.withdraw(p.uniqueId,totalPrice)){
-                sendMsg(p,"§c電子マネーのお金が足りません")
+                sendMsg(p,"§c電子マネーのお金が足りません(必要なお金:${format(totalPrice)}円)")
                 callback(false)
                 return@add
             }
@@ -145,7 +145,7 @@ object Transaction {
 
             p.inventory.addItem(item)
 
-            sendMsg(p,"§a購入しました")
+            sendMsg(p,"§a${format(totalPrice)}円で購入しました")
             callback(true)
         }
     }
