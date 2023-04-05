@@ -69,6 +69,10 @@ open class MenuFramework(val p:Player,private val menuSize: Int, private val tit
             if (stack.isNullOrEmpty()) return null
             return stack.peek()
         }
+
+        fun dispatch(plugin:JavaPlugin,job:()->Unit){
+            Bukkit.getScheduler().runTask(plugin, Runnable(job))
+        }
     }
 
     open fun init(){}
