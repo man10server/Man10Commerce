@@ -66,8 +66,6 @@ class EnchantSelectMenu(p:Player, private val page:Int,private val enchant: Ench
 
     override fun init () {
 
-        loadingMenu()
-
         Transaction.async { sql->
 
             val list = Transaction.syncGetMinPriceItems(sql).filter { data->

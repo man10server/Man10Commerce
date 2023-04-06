@@ -14,8 +14,6 @@ import kotlin.math.floor
 class OneItemMenu(p:Player, private val itemID:Int, private val page:Int) : MenuFramework(p, LARGE_CHEST_SIZE,"§l同じアイテムのリスト"){
 
     override fun init () {
-        loadingMenu()
-
         Transaction.async {sql->
 
             val list = Transaction.syncGetOneItemList(itemID, sql)

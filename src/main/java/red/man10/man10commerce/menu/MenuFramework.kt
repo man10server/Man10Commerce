@@ -25,7 +25,7 @@ import java.util.*
  * このクラスを継承させて使用する。
  * 起動時にsetup関数を呼んでPluginインスタンスを渡す
  *
- * (最終更新 2023/03/31) created by Jin Morikawa
+ * (最終更新 2023/04/06) created by Jin Morikawa
  */
 open class MenuFramework(val p:Player,private val menuSize: Int, private val title: String){
 
@@ -102,12 +102,6 @@ open class MenuFramework(val p:Player,private val menuSize: Int, private val tit
         for (i in 0 until menu.size){
             setButton(button,i)
         }
-    }
-
-    fun loadingMenu(){
-//        val loadButton = Button(Material.CLOCK)
-//        loadButton.title("§6§l§kXX §6§l読み込み中 §6§l§kXX")
-//        setButton(loadButton,4)
     }
 
     fun setCloseAction(action: OnCloseListener){

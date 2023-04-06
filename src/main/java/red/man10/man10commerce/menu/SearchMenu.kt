@@ -15,8 +15,6 @@ import kotlin.math.floor
 class SearchMenu(p:Player, private val page:Int,private val query:String) : MenuFramework(p, LARGE_CHEST_SIZE,"§l検索結果"){
 
     override fun init () {
-        loadingMenu()
-
         Transaction.async { sql->
 
             val list = Transaction.syncGetMinPriceItems(sql).filter { data->
