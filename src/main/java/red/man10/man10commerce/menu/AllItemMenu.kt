@@ -15,6 +15,10 @@ class AllItemMenu(p:Player,private val page:Int) :MenuFramework(p, LARGE_CHEST_S
 
     override fun init () {
 
+        setClickAction{
+            it.isCancelled = true
+        }
+
         Transaction.async {sql->
             val list = Transaction.syncGetMinPriceItems(sql)
 

@@ -13,6 +13,11 @@ import kotlin.math.floor
 
 class MaterialMenu(p:Player,private val page:Int,private val material: Material) : MenuFramework(p, LARGE_CHEST_SIZE,"§l同じ種類のリスト") {
     override fun init () {
+        setClickAction{
+            it.isCancelled = true
+        }
+
+
         Transaction.async { sql->
 
             val list = Transaction.syncGetMinPriceItems(sql).filter { data->
