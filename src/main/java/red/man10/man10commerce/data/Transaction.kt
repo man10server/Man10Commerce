@@ -187,6 +187,7 @@ object Transaction {
 
             if (price != price.toInt().toDouble()){
                 sendMsg(p,"§c§l少数以下の値段設定はできません")
+                callback(false)
                 return@add
             }
 
