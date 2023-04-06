@@ -480,17 +480,16 @@ object Transaction {
         val isEmptyDisplay = category.displayName.isEmpty()
         val isEmptyCMD = category.customModelData.isEmpty()
 
-        return itemDictionary
-            .filter {
-                    item ->
+        return itemDictionary.filter { entry ->
 
-                val meta = item.value.itemMeta
-                val cmd = if (meta==null || !meta.hasCustomModelData()) 0 else meta.customModelData
-                val display = Man10Commerce.getDisplayName(item.value).replace("§[a-z0-9]".toRegex(), "")
+            val item = entry.value
+            val meta = item.itemMeta
+            val cmd = if (meta==null || !meta.hasCustomModelData()) 0 else meta.customModelData
+            val display = Man10Commerce.getDisplayName(item).replace("§[a-z0-9]".toRegex(), "")
 
-                if (isEmptyMaterial) { true }else { category.material.contains(item.value.type) } &&
-                        if (isEmptyCMD) { true }else { category.customModelData.contains(cmd) } &&
-                        if (isEmptyDisplay) { true } else { (category.displayName.filter { (display).contains(it) }).isNotEmpty() }
+            (isEmptyMaterial || item.type in category.material) &&
+                    (isEmptyCMD || cmd in category.customModelData) &&
+                    (isEmptyDisplay || category.displayName.any { display.contains(it) })
             }
     }
 
@@ -505,13 +504,10 @@ object Transaction {
             displays.addAll(category.displayName)
         }
 
-        return itemDictionary
-            .filter {
-                    item ->
+        return itemDictionary.filter { item ->
                 val display = Man10Commerce.getDisplayName(item.value).replace("§[a-z0-9]".toRegex(), "")
-
                 materials.contains(item.value.type) || (displays.filter { (display).contains(it) }).isNotEmpty()
-            }
+        }
     }
 
     //  カテゴリーデータをよむ
