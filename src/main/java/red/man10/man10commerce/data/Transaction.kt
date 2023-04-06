@@ -18,6 +18,7 @@ import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.LinkedBlockingQueue
+import kotlin.math.floor
 
 data class OrderData(
     var id: Int,
@@ -180,6 +181,11 @@ object Transaction {
             if (meta != null && meta is org.bukkit.inventory.meta.Damageable && meta.hasDamage()){
                 sendMsg(p,"§c§l耐久値が削れているので出品できません！")
                 callback(false)
+                return@add
+            }
+
+            if (price != price.toInt().toDouble()){
+                sendMsg(p,"§c§l少数以下の値段設定はできません")
                 return@add
             }
 
