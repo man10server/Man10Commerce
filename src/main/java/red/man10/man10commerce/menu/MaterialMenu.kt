@@ -21,6 +21,11 @@ class MaterialMenu(p:Player,private val page:Int,private val material: Material)
 
             var inc = 0
 
+            if (list.isEmpty()){
+                Utility.sendMsg(p,"§c出品されているアイテムがありません")
+                return@async
+            }
+
             while (menu.getItem(44) == null){
 
                 val index = inc+page*45

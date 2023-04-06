@@ -20,6 +20,11 @@ class OneItemMenu(p:Player, private val itemID:Int, private val page:Int) : Menu
 
             var inc = 0
 
+            if (list.isEmpty()){
+                Utility.sendMsg(p,"§c出品されているアイテムがありません")
+                return@async
+            }
+
             while (menu.getItem(44) == null){
 
                 val index = inc+page*45

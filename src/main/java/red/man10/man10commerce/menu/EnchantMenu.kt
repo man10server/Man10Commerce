@@ -73,6 +73,11 @@ class EnchantSelectMenu(p:Player, private val page:Int,private val enchant: Ench
                 meta.enchantments.containsKey(enchant) && meta.enchantments.containsValue(level) && data.item.type == Material.ENCHANTED_BOOK
             }
 
+            if (list.isEmpty()){
+                Utility.sendMsg(p,"§c出品されているアイテムがありません")
+                return@async
+            }
+
             var inc = 0
 
             while (menu.getItem(44) == null){

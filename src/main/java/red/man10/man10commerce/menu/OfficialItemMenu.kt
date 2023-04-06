@@ -20,6 +20,11 @@ class OfficialItemMenu(p:Player,private val page:Int) : MenuFramework(p, LARGE_C
 
             var inc = 0
 
+            if (list.isEmpty()){
+                Utility.sendMsg(p,"§c出品されているアイテムがありません")
+                return@async
+            }
+
             while (menu.getItem(44) == null){
 
                 val index = inc+page*45

@@ -20,6 +20,11 @@ class SellerMenu(p:Player,private val page:Int,private val seller:String) : Menu
 
             val list = Transaction.syncGetSellerList(uuid,sql)
 
+            if (list.isEmpty()){
+                Utility.sendMsg(p,"§c出品されているアイテムがありません")
+                return@async
+            }
+
             var inc = 0
 
             while (menu.getItem(44) == null){

@@ -20,6 +20,11 @@ class CategorizedMenu(p:Player,private val page:Int, private val category:String
 
             val list = Transaction.syncGetCategorizedList(category,sql)
 
+            if (list.isEmpty()){
+                Utility.sendMsg(p,"§c出品されているアイテムがありません")
+                return@async
+            }
+
             var inc = 0
 
             while (menu.getItem(44) == null){
