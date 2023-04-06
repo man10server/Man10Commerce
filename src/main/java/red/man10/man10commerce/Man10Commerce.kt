@@ -122,6 +122,11 @@ class Man10Commerce : JavaPlugin() {
 
         if (sender !is Player)return false
 
+        if (!sender.hasPermission(USER)){
+            sendMsg(sender,"§c§lあなたはアマンゾンへのアクセス権がありません")
+            return true
+        }
+
         if (!sender.hasPermission(OP) && !enable){
             sendMsg(sender,"§f現在営業を停止しています")
 
@@ -133,7 +138,6 @@ class Man10Commerce : JavaPlugin() {
         }
 
         if (label == "amauthor"){
-            if (!sender.hasPermission(USER))return true
 
             if (args.size != 1){
                 sendMsg(sender,"§a§l/amauthor <出品者名>")
