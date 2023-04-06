@@ -126,7 +126,7 @@ object Transaction {
             if (!isOp){
                 val ret = sql.execute("DELETE FROM order_table where id=${orderID};")
                 if (!ret){
-                    sendMsg(p,"${Man10Commerce.prefix}§cセンターにアクセスができませんでした。もう一度購入し直してください")
+                    sendMsg(p,"§cセンターにアクセスができませんでした。もう一度購入し直してください")
                     callback(false)
                     return@add
                 }
