@@ -405,7 +405,7 @@ object Transaction {
         rs.close()
         sql.close()
 
-        return list
+        return list.sortedBy { it.price }
     }
 
     fun syncGetCategorizedList(categoryName: String,sql:MySQLManager):List<OrderData>{
