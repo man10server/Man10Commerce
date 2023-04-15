@@ -164,7 +164,7 @@ object Transaction {
             }
 
             if (price<Man10Commerce.minPrice){
-                sendMsg(p,"§c単価は${format(Man10Commerce.maxPrice)}円以上にしてください。")
+                sendMsg(p,"§c単価は${format(Man10Commerce.minPrice)}円以上にしてください。")
                 callback(false)
                 return@add
             }
