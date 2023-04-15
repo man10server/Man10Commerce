@@ -103,12 +103,6 @@ open class MenuFramework(val p:Player,private val menuSize: Int, private val tit
         }
     }
 
-    fun loadingMenu(){
-//        val loadButton = Button(Material.CLOCK)
-//        loadButton.title("§6§l§kXX §6§l読み込み中 §6§l§kXX")
-//        setButton(loadButton,4)
-    }
-
     fun setCloseAction(action: OnCloseListener){
         closeAction = action
     }

@@ -16,8 +16,6 @@ class CategorizedMenu(p:Player,private val page:Int, private val category:String
 
     override fun init () {
 
-        loadingMenu()
-
         Transaction.async { sql->
 
             val list = Transaction.syncGetCategorizedList(category,sql)

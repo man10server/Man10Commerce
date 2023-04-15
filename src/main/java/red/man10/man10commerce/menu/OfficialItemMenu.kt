@@ -14,7 +14,6 @@ import kotlin.math.floor
 class OfficialItemMenu(p:Player,private val page:Int) : MenuFramework(p, LARGE_CHEST_SIZE,"§d§lAmanzonBasic"){
 
     override fun init () {
-        loadingMenu()
 
         Transaction.async { sql->
 
