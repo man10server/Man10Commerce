@@ -14,12 +14,21 @@ import kotlin.math.floor
 class OneItemMenu(p:Player, private val itemID:Int, private val page:Int) : MenuFramework(p, LARGE_CHEST_SIZE,"§l同じアイテムのリスト"){
 
     override fun init () {
+        setClickAction{
+            it.isCancelled = true
+        }
+
 
         Transaction.async {sql->
 
             val list = Transaction.syncGetOneItemList(itemID, sql)
 
             var inc = 0
+
+            if (list.isEmpty()){
+                Utility.sendMsg(p,"§c出品されているアイテムがありません")
+                return@async
+            }
 
             while (menu.getItem(44) == null){
 

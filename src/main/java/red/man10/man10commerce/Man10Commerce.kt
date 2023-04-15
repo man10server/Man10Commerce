@@ -122,15 +122,22 @@ class Man10Commerce : JavaPlugin() {
 
         if (sender !is Player)return false
 
+        if (!sender.hasPermission(USER)){
+            sendMsg(sender,"§c§lあなたはアマンゾンへのアクセス権がありません")
+            return true
+        }
+
+        if (!sender.hasPermission(OP) && !enable){
+            sendMsg(sender,"§f現在営業を停止しています")
+
+            return false
+        }
+
+        if (sender.hasPermission(OP) && !enable){
+            sendMsg(sender,"§c§l管理者として実行しています")
+        }
 
         if (label == "amauthor"){
-            if (!sender.hasPermission(USER))return true
-
-            if (!sender.hasPermission(OP) && !enable){
-                sendMsg(sender,"§f現在営業を停止しています")
-
-                return false
-            }
 
             if (args.size != 1){
                 sendMsg(sender,"§a§l/amauthor <出品者名>")
@@ -145,12 +152,6 @@ class Man10Commerce : JavaPlugin() {
         if (label == "amsearch"){
             if (!sender.hasPermission(USER))return true
 
-            if (!sender.hasPermission(OP) && !enable){
-                sendMsg(sender,"§f現在営業を停止しています")
-
-                return false
-            }
-
             if (args.isEmpty()){
                 sendMsg(sender,"§a§l/amsearch <検索するアイテムの名前>")
                 return true
@@ -164,11 +165,6 @@ class Man10Commerce : JavaPlugin() {
         if (label == "amsell"){
 
             if (!sender.hasPermission(USER))return true
-
-            if (!sender.hasPermission(OP) && !enable){
-                sendMsg(sender,"§f現在営業を停止しています")
-                return false
-            }
 
             if (args.isEmpty()){
 
@@ -246,11 +242,6 @@ class Man10Commerce : JavaPlugin() {
 
             if (!sender.hasPermission(USER))return false
 
-            if (!sender.hasPermission(OP) && !enable){
-                sendMsg(sender,"§f現在営業を停止しています")
-                return false
-            }
-
             MainMenu(sender).open()
 
             return true
@@ -260,11 +251,6 @@ class Man10Commerce : JavaPlugin() {
 
             "category" ->{
                 if (!sender.hasPermission(USER))return false
-
-                if (!sender.hasPermission(OP) && !enable){
-                    sendMsg(sender,"§f現在営業を停止しています")
-                    return false
-                }
 
                 CategoryMenu(sender).open()
 

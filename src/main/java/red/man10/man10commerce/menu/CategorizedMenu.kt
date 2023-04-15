@@ -17,8 +17,16 @@ class CategorizedMenu(p:Player,private val page:Int, private val category:String
     override fun init () {
 
         Transaction.async { sql->
+            setClickAction{
+                it.isCancelled = true
+            }
 
             val list = Transaction.syncGetCategorizedList(category,sql)
+
+            if (list.isEmpty()){
+                Utility.sendMsg(p,"§c出品されているアイテムがありません")
+                return@async
+            }
 
             var inc = 0
 
@@ -33,10 +41,6 @@ class CategorizedMenu(p:Player,private val page:Int, private val category:String
 
                 val itemButton = Button(sampleItem.type)
                 itemButton.fromItemStack(sampleItem)
-                //            if (data.item.itemMeta?.hasCustomModelData() == true){
-                //                itemButton.cmd(data.item.itemMeta?.customModelData?:0)
-                //            }
-                //            itemButton.title(Man10Commerce.getDisplayName(sampleItem))
 
                 val lore = mutableListOf<String>()
 

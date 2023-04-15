@@ -10,6 +10,10 @@ import java.text.SimpleDateFormat
 class MySellingItemMenu(p:Player):MenuFramework(p, LARGE_CHEST_SIZE,"§l出品したアイテム") {
 
     override fun init () {
+        setClickAction{
+            it.isCancelled = true
+        }
+
 
         Transaction.async { sql ->
 

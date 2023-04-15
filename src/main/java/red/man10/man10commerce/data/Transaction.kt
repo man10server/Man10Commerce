@@ -18,6 +18,7 @@ import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.LinkedBlockingQueue
+import kotlin.math.floor
 
 data class OrderData(
     var id: Int,
@@ -77,8 +78,6 @@ object Transaction {
 
         blockingQueue.add { sql->
 
-            Thread.sleep(200)
-
             if (p.inventory.firstEmpty() == -1){
                 sendMsg(p,"§cインベントリに空きがありません")
                 callback(false)
@@ -127,12 +126,11 @@ object Transaction {
 
             //お金関連の処理
             if (!Man10Bank.vault.withdraw(p.uniqueId,totalPrice)){
-                sendMsg(p,"§c電子マネーのお金が足りません")
+                sendMsg(p,"§c電子マネーのお金が足りません(必要なお金:${format(totalPrice)}円)")
                 callback(false)
                 return@add
             }
 
-            //公式販売でなければデータを消す
             if (!isOp){
                 val ret = sql.execute("DELETE FROM order_table where id=${orderID};")
                 if (!ret){
@@ -149,7 +147,7 @@ object Transaction {
 
             p.inventory.addItem(item)
 
-            sendMsg(p,"§a購入しました")
+            sendMsg(p,"§a${format(totalPrice)}円で購入しました")
             callback(true)
         }
     }
@@ -183,6 +181,12 @@ object Transaction {
 
             if (meta != null && meta is org.bukkit.inventory.meta.Damageable && meta.hasDamage()){
                 sendMsg(p,"§c§l耐久値が削れているので出品できません！")
+                callback(false)
+                return@add
+            }
+
+            if (price != price.toInt().toDouble()){
+                sendMsg(p,"§c§l少数以下の値段設定はできません")
                 callback(false)
                 return@add
             }
@@ -402,7 +406,7 @@ object Transaction {
         rs.close()
         sql.close()
 
-        return list
+        return list.sortedBy { it.price }
     }
 
     fun syncGetCategorizedList(categoryName: String,sql:MySQLManager):List<OrderData>{
@@ -478,17 +482,16 @@ object Transaction {
         val isEmptyDisplay = category.displayName.isEmpty()
         val isEmptyCMD = category.customModelData.isEmpty()
 
-        return itemDictionary
-            .filter {
-                    item ->
+        return itemDictionary.filter { entry ->
 
-                val meta = item.value.itemMeta
-                val cmd = if (meta==null || !meta.hasCustomModelData()) 0 else meta.customModelData
-                val display = Man10Commerce.getDisplayName(item.value).replace("§[a-z0-9]".toRegex(), "")
+            val item = entry.value
+            val meta = item.itemMeta
+            val cmd = if (meta==null || !meta.hasCustomModelData()) 0 else meta.customModelData
+            val display = Man10Commerce.getDisplayName(item).replace("§[a-z0-9]".toRegex(), "")
 
-                if (isEmptyMaterial) { true }else { category.material.contains(item.value.type) } &&
-                        if (isEmptyCMD) { true }else { category.customModelData.contains(cmd) } &&
-                        if (isEmptyDisplay) { true } else { (category.displayName.filter { (display).contains(it) }).isNotEmpty() }
+            (isEmptyMaterial || item.type in category.material) &&
+                    (isEmptyCMD || cmd in category.customModelData) &&
+                    (isEmptyDisplay || category.displayName.any { display.contains(it) })
             }
     }
 
@@ -503,13 +506,10 @@ object Transaction {
             displays.addAll(category.displayName)
         }
 
-        return itemDictionary
-            .filter {
-                    item ->
+        return itemDictionary.filter { item ->
                 val display = Man10Commerce.getDisplayName(item.value).replace("§[a-z0-9]".toRegex(), "")
-
                 materials.contains(item.value.type) || (displays.filter { (display).contains(it) }).isNotEmpty()
-            }
+        }
     }
 
     //  カテゴリーデータをよむ

@@ -15,8 +15,17 @@ class AllItemMenu(p:Player,private val page:Int) :MenuFramework(p, LARGE_CHEST_S
 
     override fun init () {
 
+        setClickAction{
+            it.isCancelled = true
+        }
+
         Transaction.async {sql->
             val list = Transaction.syncGetMinPriceItems(sql)
+
+            if (list.isEmpty()){
+                Utility.sendMsg(p,"§c出品されているアイテムがありません")
+                return@async
+            }
 
             var inc = 0
 

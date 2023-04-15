@@ -14,12 +14,20 @@ import kotlin.math.floor
 class SellerMenu(p:Player,private val page:Int,private val seller:String) : MenuFramework(p, LARGE_CHEST_SIZE,"§l出品者名の検索結果"){
 
     override fun init () {
+        setClickAction{
+            it.isCancelled = true
+        }
 
         Transaction.async { sql->
 
             val uuid = Bukkit.getOfflinePlayer(seller).uniqueId
 
             val list = Transaction.syncGetSellerList(uuid,sql)
+
+            if (list.isEmpty()){
+                Utility.sendMsg(p,"§c出品されているアイテムがありません")
+                return@async
+            }
 
             var inc = 0
 

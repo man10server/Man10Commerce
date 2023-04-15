@@ -13,6 +13,10 @@ import kotlin.math.floor
 
 class MaterialMenu(p:Player,private val page:Int,private val material: Material) : MenuFramework(p, LARGE_CHEST_SIZE,"§l同じ種類のリスト") {
     override fun init () {
+        setClickAction{
+            it.isCancelled = true
+        }
+
 
         Transaction.async { sql->
 
@@ -21,6 +25,11 @@ class MaterialMenu(p:Player,private val page:Int,private val material: Material)
             }
 
             var inc = 0
+
+            if (list.isEmpty()){
+                Utility.sendMsg(p,"§c出品されているアイテムがありません")
+                return@async
+            }
 
             while (menu.getItem(44) == null){
 

@@ -15,11 +15,20 @@ import kotlin.math.floor
 class SearchMenu(p:Player, private val page:Int,private val query:String) : MenuFramework(p, LARGE_CHEST_SIZE,"§l検索結果"){
 
     override fun init () {
+        setClickAction{
+            it.isCancelled = true
+        }
+
 
         Transaction.async { sql->
 
             val list = Transaction.syncGetMinPriceItems(sql).filter { data->
                 ChatColor.stripColor(Man10Commerce.getDisplayName(data.item))?.lowercase()?.contains(query.lowercase())?:false
+            }
+
+            if (list.isEmpty()){
+                Utility.sendMsg(p,"§c出品されているアイテムがありません")
+                return@async
             }
 
             var inc = 0

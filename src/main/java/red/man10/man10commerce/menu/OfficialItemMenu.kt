@@ -14,12 +14,21 @@ import kotlin.math.floor
 class OfficialItemMenu(p:Player,private val page:Int) : MenuFramework(p, LARGE_CHEST_SIZE,"§d§lAmanzonBasic"){
 
     override fun init () {
+        setClickAction{
+            it.isCancelled = true
+        }
+
 
         Transaction.async { sql->
 
             val list = Transaction.syncGetOfficialList(sql)
 
             var inc = 0
+
+            if (list.isEmpty()){
+                Utility.sendMsg(p,"§c出品されているアイテムがありません")
+                return@async
+            }
 
             while (menu.getItem(44) == null){
 

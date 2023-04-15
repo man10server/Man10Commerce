@@ -17,6 +17,10 @@ import kotlin.math.floor
 class EnchantMainMenu(p:Player) : MenuFramework(p, LARGE_CHEST_SIZE,"§lエンチャントで検索"){
 
     override fun init () {
+        setClickAction{
+            it.isCancelled = true
+        }
+
 
         for (enchant in Enchantment.values()){
             val item = ItemStack(Material.ENCHANTED_BOOK)
@@ -40,6 +44,10 @@ class EnchantMainMenu(p:Player) : MenuFramework(p, LARGE_CHEST_SIZE,"§lエン�
 class EnchantLevelMenu(p:Player,private val enchant:Enchantment) : MenuFramework(p,9,"§lレベルを選択") {
 
     override fun init () {
+        setClickAction{
+            it.isCancelled = true
+        }
+
 
         for (level in 1..enchant.maxLevel){
             val item = ItemStack(Material.ENCHANTED_BOOK)
@@ -65,12 +73,21 @@ class EnchantSelectMenu(p:Player, private val page:Int,private val enchant: Ench
     :MenuFramework(p, LARGE_CHEST_SIZE,"§lエンチャントの検索結果") {
 
     override fun init () {
+        setClickAction{
+            it.isCancelled = true
+        }
+
 
         Transaction.async { sql->
 
             val list = Transaction.syncGetMinPriceItems(sql).filter { data->
                 val meta = data.item
                 meta.enchantments.containsKey(enchant) && meta.enchantments.containsValue(level) && data.item.type == Material.ENCHANTED_BOOK
+            }
+
+            if (list.isEmpty()){
+                Utility.sendMsg(p,"§c出品されているアイテムがありません")
+                return@async
             }
 
             var inc = 0
