@@ -123,15 +123,6 @@ object Transaction {
 
             item.amount = amount
 
-            if (!isOp){
-                val ret = sql.execute("DELETE FROM order_table where id=${orderID};")
-                if (!ret){
-                    sendMsg(p,"${Man10Commerce.prefix}§cセンターにアクセスができませんでした。もう一度購入し直してください")
-                    callback(false)
-                    return@add
-                }
-            }
-
             //お金関連の処理
             if (!Man10Bank.vault.withdraw(p.uniqueId,totalPrice)){
                 sendMsg(p,"§c電子マネーのお金が足りません")
@@ -139,9 +130,20 @@ object Transaction {
                 return@add
             }
 
-            Man10Commerce.bank.deposit(seller!!,totalPrice,"SellItemOnMan10Commerce","Amanzonの売り上げ")
-
+            //公式販売でなければデータを消す
+            if (!isOp){
+                val ret = sql.execute("DELETE FROM order_table where id=${orderID};")
+                if (!ret){
+                    sendMsg(p,"${Man10Commerce.prefix}§cセンターにアクセスができませんでした。もう一度購入し直してください")
+                    //購入失敗による返金
+                    Man10Bank.vault.deposit(p.uniqueId,totalPrice)
+                    callback(false)
+                    return@add
+                }
+            }
             Log.buyLog(p,data,item)
+
+            Man10Commerce.bank.deposit(seller!!,totalPrice,"SellItemOnMan10Commerce","Amanzonの売り上げ")
 
             p.inventory.addItem(item)
 
