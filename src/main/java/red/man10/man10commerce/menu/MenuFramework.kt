@@ -8,7 +8,6 @@ import org.bukkit.NamespacedKey
 import org.bukkit.enchantments.Enchantment
 import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
-import org.bukkit.event.EventPriority
 import org.bukkit.event.Listener
 import org.bukkit.event.inventory.InventoryClickEvent
 import org.bukkit.event.inventory.InventoryCloseEvent
@@ -17,8 +16,8 @@ import org.bukkit.inventory.ItemFlag
 import org.bukkit.inventory.ItemStack
 import org.bukkit.persistence.PersistentDataType
 import org.bukkit.plugin.java.JavaPlugin
-import java.awt.Menu
 import java.util.*
+import java.util.concurrent.ConcurrentHashMap
 
 /**
  * マイクラプラグインでメニューを作るためのフレームワーク
@@ -34,7 +33,7 @@ open class MenuFramework(val p:Player,private val menuSize: Int, private val tit
     private var clickAction : Button.OnClickListener? = null
 
     companion object{
-        private val menuStack = HashMap<UUID,Stack<MenuFramework>>()
+        private val menuStack = ConcurrentHashMap<UUID,Stack<MenuFramework>>()
         private lateinit var instance : JavaPlugin
 
         const val CHEST_SIZE = 27
@@ -245,9 +244,9 @@ open class MenuFramework(val p:Player,private val menuSize: Int, private val tit
 
             if (p !is Player)return
 
-            val menu = peek(p) ?:return
+            val menu = peek(p)
 
-            menu.clickAction?.action(e)
+            menu?.clickAction?.action(e)
 
             val item = e.currentItem?:return
             val data = Button.get(item) ?:return
