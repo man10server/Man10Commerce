@@ -25,7 +25,7 @@ import java.util.*
  * このクラスを継承させて使用する。
  * 起動時にsetup関数を呼んでPluginインスタンスを渡す
  *
- * (最終更新 2023/03/31) created by Jin Morikawa
+ * (最終更新 2023/04/15) created by Jin Morikawa
  */
 open class MenuFramework(val p:Player,private val menuSize: Int, private val title: String){
 
@@ -70,21 +70,20 @@ open class MenuFramework(val p:Player,private val menuSize: Int, private val tit
             return stack.peek()
         }
 
-        fun dispatch(plugin:JavaPlugin,job:()->Unit){
-            Bukkit.getScheduler().runTask(plugin, Runnable(job))
+        fun dispatch(job:()->Unit){
+            Bukkit.getScheduler().runTask(instance, Runnable(job))
         }
     }
 
     open fun init(){}
 
     fun open(){
-//        p.closeInventory()
         menu = Bukkit.createInventory(null,menuSize, text(title))
         init()
         push(p,this)
-        Bukkit.getScheduler().runTask(instance,Runnable {
+        dispatch{
             p.openInventory(menu)
-        })
+        }
     }
 
     //slotは0スタート
@@ -245,7 +244,7 @@ open class MenuFramework(val p:Player,private val menuSize: Int, private val tit
 
     object MenuListener:Listener{
 
-        @EventHandler(priority = EventPriority.HIGHEST)
+        @EventHandler
         fun clickEvent(e:InventoryClickEvent){
 
             val p = e.whoClicked
@@ -263,14 +262,13 @@ open class MenuFramework(val p:Player,private val menuSize: Int, private val tit
             data.click(e)
         }
 
-        @EventHandler(priority = EventPriority.LOW)
+        @EventHandler
         fun closeEvent(e:InventoryCloseEvent){
 
             if (e.player !is Player)return
             val menu = peek(e.player as Player) ?:return
             menu.close(e)
         }
-
     }
 }
 

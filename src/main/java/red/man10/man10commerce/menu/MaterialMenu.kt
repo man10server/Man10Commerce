@@ -95,7 +95,7 @@ class MaterialMenu(p:Player,private val page:Int,private val material: Material)
                 arrayOf(51,52,53).forEach { setButton(next,it) }
             }
 
-            dispatch(Man10Commerce.plugin){ p.openInventory(menu) }
+            dispatch{ p.openInventory(menu) }
         }
     }
 }

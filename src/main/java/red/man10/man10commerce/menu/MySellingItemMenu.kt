@@ -48,7 +48,7 @@ class MySellingItemMenu(p:Player):MenuFramework(p, LARGE_CHEST_SIZE,"§l出品�
 
                 addButton(itemButton)
             }
-            dispatch(plugin){p.openInventory(menu)}
+            dispatch{p.openInventory(menu)}
         }
     }
 }

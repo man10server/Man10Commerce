@@ -93,7 +93,7 @@ class OfficialItemMenu(p:Player,private val page:Int) : MenuFramework(p, LARGE_C
                 arrayOf(51,52,53).forEach { setButton(next,it) }
             }
 
-            dispatch(plugin){ p.openInventory(menu) }
+            dispatch{ p.openInventory(menu) }
         }
     }
 }
