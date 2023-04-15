@@ -78,6 +78,8 @@ object Transaction {
 
         blockingQueue.add { sql->
 
+            Thread.sleep(200)
+
             if (p.inventory.firstEmpty() == -1){
                 sendMsg(p,"§cインベントリに空きがありません")
                 callback(false)
