@@ -509,7 +509,7 @@ object Transaction {
 
         return itemDictionary.filter { item ->
                 val display = Man10Commerce.getDisplayName(item.value).replace("§[a-z0-9]".toRegex(), "")
-                materials.contains(item.value.type) || (displays.filter { (display).contains(it) }).isNotEmpty()
+                !materials.contains(item.value.type) && (displays.filter { (display).contains(it) }).isEmpty()
         }
     }
 
