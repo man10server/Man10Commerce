@@ -3,6 +3,7 @@ package red.man10.man10commerce.menu
 import org.bukkit.Bukkit
 import org.bukkit.Material
 import org.bukkit.entity.Player
+import org.bukkit.event.inventory.ClickType
 import org.bukkit.event.inventory.InventoryAction
 import red.man10.man10commerce.Man10Commerce
 import red.man10.man10commerce.Man10Commerce.Companion.plugin
@@ -53,11 +54,19 @@ class OneItemMenu(p:Player, private val itemID:Int, private val page:Int) : Menu
                 lore.add("§e§l出品日:${SimpleDateFormat("yyyy-MM-dd").format(data.date)}")
                 if (data.isOP) lore.add("§d§l公式出品アイテム")
                 lore.add("§cシフトクリックで1-Click購入")
+                if (Utility.isShulkerBox(sampleItem)){
+                    lore.add("§dシフト右クリックで中身を確認")
+                }
 
                 itemButton.lore(lore)
 
                 itemButton.setClickAction{
-                    //シフト左クリック
+                    //シフト右クリック
+                    if (it.click == ClickType.SHIFT_RIGHT){
+                        Utility.shulkerInventory(p,data.item)
+                        return@setClickAction
+                    }
+
                     if (it.action == InventoryAction.MOVE_TO_OTHER_INVENTORY){
                         Utility.sendMsg(p,"§a§l購入処理中・・・・§a§k§lXX")
                         Transaction.asyncBuy(p,data.itemID,data.id){open()}
