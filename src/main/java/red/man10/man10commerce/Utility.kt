@@ -70,6 +70,9 @@ object Utility {
         val shulkerMeta = (shulker.itemMeta as BlockStateMeta).blockState as ShulkerBox
         object : MenuFramework(p, 27, "中身") {
             override fun init() {
+                setClickAction {
+                    it.isCancelled = true
+                }
                 for (i in 0..26) {
                     val item = shulkerMeta.inventory.getItem(i)
                     if (item != null) {
