@@ -4,6 +4,7 @@ import org.bukkit.Bukkit
 import org.bukkit.ChatColor
 import org.bukkit.Material
 import org.bukkit.entity.Player
+import org.bukkit.event.inventory.ClickType
 import org.bukkit.event.inventory.InventoryAction
 import red.man10.man10commerce.Man10Commerce
 import red.man10.man10commerce.Man10Commerce.Companion.plugin
@@ -54,12 +55,19 @@ class SearchMenu(p:Player, private val page:Int,private val query:String) : Menu
                 lore.add("§e§l出品日:${SimpleDateFormat("yyyy-MM-dd").format(data.date)}")
                 if (data.isOP) lore.add("§d§l公式出品アイテム")
                 lore.add("§cシフトクリックで1-Click購入")
+                if (Utility.isShulkerBox(sampleItem)){
+                    lore.add("§dシフト右クリックで中身を確認")
+                }
 
                 itemButton.lore(lore)
 
-                sampleItem.lore?.forEach { lore.add(it) }
-
                 itemButton.setClickAction{
+                    //シフト右クリック
+                    if (it.click == ClickType.SHIFT_RIGHT){
+                        Utility.shulkerInventory(p,data.item)
+                        return@setClickAction
+                    }
+
                     //シフト左クリック
                     if (it.action == InventoryAction.MOVE_TO_OTHER_INVENTORY){
                         Utility.sendMsg(p,"§a§l購入処理中・・・・§a§k§lXX")

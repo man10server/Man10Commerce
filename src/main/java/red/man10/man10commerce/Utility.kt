@@ -1,11 +1,14 @@
 package red.man10.man10commerce
 
+import org.bukkit.block.ShulkerBox
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
+import org.bukkit.inventory.meta.BlockStateMeta
 import org.bukkit.util.io.BukkitObjectInputStream
 import org.bukkit.util.io.BukkitObjectOutputStream
 import org.yaml.snakeyaml.external.biz.base64Coder.Base64Coder
 import red.man10.man10commerce.Man10Commerce.Companion.prefix
+import red.man10.man10commerce.menu.MenuFramework
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 
@@ -57,5 +60,33 @@ object Utility {
     }
 
     fun sendMsg(p:Player,msg:String){ p.sendMessage(prefix+msg) }
+
+    fun isShulkerBox(item: ItemStack): Boolean {
+        val meta = item.itemMeta
+        return meta is BlockStateMeta && meta.blockState is ShulkerBox
+    }
+
+    fun shulkerInventory(p: Player, shulker: ItemStack) {
+        val shulkerMeta = (shulker.itemMeta as BlockStateMeta).blockState as ShulkerBox
+        object : MenuFramework(p, 27, "中身") {
+            override fun init() {
+                setClickAction {
+                    it.isCancelled = true
+                }
+                for (i in 0..26) {
+                    val item = shulkerMeta.inventory.getItem(i)
+                    if (item != null) {
+                        val button = Button(item.type)
+                        button.fromItemStack(item)
+                        button.setClickAction {
+                            it.isCancelled = true
+                        }
+                        setButton(button, i)
+                    }
+                }
+            }
+        }.open()
+
+    }
 
 }
