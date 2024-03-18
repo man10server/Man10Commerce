@@ -9,6 +9,7 @@ import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
 import red.man10.man10bank.Man10Bank
 import red.man10.man10commerce.Man10Commerce
+import red.man10.man10commerce.Man10Commerce.Companion.getDisplayName
 import red.man10.man10commerce.Man10Commerce.Companion.plugin
 import red.man10.man10commerce.Utility
 import red.man10.man10commerce.Utility.format
@@ -144,7 +145,7 @@ object Transaction {
             }
             Log.buyLog(p,data,item)
 
-            Man10Commerce.bank.deposit(seller!!,totalPrice,"SellItemOnMan10Commerce","Amanzonの売り上げ")
+            Man10Commerce.bank.deposit(seller!!,totalPrice,"SellItemOnMan10Commerce","Amanzonの売り上げ (${getDisplayName(item).take(7)} ${price}円x${amount}個)")
 
             p.inventory.addItem(item)
 
