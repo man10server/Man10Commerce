@@ -24,13 +24,14 @@ import java.util.concurrent.ConcurrentHashMap
  * このクラスを継承させて使用する。
  * 起動時にsetup関数を呼んでPluginインスタンスを渡す
  *
- * (最終更新 2023/04/15) created by Jin Morikawa
+ * (最終更新 2024/11/11) created by Jin Morikawa
  */
 open class MenuFramework(val p:Player,private val menuSize: Int, private val title: String){
 
     lateinit var menu : Inventory
     private var closeAction : OnCloseListener? = null
     private var clickAction : Button.OnClickListener? = null
+    private var clickable=true
 
     companion object{
         private val menuStack = ConcurrentHashMap<UUID,Stack<MenuFramework>>()
@@ -44,7 +45,7 @@ open class MenuFramework(val p:Player,private val menuSize: Int, private val tit
             instance = plugin
         }
 
-        fun push(p:Player,menu:MenuFramework){
+        fun push(p:Player,menu: MenuFramework){
             val stack = menuStack[p.uniqueId]?: Stack()
             if (stack.isNotEmpty() && menu::class == stack.peek()::class){
                 return
@@ -54,7 +55,7 @@ open class MenuFramework(val p:Player,private val menuSize: Int, private val tit
         }
 
         //      スタックの取り出し
-        fun pop(p:Player):MenuFramework?{
+        fun pop(p:Player): MenuFramework?{
             val stack = menuStack[p.uniqueId]?:return null
             if (stack.isEmpty())return null
             val menu = stack.pop()
@@ -69,20 +70,29 @@ open class MenuFramework(val p:Player,private val menuSize: Int, private val tit
             return stack.peek()
         }
 
-        fun dispatch(job:()->Unit){
-            Bukkit.getScheduler().runTask(instance, Runnable(job))
+        fun delete(p:Player){
+            menuStack.remove(p.uniqueId)
+        }
+
+        fun dispatch(plugin:JavaPlugin,job:()->Unit){
+            Bukkit.getScheduler().runTask(plugin, Runnable(job))
         }
     }
 
     open fun init(){}
 
+    fun clickable(boolean:Boolean){
+        clickable=boolean
+    }
+
     fun open(){
-        menu = Bukkit.createInventory(null,menuSize, text(title))
-        init()
-        push(p,this)
-        dispatch{
+//        p.closeInventory()
+        Bukkit.getScheduler().runTask(instance,Runnable {
+            menu = Bukkit.createInventory(null,menuSize, text(title))
+            init()
             p.openInventory(menu)
-        }
+            push(p,this)
+        })
     }
 
     //slotは0スタート
@@ -91,7 +101,7 @@ open class MenuFramework(val p:Player,private val menuSize: Int, private val tit
     }
 
     //
-    fun addButton(button:Button){
+    fun addButton(button: Button){
         menu.addItem(button.icon())
     }
 
@@ -111,11 +121,16 @@ open class MenuFramework(val p:Player,private val menuSize: Int, private val tit
     }
 
     fun close(e:InventoryCloseEvent){
-        closeAction?.closeAction(e)
-        if (e.reason == InventoryCloseEvent.Reason.PLAYER){
-            pop(p)//ひとつ前のメニューに戻るためにスタックを一個削除
-            pop(p)?.open()
-        }
+        Bukkit.getScheduler().runTask(instance,Runnable {
+            closeAction?.closeAction(e)
+            if (e.reason == InventoryCloseEvent.Reason.PLAYER) {
+                pop(p)//ひとつ前のメニューに戻るためにスタックを一個削除
+                pop(p)?.open()
+            }
+            if (e.reason == InventoryCloseEvent.Reason.PLUGIN){
+                menuStack.remove(e.player.uniqueId)
+            }
+        })
     }
 
     fun interface OnCloseListener{
@@ -155,7 +170,7 @@ open class MenuFramework(val p:Player,private val menuSize: Int, private val tit
             }
         }
 
-        fun fromItemStack(item:ItemStack): Button {
+        fun setIcon(item:ItemStack): Button {
             buttonItem = item.clone()
             val meta = buttonItem.itemMeta
             meta.persistentDataContainer.set(NamespacedKey.fromString("key")!!
@@ -244,9 +259,20 @@ open class MenuFramework(val p:Player,private val menuSize: Int, private val tit
 
             if (p !is Player)return
 
-            val menu = peek(p)
+            val menu = peek(p) ?:return
 
-            menu?.clickAction?.action(e)
+            //メニューが違う場合は無視
+            if (e.view.title != menu.title){
+                delete(p)
+                e.isCancelled = true
+                p.closeInventory()
+                p.sendMessage("§c§lメニューを開き直してください")
+                return
+            }
+
+            if(!menu.clickable)e.isCancelled=true
+
+            menu.clickAction?.action(e)
 
             val item = e.currentItem?:return
             val data = Button.get(item) ?:return
@@ -259,9 +285,11 @@ open class MenuFramework(val p:Player,private val menuSize: Int, private val tit
         fun closeEvent(e:InventoryCloseEvent){
 
             if (e.player !is Player)return
+
             val menu = peek(e.player as Player) ?:return
+
             menu.close(e)
         }
+
     }
 }
-
