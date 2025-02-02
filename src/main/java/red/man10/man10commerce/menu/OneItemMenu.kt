@@ -41,7 +41,7 @@ class OneItemMenu(p:Player, private val itemID:Int, private val page:Int) : Menu
                 val sampleItem = data.item.clone()
 
                 val itemButton = Button(sampleItem.type)
-                itemButton.fromItemStack(sampleItem)
+                itemButton.setIcon(sampleItem)
 
                 val lore = mutableListOf<String>()
 
@@ -105,7 +105,7 @@ class OneItemMenu(p:Player, private val itemID:Int, private val page:Int) : Menu
                 arrayOf(51,52,53).forEach { setButton(next,it) }
             }
 
-            dispatch{ p.openInventory(menu) }
+            dispatch(plugin){ p.openInventory(menu) }
         }
     }
 }

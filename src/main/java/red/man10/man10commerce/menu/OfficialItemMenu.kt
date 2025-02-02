@@ -41,7 +41,7 @@ class OfficialItemMenu(p:Player,private val page:Int) : MenuFramework(p, LARGE_C
                 val sampleItem = data.item.clone()
 
                 val itemButton = Button(sampleItem.type)
-                itemButton.fromItemStack(sampleItem)
+                itemButton.setIcon(sampleItem)
 
                 val lore = mutableListOf<String>()
 
@@ -110,7 +110,7 @@ class OfficialItemMenu(p:Player,private val page:Int) : MenuFramework(p, LARGE_C
                 arrayOf(51,52,53).forEach { setButton(next,it) }
             }
 
-            dispatch{ p.openInventory(menu) }
+            dispatch(plugin){ p.openInventory(menu) }
         }
     }
 }

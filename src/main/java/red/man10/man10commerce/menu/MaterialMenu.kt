@@ -6,9 +6,9 @@ import org.bukkit.entity.Player
 import org.bukkit.event.inventory.ClickType
 import org.bukkit.event.inventory.InventoryAction
 import red.man10.man10commerce.Man10Commerce
+import red.man10.man10commerce.Man10Commerce.Companion.plugin
 import red.man10.man10commerce.Utility
 import red.man10.man10commerce.data.Transaction
-import red.man10.man10commerce.menu.MenuFramework.Button
 import java.text.SimpleDateFormat
 import kotlin.math.floor
 
@@ -42,7 +42,7 @@ class MaterialMenu(p:Player,private val page:Int,private val material: Material)
                 val sampleItem = data.item.clone()
 
                 val itemButton = Button(sampleItem.type)
-                itemButton.fromItemStack(sampleItem)
+                itemButton.setIcon(sampleItem)
 
                 val lore = mutableListOf<String>()
 
@@ -113,7 +113,7 @@ class MaterialMenu(p:Player,private val page:Int,private val material: Material)
                 arrayOf(51,52,53).forEach { setButton(next,it) }
             }
 
-            dispatch{ p.openInventory(menu) }
+            dispatch(plugin){ p.openInventory(menu) }
         }
     }
 }

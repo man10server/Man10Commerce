@@ -31,7 +31,7 @@ class MySellingItemMenu(p:Player):MenuFramework(p, LARGE_CHEST_SIZE,"§l出品�
                 val sampleItem = data.item.clone()
 
                 val itemButton = Button(sampleItem.type)
-                itemButton.fromItemStack(sampleItem)
+                itemButton.setIcon(sampleItem)
 
                 val lore = mutableListOf<String>()
 
@@ -52,7 +52,7 @@ class MySellingItemMenu(p:Player):MenuFramework(p, LARGE_CHEST_SIZE,"§l出品�
 
                 addButton(itemButton)
             }
-            dispatch{p.openInventory(menu)}
+            dispatch(plugin){p.openInventory(menu)}
         }
     }
 }

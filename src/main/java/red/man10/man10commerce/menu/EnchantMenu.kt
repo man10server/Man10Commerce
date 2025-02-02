@@ -30,7 +30,7 @@ class EnchantMainMenu(p:Player) : MenuFramework(p, LARGE_CHEST_SIZE,"§lエン�
 
             val button = Button(Material.ENCHANTED_BOOK)
 
-            button.fromItemStack(item)
+            button.setIcon(item)
             button.setClickAction{
                 EnchantLevelMenu(p,meta.storedEnchants.entries.first().key).open()
 //                EnchantLevelMenu(p,item.enchantments.entries.first().key).open()
@@ -55,7 +55,7 @@ class EnchantLevelMenu(p:Player,private val enchant:Enchantment) : MenuFramework
             meta.addStoredEnchant(enchant,level,true)
             item.itemMeta = meta
             val button = Button(Material.ENCHANTED_BOOK)
-            button.fromItemStack(item)
+            button.setIcon(item)
 
             button.setClickAction{
 //                val e = item.enchantments.entries.first()
@@ -169,7 +169,7 @@ class EnchantSelectMenu(p:Player, private val page:Int,private val enchant: Ench
                 arrayOf(51,52,53).forEach { setButton(next,it) }
             }
 
-            dispatch{ p.openInventory(menu) }
+            dispatch(plugin){ p.openInventory(menu) }
         }
     }
 }

@@ -9,7 +9,6 @@ import red.man10.man10commerce.Man10Commerce
 import red.man10.man10commerce.Man10Commerce.Companion.plugin
 import red.man10.man10commerce.Utility
 import red.man10.man10commerce.data.Transaction
-import red.man10.man10commerce.menu.MenuFramework.Button
 import java.text.SimpleDateFormat
 import kotlin.math.floor
 
@@ -41,7 +40,7 @@ class CategorizedMenu(p:Player,private val page:Int, private val category:String
                 val sampleItem = data.item.clone()
 
                 val itemButton = Button(sampleItem.type)
-                itemButton.fromItemStack(sampleItem)
+                itemButton.setIcon(sampleItem)
 
                 val lore = mutableListOf<String>()
 
@@ -113,7 +112,7 @@ class CategorizedMenu(p:Player,private val page:Int, private val category:String
                 arrayOf(51,52,53).forEach { setButton(next,it) }
             }
 
-            dispatch{p.openInventory(menu)}
+            dispatch(plugin){p.openInventory(menu)}
 
         }
     }

@@ -77,7 +77,7 @@ object Utility {
                     val item = shulkerMeta.inventory.getItem(i)
                     if (item != null) {
                         val button = Button(item.type)
-                        button.fromItemStack(item)
+                        button.setIcon(item)
                         button.setClickAction {
                             it.isCancelled = true
                         }
