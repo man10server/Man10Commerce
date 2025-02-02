@@ -153,7 +153,7 @@ open class MenuFramework(val p:Player,private val menuSize: Int, private val tit
 
         companion object{
 
-            private val BUTTON_KEY = NamespacedKey.fromString("menu-framework-key")!!
+            private val BUTTON_KEY = NamespacedKey("forest611","button_key")
 
             private val buttonMap = HashMap<String, Button>()
 
@@ -180,8 +180,7 @@ open class MenuFramework(val p:Player,private val menuSize: Int, private val tit
         fun setIcon(item:ItemStack): Button {
             buttonItem = item.clone()
             val meta = buttonItem.itemMeta
-            meta.persistentDataContainer.set(NamespacedKey.fromString("key")!!
-                , PersistentDataType.STRING,key)
+            meta.persistentDataContainer.set(BUTTON_KEY, PersistentDataType.STRING,key)
             buttonItem.itemMeta = meta
             set(this)
             return this

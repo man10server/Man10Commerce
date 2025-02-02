@@ -105,7 +105,7 @@ class OneItemMenu(p:Player, private val itemID:Int, private val page:Int) : Menu
                 arrayOf(51,52,53).forEach { setButton(next,it) }
             }
 
-            dispatch(plugin){ p.openInventory(menu) }
+//            dispatch(plugin){ p.openInventory(menu) }
         }
     }
 }

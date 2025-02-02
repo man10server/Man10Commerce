@@ -112,7 +112,7 @@ class CategorizedMenu(p:Player,private val page:Int, private val category:String
                 arrayOf(51,52,53).forEach { setButton(next,it) }
             }
 
-            dispatch(plugin){p.openInventory(menu)}
+//            dispatch(plugin){p.openInventory(menu)}
 
         }
     }
