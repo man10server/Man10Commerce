@@ -292,8 +292,9 @@ open class MenuFramework(val p:Player,private val menuSize: Int, private val tit
                     return
                 }
 
-                val button = Button.get(item)?:return
-                button.click(e)
+                val button = Button.get(item)?.let {
+                    it.click(e)
+                }
             }
 
             val menu = peek(p) ?:return
