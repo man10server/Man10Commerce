@@ -2,6 +2,7 @@ package red.man10.man10commerce
 
 import com.google.gson.Gson
 import com.google.gson.JsonObject
+import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer
 import org.bukkit.Bukkit
 import org.bukkit.Material
 import org.bukkit.command.Command
@@ -49,7 +50,7 @@ class Man10Commerce : JavaPlugin() {
 
             val name: String
             if (item.hasItemMeta() && item.itemMeta.hasDisplayName()){
-                name = item.itemMeta.displayName
+                name = PlainTextComponentSerializer.plainText().serialize(item.itemMeta.displayName()!!);
 
             }else{
                 val separator =

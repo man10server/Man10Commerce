@@ -193,7 +193,7 @@ object Transaction {
                 return@add
             }
 
-            val name = Man10Commerce.getDisplayName(item)
+            val name = getDisplayName(item)
 
             if (item.hasItemMeta()){
                 if (Man10Commerce.disableItems.contains(ChatColor.stripColor(name))){
@@ -287,22 +287,29 @@ object Transaction {
 
         if (itemDictionary.values.any{it.isSimilar(one)})return
 
-        val name = Man10Commerce.getDisplayName(one)
+        val name = getDisplayName(one)
 
-        sql.execute(
+        val insertResult = sql.execute(
             "INSERT INTO item_list " +
                     "(item_name, item_type, base64) VALUES ('${MySQLManager.escapeStringForMySQL(name)}', '${one.type}', '${Utility.itemToBase64(one)}');"
         )
 
-        val rs = sql.query("select id from item_list ORDER BY id DESC LIMIT 1;")!!
-
-        if (!rs.next()){
-//            syncRegisterItemIndex(item, sql)
+        if (!insertResult){
             Bukkit.getLogger().warning("${name}の登録に失敗しました")
             return
         }
 
-        itemDictionary[rs.getInt("id")] = one
+        val rs = sql.query("select id from item_list ORDER BY id DESC LIMIT 1;")
+
+        if (rs == null || !rs.next()){
+            Bukkit.getLogger().warning("${name}の登録に失敗しました")
+            return
+        }
+
+        if (itemDictionary.putIfAbsent(rs.getInt("id"), one) != null) {
+            Bukkit.getLogger().warning("${name}の登録に失敗しました")
+            return
+        }
 
         rs.close()
         sql.close()
@@ -489,7 +496,7 @@ object Transaction {
             val item = entry.value
             val meta = item.itemMeta
             val cmd = if (meta==null || !meta.hasCustomModelData()) 0 else meta.customModelData
-            val display = Man10Commerce.getDisplayName(item).replace("§[a-z0-9]".toRegex(), "")
+            val display = getDisplayName(item).replace("§[a-z0-9]".toRegex(), "")
 
             (isEmptyMaterial || item.type in category.material) &&
                     (isEmptyCMD || cmd in category.customModelData) &&
@@ -509,7 +516,7 @@ object Transaction {
         }
 
         return itemDictionary.filter { item ->
-                val display = Man10Commerce.getDisplayName(item.value).replace("§[a-z0-9]".toRegex(), "")
+                val display = getDisplayName(item.value).replace("§[a-z0-9]".toRegex(), "")
                 !materials.contains(item.value.type) && (displays.filter { (display).contains(it) }).isEmpty()
         }
     }
