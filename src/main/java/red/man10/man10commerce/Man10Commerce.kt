@@ -50,8 +50,7 @@ class Man10Commerce : JavaPlugin() {
 
             val name: String
             if (item.hasItemMeta() && item.itemMeta.hasDisplayName()){
-                name = PlainTextComponentSerializer.plainText().serialize(item.itemMeta.displayName()!!);
-
+                name = item.itemMeta.displayName
             }else{
                 val separator =
                     if (item.type.isBlock) {
@@ -59,7 +58,6 @@ class Man10Commerce : JavaPlugin() {
                     } else {
                         "item.minecraft."
                     }
-
                 val japanese = lang[separator + item.type.name.toLowerCase()]
                 name = if (japanese == null){
                     item.i18NDisplayName?:""

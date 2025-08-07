@@ -204,11 +204,12 @@ open class MenuFramework(val p:Player,private val menuSize: Int, private val tit
         }
 
         fun lore(lore:List<String>): Button {
-            val loreComponent = mutableListOf<Component>()
-            lore.forEach { loreComponent.add(text(it)) }
+//            val loreComponent = mutableListOf<Component>()
+//            lore.forEach { loreComponent.add(text(it)) }
 
             val meta = buttonItem.itemMeta
-            meta.lore(loreComponent)
+            meta.lore = lore
+//            meta.lore(loreComponent)
             buttonItem.itemMeta = meta
             set(this)
             return this
