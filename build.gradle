@@ -1,6 +1,6 @@
 plugins {
     id 'java'
-    id 'org.jetbrains.kotlin.jvm' version '1.7.10'
+    id 'org.jetbrains.kotlin.jvm' version '2.0.0'
 }
 
 group = 'red.man10'
@@ -16,15 +16,20 @@ repositories {
         name = 'sonatype'
         url = 'https://oss.sonatype.org/content/groups/public/'
     }
+    maven { url 'https://jitpack.io' }
+
 }
 
 dependencies {
-    compileOnly 'io.papermc.paper:paper-api:1.20.4-R0.1-SNAPSHOT'
+    compileOnly 'io.papermc.paper:paper-api:1.21.8-R0.1-SNAPSHOT'
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
+    compileOnly ("com.github.MilkBowl:VaultAPI:1.7") {
+        exclude group: 'org.bukkit', module: 'bukkit'
+    }
     compileOnly fileTree(dir: 'libs', include: '*.jar')
 }
 
-def targetJavaVersion = 17
+def targetJavaVersion = 21
 java {
     def javaVersion = JavaVersion.toVersion(targetJavaVersion)
     sourceCompatibility = javaVersion
@@ -32,6 +37,11 @@ java {
     if (JavaVersion.current() < javaVersion) {
         toolchain.languageVersion = JavaLanguageVersion.of(targetJavaVersion)
     }
+}
+
+// Ensure Kotlin uses the same JVM toolchain and target as Java
+kotlin {
+    jvmToolchain(21)
 }
 
 tasks.withType(JavaCompile).configureEach {
@@ -50,11 +60,11 @@ processResources {
 }
 compileKotlin {
     kotlinOptions {
-        jvmTarget = "1.8"
+        jvmTarget = "21"
     }
 }
 compileTestKotlin {
     kotlinOptions {
-        jvmTarget = "1.8"
+        jvmTarget = "21"
     }
 }
