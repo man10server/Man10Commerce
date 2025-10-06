@@ -7,7 +7,6 @@ import org.bukkit.Material
 import org.bukkit.configuration.file.YamlConfiguration
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
-import red.man10.man10bank.Man10Bank
 import red.man10.man10commerce.Man10Commerce
 import red.man10.man10commerce.Man10Commerce.Companion.getDisplayName
 import red.man10.man10commerce.Man10Commerce.Companion.plugin
@@ -19,7 +18,6 @@ import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.LinkedBlockingQueue
-import kotlin.math.floor
 
 data class OrderData(
     var id: Int,
@@ -127,7 +125,7 @@ object Transaction {
             item.amount = amount
 
             //お金関連の処理
-            if (!Man10Bank.vault.withdraw(p.uniqueId,totalPrice)){
+            if (!Man10Commerce.vault.withdraw(p,totalPrice)){
                 sendMsg(p,"§c電子マネーのお金が足りません(必要なお金:${format(totalPrice)}円)")
                 callback(false)
                 return@add
@@ -138,7 +136,7 @@ object Transaction {
                 if (!ret){
                     sendMsg(p,"${Man10Commerce.prefix}§cセンターにアクセスができませんでした。もう一度購入し直してください")
                     //購入失敗による返金
-                    Man10Bank.vault.deposit(p.uniqueId,totalPrice)
+                    Man10Commerce.vault.deposit(p,totalPrice)
                     callback(false)
                     return@add
                 }

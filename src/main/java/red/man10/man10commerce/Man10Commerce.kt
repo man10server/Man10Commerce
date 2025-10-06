@@ -2,7 +2,6 @@ package red.man10.man10commerce
 
 import com.google.gson.Gson
 import com.google.gson.JsonObject
-import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer
 import org.bukkit.Bukkit
 import org.bukkit.Material
 import org.bukkit.command.Command
@@ -27,7 +26,7 @@ class Man10Commerce : JavaPlugin() {
         lateinit var plugin: JavaPlugin
         lateinit var bank : BankAPI
         lateinit var es : ExecutorService
-
+        lateinit var vault: VaultManager
 
         const val prefix = "§l[§a§lA§d§lma§f§ln§a§lzon§f§l]§f"
 
@@ -72,19 +71,26 @@ class Man10Commerce : JavaPlugin() {
 
     override fun onEnable() {
         // Plugin startup logic
+        if (server.pluginManager.getPlugin("Man10Bank") == null){
+            Bukkit.getLogger().warning("Man10Bankが見つかりません。Man10Commerceを無効化します")
+            server.pluginManager.disablePlugin(this)
+            return
+        }
+
         saveDefaultConfig()
 
         es  = Executors.newCachedThreadPool()
 
         plugin = this
         bank = BankAPI(plugin)
+        vault = VaultManager(plugin)
+        vault.hook()
         MenuFramework.setup(this)
 
         Transaction.setup()
 
         loadConfig()
 
-//        server.pluginManager.registerEvents(Event,this)
         server.pluginManager.registerEvents(MenuFramework.MenuListener,this)
 
         try {
