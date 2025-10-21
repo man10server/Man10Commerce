@@ -324,7 +324,12 @@ object Transaction {
             if (rs != null) {
 
                 while (rs.next()) {
-                    itemDictionary[rs.getInt("id")] = Utility.itemFromBase64(rs.getString("base64"))?:continue
+                    try {
+                        itemDictionary[rs.getInt("id")] = Utility.itemFromBase64(rs.getString("base64"))?:continue
+                    } catch (_ : Exception) {
+                        Bukkit.getLogger().warning("アイテムの読み込みに失敗しました id:${rs.getInt("id")}")
+                        continue
+                    }
                 }
 
                 rs.close()
