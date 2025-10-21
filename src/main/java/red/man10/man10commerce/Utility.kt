@@ -4,6 +4,7 @@ import org.bukkit.block.ShulkerBox
 import org.bukkit.entity.Player
 import org.bukkit.inventory.ItemStack
 import org.bukkit.inventory.meta.BlockStateMeta
+import org.yaml.snakeyaml.external.biz.base64Coder.Base64Coder
 import red.man10.man10commerce.Man10Commerce.Companion.prefix
 import red.man10.man10commerce.menu.MenuFramework
 import java.util.*
@@ -13,14 +14,14 @@ object Utility {
     ///////////////////////////////
     //base 64
     //////////////////////////////
-    fun itemFromBase64(data: String): ItemStack? {
-        val bytes = Base64.getDecoder().decode(data)
+    fun itemFromBase64(data: String): ItemStack {
+        val bytes = Base64Coder.decodeLines(data)
         return ItemStack.deserializeBytes(bytes)
     }
 
     fun itemToBase64(item: ItemStack): String {
         val bytes = item.serializeAsBytes()
-        return Base64.getEncoder().encodeToString(bytes)
+        return Base64Coder.encodeLines(bytes)
     }
 
     fun format(double: Double):String{
