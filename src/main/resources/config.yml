@@ -14,7 +14,8 @@ mysql:
   pool:
     maximumPoolSize: 10
     minimumIdle: 2
-    connectionTimeoutMs: 5000
+    # DBが落ちている間、取引スレッドはこの2倍まで待たされる
+    connectionTimeoutMs: 3000
     validationTimeoutMs: 3000
     idleTimeoutMs: 600000
     maxLifetimeMs: 1740000
