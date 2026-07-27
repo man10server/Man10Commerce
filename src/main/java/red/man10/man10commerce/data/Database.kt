@@ -21,8 +21,13 @@ object Database {
 
     private const val POOL_NAME = "Man10Commerce"
 
-    /** Attempts made to borrow a connection before giving up. */
-    private const val ACQUIRE_ATTEMPTS = 3
+    /**
+     * Attempts made to borrow a connection before giving up. HikariCP already
+     * waits `connectionTimeout` internally, so the worst case a caller can block
+     * is ATTEMPTS * connectionTimeout. Keep it small: a stalled write thread
+     * backs up every purchase behind it.
+     */
+    private const val ACQUIRE_ATTEMPTS = 2
     private const val ACQUIRE_RETRY_INTERVAL_MS = 200L
 
     /** Throttles the "database is down" log so a broken DB cannot spam the console. */
@@ -71,7 +76,7 @@ object Database {
 
             maximumPoolSize = config.getInt("mysql.pool.maximumPoolSize", 10)
             minimumIdle = config.getInt("mysql.pool.minimumIdle", 2)
-            connectionTimeout = config.getLong("mysql.pool.connectionTimeoutMs", 5_000)
+            connectionTimeout = config.getLong("mysql.pool.connectionTimeoutMs", 3_000)
             validationTimeout = config.getLong("mysql.pool.validationTimeoutMs", 3_000)
             idleTimeout = config.getLong("mysql.pool.idleTimeoutMs", 600_000)
             maxLifetime = config.getLong("mysql.pool.maxLifetimeMs", 1_740_000)
