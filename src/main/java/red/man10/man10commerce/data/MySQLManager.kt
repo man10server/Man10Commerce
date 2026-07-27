@@ -1,242 +1,156 @@
 package red.man10.man10commerce.data
 
 import org.bukkit.Bukkit
-import org.bukkit.plugin.java.JavaPlugin
-
 import java.sql.Connection
+import java.sql.PreparedStatement
 import java.sql.ResultSet
 import java.sql.SQLException
 import java.sql.Statement
-import java.util.concurrent.LinkedBlockingQueue
-import java.util.logging.Level
+import java.sql.Timestamp
+import java.util.Date
+import java.util.UUID
 
 /**
- * Created by takatronix on 2017/03/05.
+ * Thin, stateless helper around [Database]. Every call borrows a pooled
+ * connection and returns it before the method exits, so a single instance can
+ * safely be shared between threads.
+ *
+ * Failures are reported through the return value instead of being swallowed:
+ * [query] returns null, [execute] returns [FAILED] and [insert] returns null.
+ *
+ * Created by takatronix on 2017/03/05, rewritten for HikariCP.
  */
+class MySQLManager(private val name: String) {
 
+    var debugMode = false
 
-class MySQLManager(private val plugin: JavaPlugin, private val conName: String) {
-
-    var debugMode: Boolean? = false
-    private var HOST: String? = null
-    private var DB: String? = null
-    private var USER: String? = null
-    private var PASS: String? = null
-    private var PORT: String? = null
-    internal var connected = false
-    private var st: Statement? = null
-    private var con: Connection? = null
-    private var MySQL: MySQLFunc? = null
-
-    init {
-        this.connected = false
-        loadConfig()
-
-        this.connected = Connect(HOST, DB, USER, PASS, PORT)!!
-
-        if (!this.connected) {
-            plugin.logger.info("Unable to establish a MySQL connection.")
-        }
+    companion object {
+        /** Returned by [execute] when the statement could not be run at all. */
+        const val FAILED = -1
     }
 
-    /////////////////////////////////
-    //       設定ファイル読み込み
-    /////////////////////////////////
-    fun loadConfig() {
-        //   plugin.getLogger().info("MYSQL Config loading");
-        plugin.reloadConfig()
-        HOST = plugin.config.getString("mysql.host")
-        USER = plugin.config.getString("mysql.user")
-        PASS = plugin.config.getString("mysql.pass")
-        PORT = plugin.config.getString("mysql.port")
-        DB = plugin.config.getString("mysql.db")
-        plugin.getLogger().info("Config loaded  ${HOST} / ${USER}")
-
-    }
-
-    fun commit() {
+    /**
+     * Runs a SELECT and hands the [ResultSet] to [block]. The result set and the
+     * connection are closed as soon as [block] returns, so anything that must
+     * outlive the call has to be copied out inside it.
+     *
+     * @return whatever [block] returned, or null when the query failed.
+     */
+    fun <T> query(sql: String, vararg params: Any?, block: (ResultSet) -> T): T? {
+        val connection = Database.connection() ?: return null
+        debugLog(sql)
         try {
-            this.con!!.commit()
-        } catch (e: Exception) {
-
-        }
-
-    }
-
-    ////////////////////////////////
-    //       接続
-    ////////////////////////////////
-    fun Connect(host: String?, db: String?, user: String?, pass: String?, port: String?): Boolean? {
-        this.HOST = host
-        this.DB = db
-        this.USER = user
-        this.PASS = pass
-        this.MySQL = MySQLFunc(host!!, db!!, user!!, pass!!, port!!)
-        this.con = this.MySQL?.open()
-        if (this.con == null) {
-            Bukkit.getLogger().info("failed to open MYSQL")
-            return false
-        }
-
-        try {
-            this.st = this.con!!.createStatement()
-            this.connected = true
-            this.plugin.logger.info("[" + this.conName + "] Connected to the database.")
-        } catch (e: Exception) {
-            this.connected = false
-            this.plugin.logger.info("[" + this.conName + "] Could not connect to the database ${e.message}")
-        }
-
-        this.MySQL!!.close(this.con)
-        return java.lang.Boolean.valueOf(this.connected)
-    }
-
-    ////////////////////////////////
-    //     行数を数える
-    ////////////////////////////////
-    fun countRows(table: String): Int {
-        var count = 0
-        val set = this.query(String.format("SELECT * FROM %s", *arrayOf<Any>(table)))
-
-        try {
-            while (set!!.next()) {
-                ++count
+            connection.prepareStatement(sql).use { statement ->
+                bind(statement, params)
+                statement.executeQuery().use { result -> return block(result) }
             }
-        } catch (var5: SQLException) {
-            Bukkit.getLogger().log(Level.SEVERE, "Could not select all rows from table: " + table + ", error: " + var5.errorCode)
+        } catch (e: SQLException) {
+            logError("query", sql, e)
+            return null
+        } finally {
+            closeQuietly(connection)
         }
-
-        return count
     }
 
-    ////////////////////////////////
-    //     レコード数
-    ////////////////////////////////
-    fun count(table: String): Int {
-        var ret = 0
-        val set = this.query(String.format("SELECT count(*) from %s", table))
-
+    /**
+     * Runs an INSERT/UPDATE/DELETE.
+     *
+     * @return the number of affected rows, or [FAILED] when the statement failed.
+     */
+    fun execute(sql: String, vararg params: Any?): Int {
+        val connection = Database.connection() ?: return FAILED
+        debugLog(sql)
         try {
-            ret = set!!.getInt("count(*)")
-
-        } catch (var5: SQLException) {
-            Bukkit.getLogger().log(Level.SEVERE, "Could not select all rows from table: " + table + ", error: " + var5.errorCode)
-            return -1
+            connection.prepareStatement(sql).use { statement ->
+                bind(statement, params)
+                return statement.executeUpdate()
+            }
+        } catch (e: SQLException) {
+            logError("execute", sql, e)
+            return FAILED
+        } finally {
+            closeQuietly(connection)
         }
-
-        return ret
     }
 
-    ////////////////////////////////
-    //      実行
-    ////////////////////////////////
-    fun execute(query: String): Boolean {
-
-        this.MySQL = MySQLFunc(this.HOST!!, this.DB!!, this.USER!!, this.PASS!!, this.PORT!!)
-        this.con = this.MySQL!!.open()
-        if (this.con == null) {
-            Bukkit.getLogger().info("failed to open MYSQL")
-            return false
-        }
-        var ret = true
-        if (debugMode!!) {
-            plugin.logger.info("query:$query")
-        }
-
+    /**
+     * Runs an INSERT and returns its generated auto increment key, or null when
+     * the insert failed or produced no key.
+     */
+    fun insert(sql: String, vararg params: Any?): Int? {
+        val connection = Database.connection() ?: return null
+        debugLog(sql)
         try {
-            this.st = this.con!!.createStatement()
-            this.st!!.execute(query)
-        } catch (var3: SQLException) {
-            this.plugin.logger.info("[" + this.conName + "] Error executing statement: " + var3.errorCode + ":" + var3.message)
-            this.plugin.logger.info(query)
-            ret = false
-
-        }
-
-        this.close()
-        return ret
-    }
-
-    ////////////////////////////////
-    //      クエリ
-    ////////////////////////////////
-    fun query(query: String): ResultSet? {
-
-        this.MySQL = MySQLFunc(this.HOST!!, this.DB!!, this.USER!!, this.PASS!!, this.PORT!!)
-        this.con = this.MySQL!!.open()
-        var rs: ResultSet? = null
-        if (this.con == null) {
-            Bukkit.getLogger().info("failed to open MYSQL")
-            return rs
-        }
-
-        if (debugMode!!) {
-            plugin.logger.info("[DEBUG] query:$query")
-        }
-
-        try {
-            this.st = this.con!!.createStatement()
-            rs = this.st!!.executeQuery(query)
-        } catch (var4: SQLException) {
-            this.plugin.logger.info("[" + this.conName + "] Error executing query: " + var4.errorCode)
-            this.plugin.logger.info(query)
-        }
-
-        //        this.close();
-
-        return rs
-    }
-
-
-    fun close() {
-
-        try {
-            this.st?.close()
-            this.con?.close()
-            this.MySQL?.close(this.con)
-
-        } catch (var4: SQLException) {
-        }
-
-    }
-
-
-    companion object{
-
-        val mysqlQueue = LinkedBlockingQueue<String>()
-
-        /////////////////
-        //query queue
-        ////////////////
-        @Synchronized
-        fun mysqlQueue(plugin: JavaPlugin,conName: String){
-            Thread {
-                val mysql = MySQLManager(plugin, conName)
-                try {
-                    while (true) {
-                        val take = mysqlQueue.take()
-                        mysql.execute(take)
-                    }
-                } catch (e: InterruptedException) {
-
+            connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS).use { statement ->
+                bind(statement, params)
+                if (statement.executeUpdate() == 0) return null
+                statement.generatedKeys.use { keys ->
+                    return if (keys.next()) keys.getInt(1) else null
                 }
-            }.start()
-
+            }
+        } catch (e: SQLException) {
+            logError("insert", sql, e)
+            return null
+        } finally {
+            closeQuietly(connection)
         }
+    }
 
-
-        fun escapeStringForMySQL(s: String): String {
-            return s.replace("\\", "\\\\")
-                .replace("\b", "\\b")
-                .replace("\n", "\\n")
-                .replace("\r", "\\r")
-                .replace("\t", "\\t")
-                .replace("\\x1A", "\\Z")
-                .replace("\\x00", "\\0")
-                .replace("'", "\\'")
-                .replace("\"", "\\\"")
+    /**
+     * Runs [rows] through one batched statement.
+     *
+     * @return true when every row was applied.
+     */
+    fun batch(sql: String, rows: List<Array<out Any?>>): Boolean {
+        if (rows.isEmpty()) return true
+        val connection = Database.connection() ?: return false
+        debugLog(sql)
+        try {
+            connection.prepareStatement(sql).use { statement ->
+                for (row in rows) {
+                    bind(statement, row)
+                    statement.addBatch()
+                }
+                statement.executeBatch()
+                return true
+            }
+        } catch (e: SQLException) {
+            logError("batch", sql, e)
+            return false
+        } finally {
+            closeQuietly(connection)
         }
+    }
 
+    private fun bind(statement: PreparedStatement, params: Array<out Any?>) {
+        params.forEachIndexed { index, value ->
+            val position = index + 1
+            when (value) {
+                null -> statement.setObject(position, null)
+                is UUID -> statement.setString(position, value.toString())
+                is Timestamp -> statement.setTimestamp(position, value)
+                is Date -> statement.setTimestamp(position, Timestamp(value.time))
+                is Enum<*> -> statement.setString(position, value.name)
+                else -> statement.setObject(position, value)
+            }
+        }
+    }
 
+    private fun closeQuietly(connection: Connection) {
+        try {
+            connection.close()
+        } catch (e: SQLException) {
+            Bukkit.getLogger().warning("[$name] failed to return a connection to the pool: ${e.message}")
+        }
+    }
+
+    private fun debugLog(sql: String) {
+        if (debugMode) Bukkit.getLogger().info("[$name] $sql")
+    }
+
+    private fun logError(operation: String, sql: String, e: Exception) {
+        val code = if (e is SQLException) " (errorCode=${e.errorCode}, sqlState=${e.sqlState})" else ""
+        Bukkit.getLogger().warning("[$name] $operation failed$code: ${e.message}")
+        if (sql.isNotEmpty()) Bukkit.getLogger().warning("[$name] statement: $sql")
     }
 }

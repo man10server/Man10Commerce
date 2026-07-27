@@ -80,7 +80,14 @@ class EnchantSelectMenu(p:Player, private val page:Int,private val enchant: Ench
 
         Transaction.async { sql->
 
-            val list = Transaction.syncGetMinPriceItems(sql).filter {
+            val minPriceItems = Transaction.syncGetMinPriceItems(sql)
+
+            if (minPriceItems == null){
+                Utility.sendMsg(p, Utility.DB_ERROR_MESSAGE)
+                return@async
+            }
+
+            val list = minPriceItems.filter {
                 it.item.type == Material.ENCHANTED_BOOK
                         && it.item.itemMeta is EnchantmentStorageMeta
                         && (it.item.itemMeta as EnchantmentStorageMeta).storedEnchants.containsKey(enchant)

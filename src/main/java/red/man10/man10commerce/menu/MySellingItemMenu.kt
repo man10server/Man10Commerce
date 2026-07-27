@@ -19,6 +19,11 @@ class MySellingItemMenu(p:Player):MenuFramework(p, LARGE_CHEST_SIZE,"§l出品�
 
             val list = Transaction.syncGetSellerList(p.uniqueId,sql)
 
+            if (list == null){
+                Utility.sendMsg(p, Utility.DB_ERROR_MESSAGE)
+                return@async
+            }
+
             var inc = 0
 
             while (menu.getItem(53) == null){

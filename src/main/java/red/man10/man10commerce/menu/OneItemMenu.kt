@@ -24,6 +24,11 @@ class OneItemMenu(p:Player, private val itemID:Int, private val page:Int) : Menu
 
             val list = Transaction.syncGetOneItemList(itemID, sql)
 
+            if (list == null){
+                Utility.sendMsg(p, Utility.DB_ERROR_MESSAGE)
+                return@async
+            }
+
             var inc = 0
 
             if (list.isEmpty()){
