@@ -2,6 +2,34 @@ mysql:
   db:
   pass:
   host:
-  port:
+  port: 3306
   user:
+  useSSL: false
+  # Extra JDBC parameters appended to the connection URL.
+  properties:
+    allowPublicKeyRetrieval: true
+    rewriteBatchedStatements: true
+  # HikariCP connection pool. The plugin uses one writer thread, `readThreads`
+  # reader threads and one log writer, so the default size has plenty of headroom.
+  pool:
+    maximumPoolSize: 10
+    minimumIdle: 2
+    connectionTimeoutMs: 5000
+    validationTimeoutMs: 3000
+    idleTimeoutMs: 600000
+    maxLifetimeMs: 1740000
+    keepaliveTimeMs: 300000
+    leakDetectionThresholdMs: 20000
+    # Startup fails (and the plugin disables itself) when no connection can be
+    # obtained within this many milliseconds.
+    initializationFailTimeoutMs: 10000
+
+# Threads serving read-only menu queries. Writes always stay on a single thread
+# so that buy/sell/close remain serialized.
+readThreads: 4
+
+# Seconds the cheapest-listing-per-item result is reused before it is queried
+# again. 0 disables the cache.
+minPriceCacheSeconds: 5
+
 fee: 0.1

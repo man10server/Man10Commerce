@@ -6,6 +6,9 @@ depend:
   - Vault
 softdepend:
   - Man10CommonLibs
+libraries:
+  - com.zaxxer:HikariCP:5.1.0
+  - com.mysql:mysql-connector-j:8.4.0
 api-version: 1.21
 commands:
   amzn:
