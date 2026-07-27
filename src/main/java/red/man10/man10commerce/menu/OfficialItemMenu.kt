@@ -24,6 +24,11 @@ class OfficialItemMenu(p:Player,private val page:Int) : MenuFramework(p, LARGE_C
 
             val list = Transaction.syncGetOfficialList(sql)
 
+            if (list == null){
+                Utility.sendMsg(p, Utility.DB_ERROR_MESSAGE)
+                return@async
+            }
+
             var inc = 0
 
             if (list.isEmpty()){

@@ -21,7 +21,14 @@ class MaterialMenu(p:Player,private val page:Int,private val material: Material)
 
         Transaction.async { sql->
 
-            val list = Transaction.syncGetMinPriceItems(sql).filter { data->
+            val minPriceItems = Transaction.syncGetMinPriceItems(sql)
+
+            if (minPriceItems == null){
+                Utility.sendMsg(p, Utility.DB_ERROR_MESSAGE)
+                return@async
+            }
+
+            val list = minPriceItems.filter { data->
                 data.item.type == material
             }
 

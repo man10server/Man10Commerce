@@ -12,6 +12,8 @@ import org.bukkit.inventory.ItemStack
 import org.bukkit.plugin.java.JavaPlugin
 import red.man10.man10bank.BankAPI
 import red.man10.man10commerce.Utility.sendMsg
+import red.man10.man10commerce.data.Database
+import red.man10.man10commerce.data.Log
 import red.man10.man10commerce.data.Transaction
 import red.man10.man10commerce.menu.*
 import java.io.File
@@ -67,6 +69,10 @@ class Man10Commerce : JavaPlugin() {
             return name
         }
 
+        fun shutdownExecutor(){
+            if (::es.isInitialized) es.shutdownNow()
+        }
+
     }
 
     override fun onEnable() {
@@ -82,16 +88,8 @@ class Man10Commerce : JavaPlugin() {
         es  = Executors.newCachedThreadPool()
 
         plugin = this
-        bank = BankAPI(plugin)
-        vault = VaultManager(plugin)
-        vault.hook()
-        MenuFramework.setup(this)
-
-        Transaction.setup()
 
         loadConfig()
-
-        server.pluginManager.registerEvents(MenuFramework.MenuListener,this)
 
         try {
             lang = Gson().fromJson(Files.readString(File(plugin.dataFolder.path+"/ja_jp.json").toPath()),JsonObject::class.java)
@@ -99,11 +97,50 @@ class Man10Commerce : JavaPlugin() {
             Bukkit.getLogger().warning("言語ファイルがありません")
         }
 
+        //DBに繋がらない状態で動かすとアイテムやお金を失うので、ここで止める
+        if (!Database.setup(this)){
+            Bukkit.getLogger().severe("データベースに接続できなかったためMan10Commerceを無効化します")
+            server.pluginManager.disablePlugin(this)
+            return
+        }
+
+        bank = BankAPI(plugin)
+        vault = VaultManager(plugin)
+        vault.hook()
+        MenuFramework.setup(this)
+
+        Log.setup()
+        Transaction.setup()
+
+        server.pluginManager.registerEvents(MenuFramework.MenuListener,this)
     }
 
     override fun onDisable() {
         // Plugin shutdown logic
         Transaction.stop()
+        Log.stop()
+        Database.shutdown()
+        shutdownExecutor()
+    }
+
+    //  DB接続も含めて作り直す
+    private fun reload(sender: CommandSender){
+
+        Transaction.stop()
+        Log.stop()
+
+        loadConfig()
+
+        if (!Database.setup(this)){
+            sender.sendMessage("§c§lデータベースへの再接続に失敗しました。config.ymlを確認してください")
+            return
+        }
+
+        Log.setup()
+        Transaction.setup()
+
+        sender.sendMessage("§a§lコンフィグのリロード完了")
+        sender.sendMessage("§a§l取引システムのリロード完了")
     }
 
     private fun loadConfig(){
@@ -140,6 +177,11 @@ class Man10Commerce : JavaPlugin() {
 
         if (sender.hasPermission(OP) && !enable){
             sendMsg(sender,"§c§l管理者として実行しています")
+        }
+
+        if (!Database.isReady){
+            sendMsg(sender,"§c§l現在センターにアクセスできません。復旧までお待ちください")
+            return true
         }
 
         if (label == "amauthor"){
@@ -283,12 +325,7 @@ class Man10Commerce : JavaPlugin() {
             "reload" ->{
                 if (!sender.hasPermission(OP))return true
 
-                es.execute {
-                    loadConfig()
-                    sender.sendMessage("§a§lコンフィグのリロード完了")
-                    Transaction.setup()
-                    sendMsg(sender,"取引システムのリロード完了")
-                }
+                es.execute { reload(sender) }
             }
         }
 

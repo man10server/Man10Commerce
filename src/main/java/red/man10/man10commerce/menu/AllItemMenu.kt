@@ -23,6 +23,11 @@ class AllItemMenu(p:Player,private val page:Int) :MenuFramework(p, LARGE_CHEST_S
         Transaction.async {sql->
             val list = Transaction.syncGetMinPriceItems(sql)
 
+            if (list == null){
+                Utility.sendMsg(p, Utility.DB_ERROR_MESSAGE)
+                return@async
+            }
+
             if (list.isEmpty()){
                 Utility.sendMsg(p,"§c出品されているアイテムがありません")
                 return@async
