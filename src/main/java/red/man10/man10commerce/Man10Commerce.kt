@@ -14,6 +14,8 @@ import red.man10.man10bank.BankAPI
 import red.man10.man10commerce.Utility.sendMsg
 import red.man10.man10commerce.data.Database
 import red.man10.man10commerce.data.Log
+import red.man10.man10commerce.data.MySQLManager
+import red.man10.man10commerce.data.Schema
 import red.man10.man10commerce.data.Transaction
 import red.man10.man10commerce.menu.*
 import java.io.File
@@ -104,6 +106,10 @@ class Man10Commerce : JavaPlugin() {
             return
         }
 
+        if (!Schema.migrate(MySQLManager("Man10CommerceSchema"))){
+            Bukkit.getLogger().warning("テーブル・インデックスの適用に失敗しました。処理が遅くなる可能性があります")
+        }
+
         bank = BankAPI(plugin)
         vault = VaultManager(plugin)
         vault.hook()
@@ -135,6 +141,8 @@ class Man10Commerce : JavaPlugin() {
             sender.sendMessage("§c§lデータベースへの再接続に失敗しました。config.ymlを確認してください")
             return
         }
+
+        Schema.migrate(MySQLManager("Man10CommerceSchema"))
 
         Log.setup()
         Transaction.setup()
