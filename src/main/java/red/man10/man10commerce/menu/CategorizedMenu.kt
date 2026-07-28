@@ -36,7 +36,7 @@ class CategorizedMenu(p:Player,private val page:Int, private val category:String
             }
 
             //名前解決はI/Oを伴うのでメインスレッドに入る前に済ませる
-            val sellerNames = Utility.resolveNames(list.map { it.seller })
+            val sellerNames = Utility.resolveNames(list.drop(page*45).take(45).map { it.seller })
 
             //インベントリの操作はメインスレッドでしか行えない
             dispatch(plugin){ build(list, sellerNames) }
@@ -65,7 +65,7 @@ class CategorizedMenu(p:Player,private val page:Int, private val category:String
 
             lore.add("§e§l値段:${Utility.format(floor(data.price*data.amount))}")
             lore.add("§e§l単価:${Utility.format(floor(data.price))}")
-            lore.add("§e§l出品者${sellerNames[data.seller]}")
+            lore.add("§e§l出品者${sellerNames[data.seller]?:"unknown"}")
             lore.add("§e§l個数:${data.amount}")
             lore.add("§e§l出品日:${SimpleDateFormat("yyyy-MM-dd").format(data.date)}")
             if (data.isOP) lore.add("§d§l公式出品アイテム")
