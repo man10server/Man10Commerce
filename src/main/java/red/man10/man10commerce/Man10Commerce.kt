@@ -45,7 +45,8 @@ class Man10Commerce : JavaPlugin() {
         const val OP = "commerce.op"
         const val USER = "commerce.user"
 
-        lateinit var lang : JsonObject
+        //言語ファイルが無くてもgetDisplayNameが落ちないよう、空のJsonObjectを初期値にする
+        var lang : JsonObject = JsonObject()
 
         val disableItems = ArrayList<String>()
 
@@ -95,8 +96,10 @@ class Man10Commerce : JavaPlugin() {
 
         try {
             lang = Gson().fromJson(Files.readString(File(plugin.dataFolder.path+"/ja_jp.json").toPath()),JsonObject::class.java)
+                ?: JsonObject()
         }catch (e:Exception){
-            Bukkit.getLogger().warning("言語ファイルがありません")
+            lang = JsonObject()
+            Bukkit.getLogger().warning("言語ファイルがありません。アイテム名は英語表記になります")
         }
 
         //DBに繋がらない状態で動かすとアイテムやお金を失うので、ここで止める
