@@ -66,9 +66,13 @@ object Log {
         queue.add(arrayOf(seller, p.name, "BuyItem", data.itemID, displayName(item), item.amount, data.price))
     }
 
-    //      取り消しログを追加
-    fun closeLog(p:Player,itemID:Int,item: ItemStack){
-        queue.add(arrayOf(p.name, "", "CloseItem", itemID, displayName(item), item.amount, 0.0))
+    /**
+     * 取り消しログを追加。
+     * OPが他人の出品を取り下げた場合は、誰の出品だったかをtarget_playerに残す。
+     */
+    fun closeLog(p:Player,order: OrderData,item: ItemStack,isOwner:Boolean){
+        val seller = if (isOwner) "" else Bukkit.getOfflinePlayer(order.seller).name ?: ""
+        queue.add(arrayOf(p.name, seller, "CloseItem", order.itemID, displayName(item), item.amount, 0.0))
     }
 
     private fun displayName(item: ItemStack):String{
