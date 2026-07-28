@@ -7,8 +7,10 @@ import org.bukkit.event.inventory.InventoryAction
 import red.man10.man10commerce.Man10Commerce
 import red.man10.man10commerce.Man10Commerce.Companion.plugin
 import red.man10.man10commerce.Utility
+import red.man10.man10commerce.data.OrderData
 import red.man10.man10commerce.data.Transaction
 import java.text.SimpleDateFormat
+import java.util.UUID
 import kotlin.math.floor
 
 class SellerMenu(p:Player,private val page:Int,private val seller:String) : MenuFramework(p, LARGE_CHEST_SIZE,"§l出品者名の検索結果"){
@@ -34,82 +36,88 @@ class SellerMenu(p:Player,private val page:Int,private val seller:String) : Menu
                 return@async
             }
 
-            var inc = 0
+            //名前解決はI/Oを伴うのでメインスレッドに入る前に済ませる
+            val sellerNames = Utility.resolveNames(list.map { it.seller })
 
-            while (menu.getItem(44) == null){
+            //インベントリの操作はメインスレッドでしか行えない
+            dispatch(plugin){ build(list, sellerNames) }
+        }
+    }
 
-                val index = inc+page*45
-                inc++
-                if (list.size<=index) break
+    private fun build(list:List<OrderData>, sellerNames:Map<UUID,String>){
 
-                val data = list[index]
-                val sampleItem = data.item.clone()
+        var inc = 0
 
-                val itemButton = Button(sampleItem.type)
-                itemButton.setIcon(sampleItem)
+        while (menu.getItem(44) == null){
 
-                val lore = mutableListOf<String>()
+            val index = inc+page*45
+            inc++
+            if (list.size<=index) break
 
-                lore.add("§e§l値段:${Utility.format(floor(data.price*data.amount))}")
-                lore.add("§e§l単価:${Utility.format(floor(data.price))}")
-                lore.add("§e§l出品者${Bukkit.getOfflinePlayer(data.seller).name}")
-                lore.add("§e§l個数:${data.amount}")
-                lore.add("§e§l出品日:${SimpleDateFormat("yyyy-MM-dd").format(data.date)}")
-                if (data.isOP) lore.add("§d§l公式出品アイテム")
-                lore.add("§cシフトクリックで1-Click購入")
+            val data = list[index]
+            val sampleItem = data.item.clone()
 
-                itemButton.lore(lore)
+            val itemButton = Button(sampleItem.type)
+            itemButton.setIcon(sampleItem)
 
-                sampleItem.lore?.forEach { lore.add(it) }
+            val lore = mutableListOf<String>()
 
-                itemButton.setClickAction{
-                    //シフト左クリック
-                    if (it.action == InventoryAction.MOVE_TO_OTHER_INVENTORY){
-                        Utility.sendMsg(p,"§a§l購入処理中・・・・§a§k§lXX")
-                        Transaction.asyncBuy(p,data.itemID,data.id){open()}
-                        return@setClickAction
-                    }
+            lore.add("§e§l値段:${Utility.format(floor(data.price*data.amount))}")
+            lore.add("§e§l単価:${Utility.format(floor(data.price))}")
+            lore.add("§e§l出品者${sellerNames[data.seller]}")
+            lore.add("§e§l個数:${data.amount}")
+            lore.add("§e§l出品日:${SimpleDateFormat("yyyy-MM-dd").format(data.date)}")
+            if (data.isOP) lore.add("§d§l公式出品アイテム")
+            lore.add("§cシフトクリックで1-Click購入")
 
-                    //通常クリック
-                    if (it.action == InventoryAction.PICKUP_ALL){
-                        OneItemMenu(p,data.itemID,0).open()
-                        return@setClickAction
-                    }
+            itemButton.lore(lore)
 
-                    //右クリック(出品取り消し)
-                    if (it.action == InventoryAction.PICKUP_HALF && p.hasPermission(Man10Commerce.OP)){
-                        Transaction.asyncClose(p,data.id)
-                        return@setClickAction
-                    }
+            sampleItem.lore?.forEach { lore.add(it) }
+
+            itemButton.setClickAction{
+                //シフト左クリック
+                if (it.action == InventoryAction.MOVE_TO_OTHER_INVENTORY){
+                    Utility.sendMsg(p,"§a§l購入処理中・・・・§a§k§lXX")
+                    Transaction.asyncBuy(p,data.itemID,data.id){open()}
+                    return@setClickAction
                 }
 
-                addButton(itemButton)
+                //通常クリック
+                if (it.action == InventoryAction.PICKUP_ALL){
+                    OneItemMenu(p,data.itemID,0).open()
+                    return@setClickAction
+                }
+
+                //右クリック(出品取り消し)
+                if (it.action == InventoryAction.PICKUP_HALF && p.hasPermission(Man10Commerce.OP)){
+                    Transaction.asyncClose(p,data.id)
+                    return@setClickAction
+                }
             }
 
-            //Back
-            val back = Button(Material.LIGHT_BLUE_STAINED_GLASS_PANE)
-            back.title("")
-            arrayOf(45,46,47,48,49,50,51,52,53).forEach { setButton(back,it) }
+            addButton(itemButton)
+        }
 
-            //previous
-            if (page!=0){
-                val previous = Button(Material.RED_STAINED_GLASS_PANE)
-                previous.title("前のページへ")
-                previous.setClickAction{ SellerMenu(p,page-1, seller).open() }
-                arrayOf(45,46,47).forEach { setButton(previous,it) }
+        //Back
+        val back = Button(Material.LIGHT_BLUE_STAINED_GLASS_PANE)
+        back.title("")
+        arrayOf(45,46,47,48,49,50,51,52,53).forEach { setButton(back,it) }
 
-            }
+        //previous
+        if (page!=0){
+            val previous = Button(Material.RED_STAINED_GLASS_PANE)
+            previous.title("前のページへ")
+            previous.setClickAction{ SellerMenu(p,page-1, seller).open() }
+            arrayOf(45,46,47).forEach { setButton(previous,it) }
 
-            //next
-            if (inc>=44){
-                val next = Button(Material.RED_STAINED_GLASS_PANE)
-                next.title("次のページへ")
-                next.setClickAction{ SellerMenu(p,page+1, seller).open() }
-                arrayOf(51,52,53).forEach { setButton(next,it) }
-            }
+        }
 
-//            dispatch(plugin){p.openInventory(menu)}
-
+        //next
+        if (inc>=44){
+            val next = Button(Material.RED_STAINED_GLASS_PANE)
+            next.title("次のページへ")
+            next.setClickAction{ SellerMenu(p,page+1, seller).open() }
+            arrayOf(51,52,53).forEach { setButton(next,it) }
         }
     }
 }
