@@ -5,6 +5,8 @@ import com.zaxxer.hikari.HikariDataSource
 import org.bukkit.plugin.java.JavaPlugin
 import java.sql.Connection
 import java.sql.SQLException
+import java.util.concurrent.atomic.AtomicInteger
+import java.util.concurrent.atomic.AtomicLong
 import java.util.logging.Level
 import java.util.logging.Logger
 
@@ -33,6 +35,17 @@ object Database {
     /** Throttles the "database is down" log so a broken DB cannot spam the console. */
     private const val FAILURE_LOG_INTERVAL_MS = 30_000L
 
+    /**
+     * Consecutive acquisition failures after which the pool is treated as down.
+     * From then on callers fail immediately instead of waiting `connectionTimeout`
+     * each: the write queue is serialized, so a backlog of blocked jobs keeps the
+     * shop broken long after MySQL itself has recovered.
+     */
+    private const val FAILURE_THRESHOLD = 3
+
+    /** While the database is down, only one thread per interval retries. */
+    private const val PROBE_INTERVAL_MS = 1_000L
+
     @Volatile
     private var dataSource: HikariDataSource? = null
 
@@ -42,8 +55,12 @@ object Database {
     @Volatile
     private var logger: Logger = Logger.getLogger(POOL_NAME)
 
+    private val consecutiveFailures = AtomicInteger(0)
+    private val lastProbeAt = AtomicLong(0)
+
+    /** false while the database is known to be unreachable. */
     val isReady: Boolean
-        get() = dataSource?.isClosed == false
+        get() = dataSource?.isClosed == false && consecutiveFailures.get() < FAILURE_THRESHOLD
 
     fun setup(plugin: JavaPlugin): Boolean {
         logger = plugin.logger
@@ -100,6 +117,8 @@ object Database {
             source.connection.use { connection ->
                 if (!connection.isValid(3)) throw SQLException("Connection validation failed")
             }
+            consecutiveFailures.set(0)
+            lastProbeAt.set(0)
             dataSource = source
             logger.info("[$POOL_NAME] connection pool ready (maximumPoolSize=${hikari.maximumPoolSize})")
             true
@@ -124,6 +143,9 @@ object Database {
      * Borrows a connection, retrying transient acquisition failures.
      * Retrying here is safe because no statement has been executed yet.
      *
+     * While the database is down every call returns immediately, except for one
+     * probe per [PROBE_INTERVAL_MS] which detects the recovery.
+     *
      * @return a pooled connection, or null when the database is unreachable.
      */
     fun connection(): Connection? {
@@ -133,13 +155,20 @@ object Database {
             return null
         }
 
+        val down = consecutiveFailures.get() >= FAILURE_THRESHOLD
+        if (down && !shouldProbe()) return null
+
+        val attempts = if (down) 1 else ACQUIRE_ATTEMPTS
         var last: SQLException? = null
-        repeat(ACQUIRE_ATTEMPTS) { attempt ->
+
+        repeat(attempts) { attempt ->
             try {
-                return source.connection
+                val connection = source.connection
+                onAcquired()
+                return connection
             } catch (e: SQLException) {
                 last = e
-                if (attempt < ACQUIRE_ATTEMPTS - 1) {
+                if (attempt < attempts - 1) {
                     try {
                         Thread.sleep(ACQUIRE_RETRY_INTERVAL_MS * (attempt + 1))
                     } catch (interrupted: InterruptedException) {
@@ -150,8 +179,33 @@ object Database {
             }
         }
 
-        logFailure("could not obtain a connection after $ACQUIRE_ATTEMPTS attempts: ${last?.message}")
+        onFailed(last)
         return null
+    }
+
+    /** Lets a single thread through per interval so the probe does not pile up. */
+    private fun shouldProbe(): Boolean {
+        val now = System.currentTimeMillis()
+        val last = lastProbeAt.get()
+        if (now - last < PROBE_INTERVAL_MS) return false
+        return lastProbeAt.compareAndSet(last, now)
+    }
+
+    private fun onAcquired() {
+        if (consecutiveFailures.getAndSet(0) >= FAILURE_THRESHOLD) {
+            logger.info("[$POOL_NAME] the database is reachable again")
+        }
+    }
+
+    private fun onFailed(e: SQLException?) {
+        if (consecutiveFailures.incrementAndGet() == FAILURE_THRESHOLD) {
+            lastFailureLoggedAt = System.currentTimeMillis()
+            logger.severe(
+                "[$POOL_NAME] the database is unreachable, requests fail immediately until it recovers: ${e?.message}"
+            )
+            return
+        }
+        logFailure("could not obtain a connection: ${e?.message}")
     }
 
     /** Reports a pool level failure at most once per [FAILURE_LOG_INTERVAL_MS]. */

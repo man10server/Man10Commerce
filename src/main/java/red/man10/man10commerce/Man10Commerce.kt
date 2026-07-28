@@ -190,7 +190,8 @@ class Man10Commerce : JavaPlugin() {
             sendMsg(sender,"§c§l管理者として実行しています")
         }
 
-        if (!Database.isReady){
+        //OPは復旧作業のため /amzn reload を打てるようにする
+        if (!Database.isReady && !sender.hasPermission(OP)){
             sendMsg(sender,"§c§l現在センターにアクセスできません。復旧までお待ちください")
             return true
         }
