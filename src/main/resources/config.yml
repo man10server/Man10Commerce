@@ -5,6 +5,9 @@ mysql:
   port: 3306
   user:
   useSSL: false
+  # 1クエリの実行時間の上限(秒)。0で無制限。
+  # 起動時のスキーマ適用とアイテム辞書の読み込みは対象外。
+  queryTimeoutSeconds: 3
   # Extra JDBC parameters appended to the connection URL.
   properties:
     allowPublicKeyRetrieval: true

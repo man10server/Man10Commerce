@@ -5,8 +5,9 @@ import com.zaxxer.hikari.HikariDataSource
 import org.bukkit.plugin.java.JavaPlugin
 import java.sql.Connection
 import java.sql.SQLException
+import java.sql.SQLNonTransientConnectionException
+import java.sql.SQLRecoverableException
 import java.util.concurrent.atomic.AtomicInteger
-import java.util.concurrent.atomic.AtomicLong
 import java.util.logging.Level
 import java.util.logging.Logger
 
@@ -23,28 +24,21 @@ object Database {
 
     private const val POOL_NAME = "Man10Commerce"
 
-    /**
-     * Attempts made to borrow a connection before giving up. HikariCP already
-     * waits `connectionTimeout` internally, so the worst case a caller can block
-     * is ATTEMPTS * connectionTimeout. Keep it small: a stalled write thread
-     * backs up every purchase behind it.
-     */
-    private const val ACQUIRE_ATTEMPTS = 2
-    private const val ACQUIRE_RETRY_INTERVAL_MS = 200L
-
     /** Throttles the "database is down" log so a broken DB cannot spam the console. */
     private const val FAILURE_LOG_INTERVAL_MS = 30_000L
 
     /**
-     * Consecutive acquisition failures after which the pool is treated as down.
-     * From then on callers fail immediately instead of waiting `connectionTimeout`
-     * each: the write queue is serialized, so a backlog of blocked jobs keeps the
-     * shop broken long after MySQL itself has recovered.
+     * Consecutive connection failures after which the pool is treated as down.
+     * From then on [connection] returns immediately instead of waiting
+     * `connectionTimeout` each: the write queue is serialized, so a backlog of
+     * blocked jobs keeps the shop broken long after MySQL itself has recovered.
      */
-    private const val FAILURE_THRESHOLD = 3
+    private const val FAILURE_THRESHOLD = 2
 
-    /** While the database is down, only one thread per interval retries. */
+    /** How often the probe thread checks whether the database came back. */
     private const val PROBE_INTERVAL_MS = 1_000L
+
+    private const val DEFAULT_QUERY_TIMEOUT_SECONDS = 3
 
     @Volatile
     private var dataSource: HikariDataSource? = null
@@ -55,8 +49,15 @@ object Database {
     @Volatile
     private var logger: Logger = Logger.getLogger(POOL_NAME)
 
+    @Volatile
+    private var probeThread: Thread? = null
+
+    /** Seconds a single statement may run before it is aborted. 0 disables the limit. */
+    @Volatile
+    var queryTimeoutSeconds = DEFAULT_QUERY_TIMEOUT_SECONDS
+        private set
+
     private val consecutiveFailures = AtomicInteger(0)
-    private val lastProbeAt = AtomicLong(0)
 
     /** false while the database is known to be unreachable. */
     val isReady: Boolean
@@ -77,6 +78,9 @@ object Database {
             logger.severe("mysql.host / mysql.db / mysql.user are not set in config.yml")
             return false
         }
+
+        queryTimeoutSeconds = config.getInt("mysql.queryTimeoutSeconds", DEFAULT_QUERY_TIMEOUT_SECONDS)
+            .coerceAtLeast(0)
 
         val driverClass = resolveDriverClass()
         if (driverClass == null) {
@@ -118,8 +122,8 @@ object Database {
                 if (!connection.isValid(3)) throw SQLException("Connection validation failed")
             }
             consecutiveFailures.set(0)
-            lastProbeAt.set(0)
             dataSource = source
+            startProbeThread()
             logger.info("[$POOL_NAME] connection pool ready (maximumPoolSize=${hikari.maximumPoolSize})")
             true
         } catch (e: Exception) {
@@ -129,6 +133,7 @@ object Database {
     }
 
     fun shutdown() {
+        stopProbeThread()
         val source = dataSource ?: return
         dataSource = null
         try {
@@ -140,11 +145,11 @@ object Database {
     }
 
     /**
-     * Borrows a connection, retrying transient acquisition failures.
-     * Retrying here is safe because no statement has been executed yet.
+     * Borrows a connection.
      *
-     * While the database is down every call returns immediately, except for one
-     * probe per [PROBE_INTERVAL_MS] which detects the recovery.
+     * Once the database is known to be down this returns null without waiting:
+     * blocking here would stall the serialized write thread and keep the backlog
+     * growing. Recovery is detected by [probeThread], never by a caller.
      *
      * @return a pooled connection, or null when the database is unreachable.
      */
@@ -155,40 +160,32 @@ object Database {
             return null
         }
 
-        val down = consecutiveFailures.get() >= FAILURE_THRESHOLD
-        if (down && !shouldProbe()) return null
+        if (consecutiveFailures.get() >= FAILURE_THRESHOLD) return null
 
-        val attempts = if (down) 1 else ACQUIRE_ATTEMPTS
-        var last: SQLException? = null
-
-        repeat(attempts) { attempt ->
-            try {
-                val connection = source.connection
-                onAcquired()
-                return connection
-            } catch (e: SQLException) {
-                last = e
-                if (attempt < attempts - 1) {
-                    try {
-                        Thread.sleep(ACQUIRE_RETRY_INTERVAL_MS * (attempt + 1))
-                    } catch (interrupted: InterruptedException) {
-                        Thread.currentThread().interrupt()
-                        return null
-                    }
-                }
-            }
+        return try {
+            // HikariCP itself keeps retrying until connectionTimeout elapses,
+            // so there is nothing to gain from retrying around it.
+            source.connection.also { onAcquired() }
+        } catch (e: SQLException) {
+            onFailed(e)
+            null
         }
-
-        onFailed(last)
-        return null
     }
 
-    /** Lets a single thread through per interval so the probe does not pile up. */
-    private fun shouldProbe(): Boolean {
-        val now = System.currentTimeMillis()
-        val last = lastProbeAt.get()
-        if (now - last < PROBE_INTERVAL_MS) return false
-        return lastProbeAt.compareAndSet(last, now)
+    /**
+     * Reports a statement level failure. A connection that dies mid-query is the
+     * usual first sign of an outage, so it has to count towards the threshold as
+     * well - otherwise the breaker only trips once callers start timing out on
+     * acquisition, several seconds later.
+     */
+    fun reportFailure(e: SQLException) {
+        if (!isConnectionError(e)) return
+        onFailed(e)
+    }
+
+    private fun isConnectionError(e: SQLException): Boolean {
+        if (e is SQLNonTransientConnectionException || e is SQLRecoverableException) return true
+        return e.sqlState?.startsWith("08") == true
     }
 
     private fun onAcquired() {
@@ -206,6 +203,43 @@ object Database {
             return
         }
         logFailure("could not obtain a connection: ${e?.message}")
+    }
+
+    /**
+     * Checks in the background whether a downed database came back, so that no
+     * request thread ever pays the `connectionTimeout` wait.
+     */
+    private fun startProbeThread() {
+        probeThread = Thread({
+            while (!Thread.currentThread().isInterrupted) {
+                try {
+                    Thread.sleep(PROBE_INTERVAL_MS)
+                } catch (e: InterruptedException) {
+                    Thread.currentThread().interrupt()
+                    return@Thread
+                }
+
+                if (consecutiveFailures.get() < FAILURE_THRESHOLD) continue
+
+                val source = dataSource ?: continue
+                if (source.isClosed) continue
+
+                try {
+                    source.connection.use { it.isValid(1) }
+                    onAcquired()
+                } catch (e: SQLException) {
+                    // still down, try again on the next tick
+                }
+            }
+        }, "Man10Commerce-DbProbe").apply {
+            isDaemon = true
+            start()
+        }
+    }
+
+    private fun stopProbeThread() {
+        probeThread?.interrupt()
+        probeThread = null
     }
 
     /** Reports a pool level failure at most once per [FAILURE_LOG_INTERVAL_MS]. */

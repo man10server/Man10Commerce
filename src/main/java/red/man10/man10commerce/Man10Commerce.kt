@@ -109,7 +109,7 @@ class Man10Commerce : JavaPlugin() {
             return
         }
 
-        if (!Schema.migrate(MySQLManager("Man10CommerceSchema"))){
+        if (!Schema.migrate(MySQLManager("Man10CommerceSchema", 0))){
             Bukkit.getLogger().warning("テーブル・インデックスの適用に失敗しました。処理が遅くなる可能性があります")
         }
 
@@ -145,7 +145,7 @@ class Man10Commerce : JavaPlugin() {
             return
         }
 
-        Schema.migrate(MySQLManager("Man10CommerceSchema"))
+        Schema.migrate(MySQLManager("Man10CommerceSchema", 0))
 
         Log.setup()
         Transaction.setup()
