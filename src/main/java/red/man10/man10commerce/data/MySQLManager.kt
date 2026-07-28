@@ -20,7 +20,13 @@ import java.util.UUID
  *
  * Created by takatronix on 2017/03/05, rewritten for HikariCP.
  */
-class MySQLManager(private val name: String) {
+/**
+ * @param queryTimeoutOverride seconds a statement may run, overriding
+ *   `mysql.queryTimeoutSeconds`. Pass 0 for bulk work such as the schema
+ *   migration or the item dictionary load, which legitimately take longer than
+ *   a player facing query.
+ */
+class MySQLManager(private val name: String, private val queryTimeoutOverride: Int? = null) {
 
     var debugMode = false
 
@@ -123,6 +129,9 @@ class MySQLManager(private val name: String) {
     }
 
     private fun bind(statement: PreparedStatement, params: Array<out Any?>) {
+        val timeout = queryTimeoutOverride ?: Database.queryTimeoutSeconds
+        if (timeout > 0) statement.queryTimeout = timeout
+
         params.forEachIndexed { index, value ->
             val position = index + 1
             when (value) {
@@ -152,5 +161,8 @@ class MySQLManager(private val name: String) {
         val code = if (e is SQLException) " (errorCode=${e.errorCode}, sqlState=${e.sqlState})" else ""
         Bukkit.getLogger().warning("[$name] $operation failed$code: ${e.message}")
         if (sql.isNotEmpty()) Bukkit.getLogger().warning("[$name] statement: $sql")
+
+        //接続が切れたことに最初に気づくのは実行中の文なので、遮断の判断材料に渡す
+        if (e is SQLException) Database.reportFailure(e)
     }
 }

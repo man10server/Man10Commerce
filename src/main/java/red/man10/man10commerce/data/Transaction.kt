@@ -69,6 +69,9 @@ object Transaction {
 
     private val sql = MySQLManager("Man10Commerce")
 
+    /** 起動時の一括処理はプレイヤー向けのクエリより時間がかかるのでタイムアウトを外す */
+    private val bulkSql = MySQLManager("Man10CommerceBulk", 0)
+
     @Volatile
     private var writeThread: Thread? = null
 
@@ -402,11 +405,11 @@ object Transaction {
     }
 
     private fun asyncLoadItemDictionary(){
-        asyncWrite { sql ->
+        asyncWrite {
 
             Bukkit.getLogger().info("アイテム辞書を読み込み開始")
 
-            val loaded = sql.query("SELECT id, base64 FROM item_list"){ rs ->
+            val loaded = bulkSql.query("SELECT id, base64 FROM item_list"){ rs ->
                 val map = HashMap<Int,ItemStack>()
                 while (rs.next()) {
                     val id = rs.getInt("id")
@@ -441,7 +444,7 @@ object Transaction {
 
     //1週間たったアイテムは期限切れとする
     private fun asyncCheckExpired(){
-        asyncWrite { sql->
+        asyncWrite {
 
             val calendar = Calendar.getInstance()
             calendar.time = Date()
@@ -451,7 +454,7 @@ object Transaction {
             calendar.set(Calendar.SECOND,0)
             calendar.set(Calendar.MILLISECOND,0)
 
-            val updated = sql.execute(
+            val updated = bulkSql.execute(
                 "UPDATE order_table SET expired = 1 WHERE expired = 0 AND is_op = 0 AND date < ?",
                 Timestamp(calendar.timeInMillis)
             )
