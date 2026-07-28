@@ -242,13 +242,13 @@ class Man10Commerce : JavaPlugin() {
 
             if (price == null){
                 sendMsg(sender,"§c§l金額は数字を使ってください！")
-                sender.inventory.addItem(clone)
+                Utility.giveItem(sender, clone)
                 return true
             }
 
             Transaction.asyncSell(sender,clone,price,{ result->
                 if (!result){
-                    sender.inventory.addItem(clone)
+                    Utility.giveItem(sender, clone)
                 }
             })
 
@@ -280,13 +280,13 @@ class Man10Commerce : JavaPlugin() {
 
             if (price == null){
                 sendMsg(sender,"§c§l金額は数字を使ってください！")
-                sender.inventory.addItem(clone)
+                Utility.giveItem(sender, clone)
                 return true
             }
 
             Transaction.asyncSell(sender,clone,price,{ result->
                 if (!result){
-                    sender.inventory.addItem(clone)
+                    Utility.giveItem(sender, clone)
                 }
             },true)
 

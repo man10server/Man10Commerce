@@ -134,70 +134,76 @@ object Transaction {
     ///////////////////////////////
     fun asyncBuy(p:Player, itemID: Int, orderID:Int, callback: (Boolean) -> Unit){
 
-        asyncWrite { sql->
+        //インベントリの参照はメインスレッドでしか安全に行えないので、キューに積む前に確認する
+        Utility.sync {
 
             if (p.inventory.firstEmpty() == -1){
                 sendMsg(p,"§cインベントリに空きがありません")
                 callback(false)
-                return@asyncWrite
+                return@sync
             }
 
-            val rows = sql.query("SELECT $ORDER_COLUMNS FROM order_table WHERE id = ?", orderID){ readOrders(it) }
-
-            if (rows == null){
-                sendMsg(p, DB_ERROR_MESSAGE)
-                callback(false)
-                return@asyncWrite
-            }
-
-            val order = rows.firstOrNull()
-
-            if (order == null){
-                sendMsg(p,"§cすでに売り切れです！")
-                callback(false)
-                return@asyncWrite
-            }
-
-            val totalPrice = order.price*order.amount
-
-            val item = order.item.clone()
-            item.amount = order.amount
-
-            //お金関連の処理
-            if (!Man10Commerce.vault.withdraw(p,totalPrice)){
-                sendMsg(p,"§c電子マネーのお金が足りません(必要なお金:${format(totalPrice)}円)")
-                callback(false)
-                return@asyncWrite
-            }
-
-            //出品の削除が成功して初めて購入が確定する
-            if (!order.isOP){
-                val deleted = sql.execute("DELETE FROM order_table WHERE id = ?", order.id)
-
-                if (deleted != 1){
-                    //購入失敗による返金
-                    Man10Commerce.vault.deposit(p,totalPrice)
-
-                    if (deleted == MySQLManager.FAILED){
-                        sendMsg(p,"${Man10Commerce.prefix}§cセンターにアクセスができませんでした。もう一度購入し直してください")
-                    }else{
-                        sendMsg(p,"§cすでに売り切れです！")
-                    }
-                    callback(false)
-                    return@asyncWrite
-                }
-                invalidateMinPriceCache()
-            }
-
-            Log.buyLog(p,order,item)
-
-            Man10Commerce.bank.deposit(order.seller,totalPrice,"SellItemOnMan10Commerce","Amanzonの売り上げ (${getDisplayName(item).take(7)} ${order.price}円x${order.amount}個)")
-
-            p.inventory.addItem(item)
-
-            sendMsg(p,"§a${format(totalPrice)}円で購入しました")
-            callback(true)
+            asyncWrite { sql-> syncBuy(p, orderID, sql, callback) }
         }
+    }
+
+    private fun syncBuy(p:Player, orderID:Int, sql:MySQLManager, callback: (Boolean) -> Unit){
+
+        val rows = sql.query("SELECT $ORDER_COLUMNS FROM order_table WHERE id = ?", orderID){ readOrders(it) }
+
+        if (rows == null){
+            sendMsg(p, DB_ERROR_MESSAGE)
+            callback(false)
+            return
+        }
+
+        val order = rows.firstOrNull()
+
+        if (order == null){
+            sendMsg(p,"§cすでに売り切れです！")
+            callback(false)
+            return
+        }
+
+        val totalPrice = order.price*order.amount
+
+        val item = order.item.clone()
+        item.amount = order.amount
+
+        //お金関連の処理
+        if (!Man10Commerce.vault.withdraw(p,totalPrice)){
+            sendMsg(p,"§c電子マネーのお金が足りません(必要なお金:${format(totalPrice)}円)")
+            callback(false)
+            return
+        }
+
+        //出品の削除が成功して初めて購入が確定する
+        if (!order.isOP){
+            val deleted = sql.execute("DELETE FROM order_table WHERE id = ?", order.id)
+
+            if (deleted != 1){
+                //購入失敗による返金
+                Man10Commerce.vault.deposit(p,totalPrice)
+
+                if (deleted == MySQLManager.FAILED){
+                    sendMsg(p,"${Man10Commerce.prefix}§cセンターにアクセスができませんでした。もう一度購入し直してください")
+                }else{
+                    sendMsg(p,"§cすでに売り切れです！")
+                }
+                callback(false)
+                return
+            }
+            invalidateMinPriceCache()
+        }
+
+        Log.buyLog(p,order,item)
+
+        Man10Commerce.bank.deposit(order.seller,totalPrice,"SellItemOnMan10Commerce","Amanzonの売り上げ (${getDisplayName(item).take(7)} ${order.price}円x${order.amount}個)")
+
+        Utility.giveItem(p,item)
+
+        sendMsg(p,"§a${format(totalPrice)}円で購入しました")
+        callback(true)
     }
 
     /////////////////////////////
@@ -332,7 +338,7 @@ object Transaction {
 
             val item = order.item.clone()
             item.amount = order.amount
-            p.inventory.addItem(item)
+            Utility.giveItem(p,item)
 
             Log.closeLog(p,order.itemID,item)
             sendMsg(p, "§c§l出品を取り下げました")

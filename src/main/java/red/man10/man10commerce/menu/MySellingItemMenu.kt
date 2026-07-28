@@ -4,6 +4,7 @@ import org.bukkit.entity.Player
 import org.bukkit.event.inventory.InventoryAction
 import red.man10.man10commerce.Man10Commerce.Companion.plugin
 import red.man10.man10commerce.Utility
+import red.man10.man10commerce.data.OrderData
 import red.man10.man10commerce.data.Transaction
 import java.text.SimpleDateFormat
 
@@ -24,40 +25,45 @@ class MySellingItemMenu(p:Player):MenuFramework(p, LARGE_CHEST_SIZE,"§l出品�
                 return@async
             }
 
-            var inc = 0
+            //インベントリの操作はメインスレッドでしか行えない
+            dispatch(plugin){ build(list) }
+        }
+    }
 
-            while (menu.getItem(53) == null){
+    private fun build(list:List<OrderData>){
 
-                val index = inc
-                inc++
-                if (list.size<=index) break
+        var inc = 0
 
-                val data = list[index]
-                val sampleItem = data.item.clone()
+        while (menu.getItem(53) == null){
 
-                val itemButton = Button(sampleItem.type)
-                itemButton.setIcon(sampleItem)
+            val index = inc
+            inc++
+            if (list.size<=index) break
 
-                val lore = mutableListOf<String>()
+            val data = list[index]
+            val sampleItem = data.item.clone()
 
-                lore.add("§e§l値段:${Utility.format(data.price)}")
-                lore.add("§e§l個数:${data.amount}")
-                lore.add("§e§l${SimpleDateFormat("yyyy-MM-dd").format(data.date)}")
-                lore.add("§c§lシフトクリックで出品を取り下げる")
+            val itemButton = Button(sampleItem.type)
+            itemButton.setIcon(sampleItem)
 
-                itemButton.lore(lore)
+            val lore = mutableListOf<String>()
 
-                itemButton.setClickAction{
-                    //シフト左クリック
-                    if (it.action == InventoryAction.MOVE_TO_OTHER_INVENTORY){
-                        Transaction.asyncClose(p,data.id)
-                        return@setClickAction
-                    }
+            lore.add("§e§l値段:${Utility.format(data.price)}")
+            lore.add("§e§l個数:${data.amount}")
+            lore.add("§e§l${SimpleDateFormat("yyyy-MM-dd").format(data.date)}")
+            lore.add("§c§lシフトクリックで出品を取り下げる")
+
+            itemButton.lore(lore)
+
+            itemButton.setClickAction{
+                //シフト左クリック
+                if (it.action == InventoryAction.MOVE_TO_OTHER_INVENTORY){
+                    Transaction.asyncClose(p,data.id)
+                    return@setClickAction
                 }
-
-                addButton(itemButton)
             }
-//            dispatch(plugin){p.openInventory(menu)}
+
+            addButton(itemButton)
         }
     }
 }
