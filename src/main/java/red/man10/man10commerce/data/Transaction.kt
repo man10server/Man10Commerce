@@ -55,6 +55,9 @@ object Transaction {
 
     private const val DB_ERROR_MESSAGE = Utility.DB_ERROR_MESSAGE
 
+    //アイテムごとにコンパイルすると数万件の判定で効いてくるので使い回す
+    private val COLOR_CODE = Regex("§[a-z0-9]")
+
     /** How long [stop] waits for queued writes to finish before giving up. */
     private const val WRITE_DRAIN_TIMEOUT_MS = 3_000L
 
@@ -499,12 +502,51 @@ object Transaction {
         ){ readOrders(it) }
     }
 
+    /**
+     * カテゴリーに該当する出品を返す。
+     * 辞書の全アイテムを判定してから出品と突き合わせると、辞書が数万件ある環境では
+     * ItemMetaの生成だけでメニューがもたつくので、出品中のアイテムだけを判定する。
+     */
     fun syncGetCategorizedList(categoryName: String,sql:MySQLManager):List<OrderData>?{
 
         val list = syncGetMinPriceItems(sql)?:return null
-        val dic = getCategorizedDictionary(categoryName)
 
-        return list.filter { dic.containsKey(it.itemID) }
+        //どのカテゴリーにも当てはまらないもの
+        if (categoryName == Category.NOT_CATEGORIZED){
+
+            val materials = categories.values.flatMapTo(mutableSetOf()) { it.material }
+            val displays = categories.values.flatMapTo(mutableSetOf()) { it.displayName }
+
+            return list.filter { order ->
+                if (order.item.type in materials) return@filter false
+                val display = strippedDisplayName(order.item)
+                displays.none { display.contains(it) }
+            }
+        }
+
+        val category = categories[categoryName]?:return emptyList()
+
+        val isEmptyMaterial = category.material.isEmpty()
+        val isEmptyDisplay = category.displayName.isEmpty()
+        val isEmptyCMD = category.customModelData.isEmpty()
+
+        return list.filter { order ->
+
+            val item = order.item
+
+            if (!isEmptyMaterial && item.type !in category.material) return@filter false
+
+            if (!isEmptyCMD){
+                val meta = item.itemMeta
+                val cmd = if (meta==null || !meta.hasCustomModelData()) 0 else meta.customModelData
+                if (cmd !in category.customModelData) return@filter false
+            }
+
+            if (isEmptyDisplay) return@filter true
+
+            val display = strippedDisplayName(item)
+            category.displayName.any { display.contains(it) }
+        }
     }
 
     fun syncGetSellerList(seller: UUID,sql: MySQLManager):List<OrderData>?{
@@ -554,46 +596,8 @@ object Transaction {
         minPriceCache.set(null)
     }
 
-    private fun getCategorizedDictionary(categoryName:String):Map<Int,ItemStack>{
-
-        if (categoryName == Category.NOT_CATEGORIZED){
-            return getNotCategorizedDictionary()
-        }
-
-        val category = categories[categoryName]?:return emptyMap()
-
-        val isEmptyMaterial = category.material.isEmpty()
-        val isEmptyDisplay = category.displayName.isEmpty()
-        val isEmptyCMD = category.customModelData.isEmpty()
-
-        return itemDictionary.filter { entry ->
-
-            val item = entry.value
-            val meta = item.itemMeta
-            val cmd = if (meta==null || !meta.hasCustomModelData()) 0 else meta.customModelData
-            val display = getDisplayName(item).replace("§[a-z0-9]".toRegex(), "")
-
-            (isEmptyMaterial || item.type in category.material) &&
-                    (isEmptyCMD || cmd in category.customModelData) &&
-                    (isEmptyDisplay || category.displayName.any { display.contains(it) })
-            }
-    }
-
-    //カテゴリー分けされてないアイテムを取得
-    private fun getNotCategorizedDictionary():Map<Int,ItemStack>{
-
-        val materials = mutableSetOf<Material>()
-        val displays = mutableSetOf<String>()
-
-        for (category in categories.values){
-            materials.addAll(category.material)
-            displays.addAll(category.displayName)
-        }
-
-        return itemDictionary.filter { item ->
-                val display = getDisplayName(item.value).replace("§[a-z0-9]".toRegex(), "")
-                !materials.contains(item.value.type) && (displays.filter { (display).contains(it) }).isEmpty()
-        }
+    private fun strippedDisplayName(item: ItemStack):String{
+        return getDisplayName(item).replace(COLOR_CODE, "")
     }
 
     //  カテゴリーデータをよむ
