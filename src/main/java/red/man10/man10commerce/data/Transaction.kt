@@ -306,6 +306,10 @@ object Transaction {
     //      注文を取り消す
     ////////////////////////////
     fun asyncClose(p:Player, id:Int){
+
+        //権限の判定は呼び出し元(メインスレッド)の時点で確定させる
+        val isOperator = p.hasPermission(Man10Commerce.OP)
+
         asyncWrite {sql->
 
             val rows = sql.query("SELECT $ORDER_COLUMNS FROM order_table WHERE id = ?", id){ readOrders(it) }
@@ -319,6 +323,15 @@ object Transaction {
 
             if (order == null){
                 sendMsg(p,"§c取り消し失敗！注文が存在しない可能性があります")
+                return@asyncWrite
+            }
+
+            //本人以外の取り下げはOPのみ(不正な出品の取り下げ用)。注文IDだけで他人の出品を消せないようにする
+            val isOwner = order.seller == p.uniqueId
+
+            if (!isOwner && !isOperator){
+                sendMsg(p,"§c他人の出品は取り下げられません")
+                Bukkit.getLogger().warning("Man10Commerce: ${p.name}が権限なしで注文${id}の取り下げを試みました")
                 return@asyncWrite
             }
 
@@ -340,8 +353,16 @@ object Transaction {
             item.amount = order.amount
             Utility.giveItem(p,item)
 
-            Log.closeLog(p,order.itemID,item)
-            sendMsg(p, "§c§l出品を取り下げました")
+            //OPによる取り下げは誰の出品だったかを残す
+            Log.closeLog(p,order,item,isOwner)
+
+            if (isOwner){
+                sendMsg(p, "§c§l出品を取り下げました")
+            }else{
+                val seller = Bukkit.getOfflinePlayer(order.seller).name?:order.seller.toString()
+                sendMsg(p, "§c§l${seller}の出品を取り下げました")
+                Bukkit.getLogger().info("Man10Commerce: ${p.name}が${seller}の注文${id}を取り下げました")
+            }
         }
     }
 
